@@ -1,0 +1,72 @@
+body {
+  margin: 0;
+  padding: 0;
+  font-family: sans-serif;
+  background: #f5f5f5;
+}
+
+.container {
+  max-width: 600px;
+  margin: 30px auto;
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+h1 {
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.selection-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.selection-row label {
+  width: 100px;
+  font-weight: 600;
+}
+
+.selection-row select {
+  flex: 1;
+  padding: 0.4rem;
+  font-size: 1rem;
+}
+
+button#startChatBtn {
+  display: inline-block;
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  cursor: pointer;
+  border: none;
+  border-radius: 4px;
+  background: #007bff;
+  color: #fff;
+  transition: background 0.2s;
+}
+
+button#startChatBtn:hover {
+  background: #0056b3;
+}
+
+/* Session list styling */
+#sessionList {
+  margin-top: 1rem;
+  padding: 0;
+}
+
+.session-item {
+  background: #eef;
+  padding: 0.6rem;
+  margin-bottom: 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.session-item:hover {
+  background: #dde;
+}
+

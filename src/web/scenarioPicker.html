@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Scenario Picker</title>
+  <link rel="stylesheet" href="scenarioPicker.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Scenario Picker</h1>
+    
+    <div class="selection-row">
+      <label for="scenario">Scenario:</label>
+      <select id="scenario">
+        <option value="">--Select Scenario--</option>
+        <option value="Science Class">Science Class</option>
+        <option value="Math Class">Math Class</option>
+        <option value="History Class">History Class</option>
+      </select>
+    </div>
+    
+    <div class="selection-row">
+      <label for="style">Style:</label>
+      <select id="style">
+        <option value="">--Select Style--</option>
+        <option value="Friendly">Friendly</option>
+        <option value="Strict">Strict</option>
+        <option value="Sarcastic">Sarcastic</option>
+      </select>
+    </div>
+    
+    <div class="selection-row">
+      <label for="tone">Tone:</label>
+      <select id="tone">
+        <option value="">--Select Tone--</option>
+        <option value="Serious">Serious</option>
+        <option value="Casual">Casual</option>
+        <option value="Humorous">Humorous</option>
+      </select>
+    </div>
+    
+    <button id="startChatBtn">Start Chat</button>
+    
+    <h2>Active Sessions</h2>
+    <div id="sessionList">
+      <!-- Existing sessions will appear here via scenarioPicker.js -->
+    </div>
+  </div>
+
+  <script src="scenarioPicker.js"></script>
+</body>
+</html>
+
