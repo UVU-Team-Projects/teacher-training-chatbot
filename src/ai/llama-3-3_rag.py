@@ -3,6 +3,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
 from huggingface_hub import InferenceClient
 from langchain_openai import ChatOpenAI
+from langchain_community.llms.ollama import Ollama
 import transformers
 import torch
 
@@ -30,12 +31,8 @@ class LlamaRAG:
         # self.client = InferenceClient(
         #     api_key=os.getenv("HUGGINGFACE_API_KEY"),)
 
-        self.pipeline = transformers.pipeline(
-            "text-generation",
-            model=model_name,
-            # model_kwargs={"torch_dtype": torch.bfloat16},
-            # device_map="auto",
-        )
+        # Initialize Ollama client for local inference
+        self.llm = Ollama(model='llama3.2') # or whichever model you have pulled in Ollama
 
         # Initialize embeddings model with correct device
         self.embeddings = HuggingFaceEmbeddings(
@@ -86,13 +83,54 @@ class LlamaRAG:
         messages = [
             {"role": "system", "content": "You are a 2nd grader designed to help teachers practice classroom managment. \
              Use the following context to help you know how to act and respond. If the context doesn't contain relevant information,\
-              please decided how to best respond while keeping your role."},
+              please decided how to best respond while keeping your role. The user is your teacher. Respond as if you are a 2nd grader talking \
+             to your teacher."},
             {"role": "user", "content": f"Context: {context}\n\nQuestion: {query}"}
         ]
 
-        response = self.pipeline(messages, max_new_tokens=256)
-        print(response[0]["generated_text"][-1]['content'])
-        return response[0]["generated_text"][-1]
+        response = self.llm.invoke(messages)
+        # print(response)
+        return response
+    
+    # Load data from different sources and combine into a single DataFrame
+    def load_data_sources(self):
+        # Load CSV data
+        print("loading csv")
+        csv_path = "data/collection/question-responses/second_grade_qa.csv"
+        df = pd.read_csv(csv_path)
+
+        # Load JSON data
+        print("loading json")
+        json_path = "data/collection/question-responses/second-grade_qa.json"
+        with open(json_path, 'r') as f:
+            qa_data = json.load(f)
+            json_df = pd.DataFrame([{
+                'question': qa['question'],
+                'answer': qa['answer']
+            } for qa in qa_data])
+
+        # Load markdown files
+        markdown_rows = []
+        markdown_dir = "data/collection/markdown_files"
+
+        for file in glob.glob(f"{markdown_dir}/**/*.md", recursive=True):
+            with open(file, 'r', encoding='utf-8') as f:
+                markdown_rows.append({
+                    'file': os.path.basename(file),
+                    'content': f.read()
+                })
+
+        # Combine all data sources
+        if markdown_rows:
+            print("Combining data sources")
+            markdown_df = pd.DataFrame(markdown_rows)
+            df = pd.concat([df, markdown_df, json_df], ignore_index=True)
+        else:
+            print("no markdown files")
+            print("Combining data sources")
+            df = pd.concat([df, json_df], ignore_index=True)
+
+        return df
 
 
 class GPTRAG:
@@ -170,19 +208,15 @@ class GPTRAG:
         print(response.content)
         return response
 
-
-def main():
-    # Initialize RAG system
-    rag = LlamaRAG()
-    # rag = GPTRAG()
-
     # Load data from different sources and combine into a single DataFrame
-    def load_data_sources():
+    def load_data_sources(self):
         # Load CSV data
+        print("loading csv")
         csv_path = "data/collection/question-responses/second_grade_qa.csv"
         df = pd.read_csv(csv_path)
 
         # Load JSON data
+        print("loading json")
         json_path = "data/collection/question-responses/second-grade_qa.json"
         with open(json_path, 'r') as f:
             qa_data = json.load(f)
@@ -192,27 +226,36 @@ def main():
             } for qa in qa_data])
 
         # Load markdown files
-        markdown_dir = "data/collection/markdown_files"
         markdown_rows = []
+        # markdown_dir = "data/collection/markdown_files"
 
-        for file in glob.glob(f"{markdown_dir}/**/*.md", recursive=True):
-            with open(file, 'r', encoding='utf-8') as f:
-                markdown_rows.append({
-                    'file': os.path.basename(file),
-                    'content': f.read()
-                })
+        # for file in glob.glob(f"{markdown_dir}/**/*.md", recursive=True):
+        #     with open(file, 'r', encoding='utf-8') as f:
+        #         markdown_rows.append({
+        #             'file': os.path.basename(file),
+        #             'content': f.read()
+        #         })
 
         # Combine all data sources
         if markdown_rows:
+            print("Combining data sources")
             markdown_df = pd.DataFrame(markdown_rows)
             df = pd.concat([df, markdown_df, json_df], ignore_index=True)
         else:
+            print("no markdown files")
+            print("Combining data sources")
             df = pd.concat([df, json_df], ignore_index=True)
 
         return df
 
+def main():
+    # Initialize RAG system
+    rag = LlamaRAG()
+    # rag = GPTRAG()
+
     # Load and combine all data
-    df = load_data_sources()
+    print("loading data")
+    df = rag.load_data_sources()
     # Convert DataFrame to text format
     # Adjust this based on which columns you want to include
     documents = []
@@ -222,15 +265,17 @@ def main():
         documents.append(doc)
 
     # Load documents
+    print("loading documents")
     rag.load_documents(documents)
 
     # Example query
-    query = "Why did you hit Sally?"
+    query = "Why did you cut your hair?"
 
     # Generate response
     print("\nQuery:", query)
     print("\nResponse:")
     response = rag.generate_response(query)
+    print(response)
 
 
 if __name__ == "__main__":
