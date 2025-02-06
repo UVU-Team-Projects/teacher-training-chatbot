@@ -32,7 +32,8 @@ class LlamaRAG:
         #     api_key=os.getenv("HUGGINGFACE_API_KEY"),)
 
         # Initialize Ollama client for local inference
-        self.llm = Ollama(model='llama3.2') # or whichever model you have pulled in Ollama
+        # or whichever model you have pulled in Ollama
+        self.llm = Ollama(model='llama3.2')
 
         # Initialize embeddings model with correct device
         self.embeddings = HuggingFaceEmbeddings(
@@ -91,7 +92,7 @@ class LlamaRAG:
         response = self.llm.invoke(messages)
         # print(response)
         return response
-    
+
     # Load data from different sources and combine into a single DataFrame
     def load_data_sources(self):
         # Load CSV data
@@ -248,6 +249,7 @@ class GPTRAG:
 
         return df
 
+
 def main():
     # Initialize RAG system
     rag = LlamaRAG()
@@ -268,14 +270,17 @@ def main():
     print("loading documents")
     rag.load_documents(documents)
 
-    # Example query
-    query = "Why did you cut your hair?"
+    while True:
+        # Example query
+        query = input("Enter your question: ")
+        if query.lower() == 'quit':
+            break
 
-    # Generate response
-    print("\nQuery:", query)
-    print("\nResponse:")
-    response = rag.generate_response(query)
-    print(response)
+        # Generate response
+        print("\nQuery:", query)
+        print("\nResponse:")
+        response = rag.generate_response(query)
+        print(response)
 
 
 if __name__ == "__main__":
