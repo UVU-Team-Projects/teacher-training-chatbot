@@ -33,7 +33,7 @@ class LlamaRAG:
 
         # Initialize Ollama client for local inference
         # or whichever model you have pulled in Ollama
-        self.llm = Ollama(model='llama3.2')
+        self.llm = Ollama(model='deepseek-r1:14b')
 
         # Initialize embeddings model with correct device
         self.embeddings = HuggingFaceEmbeddings(
@@ -82,10 +82,9 @@ class LlamaRAG:
 
         # Create messages with context
         messages = [
-            {"role": "system", "content": "You are a 2nd grader designed to help teachers practice classroom managment. \
-             Use the following context to help you know how to act and respond. If the context doesn't contain relevant information,\
-              please decided how to best respond while keeping your role. The user is your teacher. Respond as if you are a 2nd grader talking \
-             to your teacher."},
+            {"role": "system", "content": "You are a 2nd grader. Match your words and language to sound like one. The provided context\
+             can help you know how to act and respond. If the context doesn't contain relevant information, please decide how to best respond.\
+             The user is your teacher. Respond as if you are a 2nd grader talking to your teacher."},
             {"role": "user", "content": f"Context: {context}\n\nQuestion: {query}"}
         ]
 
@@ -110,6 +109,24 @@ class LlamaRAG:
                 'answer': qa['answer']
             } for qa in qa_data])
 
+        print("loading examples.json")
+        json_path = "data/collection/writing_example/examples.json"
+        with open(json_path, 'r') as f:
+            examples_data = json.load(f)
+            examples_rows = []
+            for example in examples_data['Examples']:
+                for example_key, example_value in example.items():
+                    capabilities = example_value.get(
+                        'writing-capabilities', [{}])[0]
+                    text = example_value.get('text', '')
+                    row = {
+                        'example': example_key,
+                        'text': text,
+                        **capabilities
+                    }
+                    examples_rows.append(row)
+            examples_df = pd.DataFrame(examples_rows)
+
         # Load markdown files
         markdown_rows = []
         markdown_dir = "data/collection/markdown_files"
@@ -125,11 +142,12 @@ class LlamaRAG:
         if markdown_rows:
             print("Combining data sources")
             markdown_df = pd.DataFrame(markdown_rows)
-            df = pd.concat([df, markdown_df, json_df], ignore_index=True)
+            df = pd.concat([df, markdown_df, json_df,
+                           examples_df], ignore_index=True)
         else:
             print("no markdown files")
             print("Combining data sources")
-            df = pd.concat([df, json_df], ignore_index=True)
+            df = pd.concat([df, json_df, examples_df], ignore_index=True)
 
         return df
 
@@ -272,12 +290,12 @@ def main():
 
     while True:
         # Example query
-        query = input("Enter your question: ")
+        query = input("Enter your question (type 'quit' to quit): ")
         if query.lower() == 'quit':
             break
 
         # Generate response
-        print("\nQuery:", query)
+        # print("\nQuery:", query)
         print("\nResponse:")
         response = rag.generate_response(query)
         print(response)
