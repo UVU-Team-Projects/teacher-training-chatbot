@@ -83,7 +83,7 @@ def update_student(student_id: int, **kwargs):
         return student
     return None
 
-def delete_student(student_id: int):
+def delete_student(student_id: int) -> bool:
     """
     Deletes a student profile from the database.
 
