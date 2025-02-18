@@ -3,7 +3,7 @@ from sqlalchemy.exc import IntegrityError
 from typing import List
 
 # Student CRUD Functions
-def get_student_by_name(name: str):
+def get_student_by_name(name: str) -> StudentProfile:
     """
     Retrieves a student profile from the database by their name.
 
@@ -28,7 +28,7 @@ def get_all_students() -> List[StudentProfile]:
     students = db.query(StudentProfile).all()
     return students
 
-def create_student(name: str, traits: list, strengths: list = None, weaknesses: list = None, motivations: list = None, fears: list = None, communication_style: str = None):
+def create_student(name: str, traits: list, strengths: list = None, weaknesses: list = None, motivations: list = None, fears: list = None, communication_style: str = None) -> StudentProfile:
     """
     Creates a new student profile in the database.
 
@@ -63,7 +63,7 @@ def create_student(name: str, traits: list, strengths: list = None, weaknesses: 
         db.rollback()
         return None  # Or raise an exception, depending on your error handling strategy
 
-def update_student(student_id: int, **kwargs):
+def update_student(student_id: int, **kwargs) -> StudentProfile:
     """
     Updates an existing student profile in the database.
 
@@ -83,7 +83,7 @@ def update_student(student_id: int, **kwargs):
         return student
     return None
 
-def delete_student(student_id: int):
+def delete_student(student_id: int) -> bool:
     """
     Deletes a student profile from the database.
 
@@ -103,7 +103,7 @@ def delete_student(student_id: int):
 
 # Scenario CRUD Functions
 
-def get_scenario_by_title(title: str):
+def get_scenario_by_title(title: str) -> Scenario:
     """
     Retrieves a scenario from the database by its title.
 
@@ -117,7 +117,7 @@ def get_scenario_by_title(title: str):
     scenario = db.query(Scenario).filter(Scenario.title == title).first()
     return scenario
 
-def get_all_scenarios():
+def get_all_scenarios() -> List[Scenario]:
     """
     Retrieves all scenarios from the database.
 
@@ -128,7 +128,7 @@ def get_all_scenarios():
     scenarios = db.query(Scenario).all()
     return scenarios
 
-def create_scenario(title: str, description: str):
+def create_scenario(title: str, description: str) -> Scenario:
     """
     Creates a new scenario in the database.
 
@@ -151,7 +151,7 @@ def create_scenario(title: str, description: str):
         print(f"Error creating scenario: {e}")
         return None
 
-def update_scenario(scenario_id: int, **kwargs):
+def update_scenario(scenario_id: int, **kwargs) -> Scenario:
     """
     Updates an existing scenario in the database.
 
@@ -171,7 +171,7 @@ def update_scenario(scenario_id: int, **kwargs):
         return scenario
     return None
 
-def delete_scenario(scenario_id: int):
+def delete_scenario(scenario_id: int) -> bool:
     """
     Deletes a scenario from the database.
 
@@ -196,7 +196,7 @@ def delete_scenario(scenario_id: int):
 
 # Dialogue CRUD functions
 
-def get_dialogue_by_id(dialogue_id: int):
+def get_dialogue_by_id(dialogue_id: int) -> Dialogue:
     """
     Retrieves a dialogue from the database by its ID.
 
@@ -210,7 +210,7 @@ def get_dialogue_by_id(dialogue_id: int):
     dialogue = db.query(Dialogue).filter(Dialogue.id == dialogue_id).first()
     return dialogue
 
-def get_dialogues_by_scenario(scenario_id: int):
+def get_dialogues_by_scenario(scenario_id: int) -> List[Dialogue]:
     """
     Retrieves all dialogues for a given scenario ID.
 
@@ -224,7 +224,7 @@ def get_dialogues_by_scenario(scenario_id: int):
     dialogues = db.query(Dialogue).filter(Dialogue.scenario_id == scenario_id).all()
     return dialogues
 
-def create_dialogue(scenario_id: int, student_name: str, utterance: str):
+def create_dialogue(scenario_id: int, student_name: str, utterance: str) -> Dialogue:
     """
     Creates a new dialogue in the database.
 
@@ -248,7 +248,7 @@ def create_dialogue(scenario_id: int, student_name: str, utterance: str):
         print(f"Error creating dialogue: {e}")
         return None
 
-def update_dialogue(dialogue_id: int, **kwargs):
+def update_dialogue(dialogue_id: int, **kwargs) -> Dialogue:
     """
     Updates an existing dialogue in the database.
 
@@ -268,7 +268,7 @@ def update_dialogue(dialogue_id: int, **kwargs):
         return dialogue
     return None
 
-def delete_dialogue(dialogue_id: int):
+def delete_dialogue(dialogue_id: int) -> bool:
     """
     Deletes a dialogue from the database.
 
@@ -291,7 +291,7 @@ def delete_dialogue(dialogue_id: int):
         print(f"Error deleting dialogue: {e}")
         return False
     
-def get_dialogues_by_student_and_scenario(student_name: str, scenario_title: str):
+def get_dialogues_by_student_and_scenario(student_name: str, scenario_title: str) -> List[Dialogue]:
     """
     Retrieves dialogues for a specific student in a specific scenario.
 
