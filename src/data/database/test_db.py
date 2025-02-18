@@ -8,3 +8,4 @@ if __name__ == "__main__":
     print(create_student(1, ["Outgoing", "smart"]))
     print(create_student(2, "idk"))
     print(create_student(["cars", "wagon"], ["smart"]))
+    print(get_student_by_id(3))

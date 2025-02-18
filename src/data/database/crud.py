@@ -3,6 +3,22 @@ from sqlalchemy.exc import IntegrityError
 from typing import List
 
 # Student CRUD Functions
+
+def get_student_by_id(id: int) -> StudentProfile:
+    """
+    Retrieves a student profile from the database by their id.
+
+    Args:
+        id (int): Id of the student to retrieve.
+
+    Returns:
+        StudentProfile: The StudentProfile object if found, None otherwise.
+    """
+    db = next(get_db())
+    student = db.query(StudentProfile).filter(StudentProfile.id == id).first()
+    return student
+
+
 def get_student_by_name(name: str) -> StudentProfile:
     """
     Retrieves a student profile from the database by their name.
