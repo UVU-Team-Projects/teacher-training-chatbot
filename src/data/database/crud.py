@@ -1,5 +1,6 @@
 from database import StudentProfile, get_db, Scenario, Dialogue
 from sqlalchemy.exc import IntegrityError
+from typing import List
 
 # Student CRUD Functions
 def get_student_by_name(name: str):
@@ -16,7 +17,7 @@ def get_student_by_name(name: str):
     student = db.query(StudentProfile).filter(StudentProfile.name == name).first()
     return student
 
-def get_all_students():
+def get_all_students() -> List[StudentProfile]:
     """
     Retrieves all student profiles from the database.
 
