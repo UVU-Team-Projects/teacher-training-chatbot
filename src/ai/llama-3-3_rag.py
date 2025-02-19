@@ -260,20 +260,20 @@ def main():
     rag = LlamaRAG()
     # rag = GPTRAG()
 
-    # Load and combine all data
-    print("loading data")
-    df = load_data_sources()
-    # Convert DataFrame to text format
-    # Adjust this based on which columns you want to include
-    documents = []
-    for _, row in df.iterrows():
-        # Convert each row to a string, joining all columns
-        doc = " ".join(str(value) for value in row)
-        documents.append(doc)
+    # # Load and combine all data
+    # print("loading data")
+    # df = load_data_sources()
+    # # Convert DataFrame to text format
+    # # Adjust this based on which columns you want to include
+    # documents = []
+    # for _, row in df.iterrows():
+    #     # Convert each row to a string, joining all columns
+    #     doc = " ".join(str(value) for value in row)
+    #     documents.append(doc)
 
-    # Load documents
-    print("loading documents")
-    # load_documents(documents)
+    # # Load documents
+    # print("loading documents")
+    # # load_documents(documents)
 
     while True:
         # Example query
@@ -284,7 +284,8 @@ def main():
         # Generate response
         # print("\nQuery:", query)
         print("\nResponse:")
-        response = rag.generate_response(query)
+        # response = rag.generate_response(query)
+        response = rag.llm.invoke(query)
         print(response)
 
 
