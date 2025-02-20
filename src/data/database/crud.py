@@ -1,6 +1,60 @@
-from database import StudentProfile, get_db, Scenario, Dialogue
+from database import StudentProfile, get_db, Scenario, Dialogue, ActiveFile, InactiveFile
 from sqlalchemy.exc import IntegrityError
-from typing import List
+from typing import List, Union
+import os
+
+def print_table_contents(table_name: str):
+    """
+    Prints the contents of the specified table.
+
+    Args:
+        table_name (str): The name of the table to print.
+    """
+    db = next(get_db())
+
+    if table_name == "student_profiles":
+        students = db.query(StudentProfile).all()
+        print("\nstudent_profiles table contents:")
+        for student in students:
+            print(f"  ID: {student.id}")
+            print(f"  Name: {student.name}")
+            print(f"  Traits: {', '.join(student.traits)}")
+            print(f"  Strengths: {', '.join(student.strengths) if student.strengths else 'None'}")
+            print(f"  Weaknesses: {', '.join(student.weaknesses) if student.weaknesses else 'None'}")
+            print(f"  Motivations: {', '.join(student.motivations) if student.motivations else 'None'}")
+            print(f"  Fears: {', '.join(student.fears) if student.fears else 'None'}")
+            print(f"  Communication Style: {student.communication_style}")
+            print(f"  Engagement Level: {student.engagement_level}")
+            print("-" * 20)  # Separator between students
+    elif table_name == "scenarios":
+        scenarios = db.query(Scenario).all()
+        print("\nscenarios table contents:")
+        for scenario in scenarios:
+            print(f"  ID: {scenario.id}")
+            print(f"  Title: {scenario.title}")
+            print(f"  Description: {scenario.description}")
+            print("-" * 20)  # Separator between scenarios
+    elif table_name == "dialogues":
+        dialogues = db.query(Dialogue).all()
+        print("\ndialogues table contents:")
+        for dialogue in dialogues:
+            print(f"  ID: {dialogue.id}")
+            print(f"  Scenario ID: {dialogue.scenario_id}")
+            print(f"  Student Name: {dialogue.student_name}")
+            print(f"  Utterance: {dialogue.utterance}")
+            print("-" * 20)  # Separator between dialogues
+    elif table_name == "active_files":
+        active_files = db.query(ActiveFile).all()
+        print("\nactive_files table contents:")
+        for file in active_files:
+            print(f"ID: {file.id}, Name: {file.name}")  # Print only ID and name
+    elif table_name == "inactive_files":
+        inactive_files = db.query(InactiveFile).all()
+        print("\ninactive_files table contents:")
+        for file in inactive_files:
+            print(f"ID: {file.id}, Name: {file.name}")  # Print only ID and name
+    else:
+        print(f"\nInvalid table name: {table_name}")
 
 # Student CRUD Functions
 
@@ -325,4 +379,252 @@ def get_dialogues_by_student_and_scenario(student_name: str, scenario_title: str
     ).all()
     return dialogues
 
+# Active and Inactive Tables CRUD functions
+
+def create_active_file(name: str, file_content: bytes) -> ActiveFile:
+    """
+    Creates a new active file entry in the database.
+
+    Args:
+        name (str): The name of the file.
+        file_content (bytes): The content of the file as bytes.
+
+    Returns:
+        The created ActiveFile object, or None if creation failed.
+    """
+    db = next(get_db())
+    try:
+        active_file = ActiveFile(name=name, file_content=file_content)
+        db.add(active_file)
+        db.commit()
+        print(f"File added to database: {name}")
+        db.refresh(active_file)
+        return active_file
+    except Exception as e:
+        db.rollback()
+        print(f"Error creating active file: {e}")
+        return None
+
+def get_active_file_by_id(active_file_id: int) -> ActiveFile:
+    """
+    Retrieves an active file from the database by its ID.
+
+    Args:
+        active_file_id (int): The ID of the active file.
+
+    Returns:
+        The ActiveFile object if found, None otherwise.
+    """
+    db = next(get_db())
+    active_file = db.query(ActiveFile).filter(ActiveFile.id == active_file_id).first()
+    return active_file
+
+def get_inactive_file_by_id(inactive_file_id: int) -> InactiveFile:
+    """
+    Retrieves an inactive file from the database by its ID.
+
+    Args:
+        inactive_file_id (int): The ID of the inactive file.
+
+    Returns:
+        The InactiveFile object if found, None otherwise.
+    """
+    db = next(get_db())
+    inactive_file = db.query(InactiveFile).filter(InactiveFile.id == inactive_file_id).first()
+    return inactive_file
+
+def get_active_file_by_name(active_file_name: str) -> ActiveFile:
+    """
+    Retrieves an active file from the database by its name.
+
+    Args:
+        active_file_name (str): The name of the active file.
+
+    Returns:
+        The ActiveFile object if found, None otherwise.
+    """
+    db = next(get_db())
+    active_file = db.query(ActiveFile).filter(ActiveFile.name == active_file_name).first()
+    return active_file
+
+def get_inactive_file_by_name(inactive_file_name: str) -> InactiveFile:
+    """
+    Retrieves an inactive file from the database by its name.
+
+    Args:
+        inactive_file_name (str): The name of the inactive file.
+
+    Returns:
+        The InactiveFile object if found, None otherwise.
+    """
+    db = next(get_db())
+    inactive_file = db.query(InactiveFile).filter(InactiveFile.name == inactive_file_name).first()
+    return inactive_file
+
+def add_markdown_files():
+    """
+    Adds markdown files from the data/markdown_files directory to the active_files table.
+    """
+    db = next(get_db())
+
+    # Define the root directory of your project
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+
+    # Construct the path to the markdown files
+    markdown_files_dir = os.path.join(project_root, "data", "markdown_files")
+
+    print(f"Searching for markdown files in: {markdown_files_dir}")  # Debug print statement
+
+    for filename in os.listdir(markdown_files_dir):
+        if filename.endswith(".md"):
+            filepath = os.path.join(markdown_files_dir, filename)
+
+            with open(filepath, "rb") as f:
+                file_content = f.read()
+
+            name = filename
+
+            create_active_file(name=name, file_content=file_content)
+
+def move_file_to_inactive_by_id(file_id: int) -> bool:
+    """
+    Moves a file from the active_files table to the inactive_files table.
+
+    Args:
+        file_id (int): The ID of the file to move.
+
+    Returns:
+        bool: True if the move was successful, False otherwise.
+    """
+    db = next(get_db())
+    try:
+        # Get the active file
+        active_file = db.query(ActiveFile).filter(ActiveFile.id == file_id).first()
+        if not active_file:
+            print(f"Active file with ID {file_id} not found.")
+            return False
+
+        # Create an inactive file with the same data
+        inactive_file = InactiveFile(
+            name=active_file.name,
+            file_content=active_file.file_content
+        )
+        db.add(inactive_file)
+
+        # Delete the active file
+        db.delete(active_file)
+
+        db.commit()
+        return True
+    except Exception as e:
+        db.rollback()
+        print(f"Error moving file to inactive: {e}")
+        return False
+
+
+def move_file_to_active_by_id(file_id: int) -> bool:
+    """
+    Moves a file from the inactive_files table to the active_files table.
+
+    Args:
+        file_id (int): The ID of the file to move.
+
+    Returns:
+        bool: True if the move was successful, False otherwise.
+    """
+    db = next(get_db())
+    try:
+        # Get the inactive file
+        inactive_file = db.query(InactiveFile).filter(InactiveFile.id == file_id).first()
+        if not inactive_file:
+            print(f"Inactive file with ID {file_id} not found.")
+            return False
+
+        # Create an active file with the same data
+        active_file = ActiveFile(
+            name=inactive_file.name,
+            file_content=inactive_file.file_content
+        )
+        db.add(active_file)
+
+        # Delete the inactive file
+        db.delete(inactive_file)
+
+        db.commit()
+        return True
+    except Exception as e:
+        db.rollback()
+        print(f"Error moving file to active: {e}")
+        return False
+
+def move_file_to_inactive_by_name(name: str) -> bool:
+    """
+    Moves a file from the active_files table to the inactive_files table by its name.
+
+    Args:
+        name (str): The name of the file to move.
+
+    Returns:
+        bool: True if the move was successful, False otherwise.
+    """
+    db = next(get_db())
+    try:
+        # Get the active file by name
+        active_file = db.query(ActiveFile).filter(ActiveFile.name == name).first()
+        if not active_file:
+            print(f"Active file with name {name} not found.")
+            return False
+
+        # Create an inactive file with the same data
+        inactive_file = InactiveFile(
+            name=active_file.name,
+            file_content=active_file.file_content
+        )
+        db.add(inactive_file)
+
+        # Delete the active file
+        db.delete(active_file)
+
+        db.commit()
+        return True
+    except Exception as e:
+        db.rollback()
+        print(f"Error moving file to inactive: {e}")
+        return False
+
+
+def move_file_to_active_by_name(name: str) -> bool:
+    """
+    Moves a file from the inactive_files table to the active_files table by its name.
+
+    Args:
+        name (str): The name of the file to move.
+
+    Returns:
+        bool: True if the move was successful, False otherwise.
+    """
+    db = next(get_db())
+    try:
+        # Get the inactive file by name
+        inactive_file = db.query(InactiveFile).filter(InactiveFile.name == name).first()
+        if not inactive_file:
+            print(f"Inactive file with name {name} not found.")
+            return False
+
+        # Create an active file with the same data
+        active_file = ActiveFile(
+            name=inactive_file.name,
+            file_content=inactive_file.file_content
+        )
+        db.add(active_file)
+
+        # Delete the inactive file
+        db.delete(inactive_file)
+
+        db.commit()
+        return True
+    except Exception as e:
+        db.rollback()
+        print(f"Error moving file to active: {e}")
+        return False
 

@@ -1,11 +1,10 @@
-from database import get_db, StudentProfile, Scenario, Dialogue, create_tables
+from database import get_db, StudentProfile, Scenario, Dialogue, ActiveFile, InactiveFile
 from crud import *
 
 if __name__ == "__main__":
-    print(create_student("bob", ["Shy"]))
-    print(create_student("bob", ["Shy"]))
-    print(create_student("jenny", ["Outgoing", "smart"]))
-    print(create_student(1, ["Outgoing", "smart"]))
-    print(create_student(2, "idk"))
-    print(create_student(["cars", "wagon"], ["smart"]))
-    print(get_student_by_id(3))
+    print_table_contents("student_profiles")
+    print_table_contents("scenarios")
+    print_table_contents("dialogues")
+    print_table_contents("active_files")
+    print_table_contents("inactive_files")
+

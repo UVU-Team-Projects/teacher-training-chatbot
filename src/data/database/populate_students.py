@@ -82,30 +82,9 @@ def add_david_lee():  # Mild mental disability
         db.rollback()
         print("David already exists in the database.")
 
-# Add a user-created example
-def add_user_student(name, traits, strengths=None, weaknesses=None, motivations=None, fears=None, communication_style=None, engagement_level=None):
-    db = next(get_db())
-    try:
-        student = StudentProfile(
-            name=name,
-            traits=traits,
-            strengths=strengths,
-            weaknesses=weaknesses,
-            motivations=motivations,
-            fears=fears,
-            communication_style=communication_style,
-            engagement_level=engagement_level
-        )
-        db.add(student)
-        db.commit()
-        print(f"{name} added to the database.")
-    except IntegrityError:
-        db.rollback()
-        print(f"{name} already exists in the database.")
 
 if __name__ == "__main__":
     add_maria_rodriguez()
-    add_user_student(name="Bob", traits=['outgoing', 'vocal', 'proud'])
     add_jacob_smith()
     add_sophia_chen()
     add_david_lee()

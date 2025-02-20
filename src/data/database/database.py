@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, ARRAY, Text, MetaData, inspect, ForeignKey
+from sqlalchemy import create_engine, Column, Integer, String, ARRAY, Text, MetaData, inspect, ForeignKey, LargeBinary
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 from sqlalchemy import UniqueConstraint
 from sqlalchemy.exc import OperationalError
@@ -47,25 +47,39 @@ class Dialogue(Base):
 
 StudentProfile.dialogues = relationship("Dialogue", back_populates="student")
 
-def create_tables():
-     # Check if the table exists and if its schema matches the model
-     inspector = inspect(engine)
-     for table_name in ["student_profiles", "scenarios", "dialogues"]:
-         table_exists = inspector.has_table(table_name)
-         if table_exists:
-             table_columns = [c["name"] for c in inspector.get_columns(table_name)]
-             model_columns = [c.name for c in Base.metadata.tables[table_name].columns]
-             if table_columns!= model_columns:
-                 # Drop the table if the schema doesn't match
-                 try:
-                     Base.metadata.tables[table_name].drop(engine)
-                     print(f"{table_name} table dropped due to schema changes.")
-                 except OperationalError:
-                     print(f"Error dropping {table_name} table.")
-         else:
-             # Create the table if it doesn't exist
-             metadata.create_all(bind=engine)
-             print(f"{table_name} table created.")
+class ActiveFile(Base):
+    __tablename__ = "active_files"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    file_content = Column(LargeBinary, nullable=False)  # Store the file content as binary data
+
+class InactiveFile(Base):
+    __tablename__ = "inactive_files"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    file_content = Column(LargeBinary, nullable=False)  # Store the file content as binary data
+
+
+# Check if the table exists and if its schema matches the model
+inspector = inspect(engine)
+for table_name in ["student_profiles", "scenarios", "dialogues", "active_files", "inactive_files"]:
+    table_exists = inspector.has_table(table_name)
+    if table_exists:
+        table_columns = [c["name"] for c in inspector.get_columns(table_name)]
+        model_columns = [c.name for c in Base.metadata.tables[table_name].columns]
+        if table_columns!= model_columns:
+            # Drop the table if the schema doesn't match
+            try:
+                Base.metadata.tables[table_name].drop(engine)
+                print(f"{table_name} table dropped due to schema changes.")
+            except OperationalError:
+                print(f"Error dropping {table_name} table.")
+    else:
+        # Create the table if it doesn't exist
+        metadata.create_all(bind=engine)
+        print(f"{table_name} table created.")
 
 # Create a Session
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
