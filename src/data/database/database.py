@@ -4,7 +4,7 @@ from sqlalchemy import UniqueConstraint
 from sqlalchemy.exc import OperationalError
 
 # Database Configuration
-DATABASE_URL = "postgresql://teacher_chatbot_user:Bing_Bong19@localhost/teacher_chatbot_database"
+DATABASE_URL = "postgresql://teacher_chatbot_user:team4ai@localhost/teacher_chatbot_database"
 
 engine = create_engine(DATABASE_URL)
 metadata = MetaData()
