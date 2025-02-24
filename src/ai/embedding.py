@@ -153,8 +153,8 @@ class EmbeddingGenerator:
             documents (list[Document]): List of documents to split
         """
         text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=800,
-            chunk_overlap=100,
+            chunk_size=512,
+            chunk_overlap=20,
             length_function=len,
             is_separator_regex=False,
         )
@@ -269,15 +269,20 @@ class EmbeddingGenerator:
         db.delete_collection()
         # db.persist()
 
+    def construct_chroma(self):
+        """
+        Construct the Chroma vector store.
+        """
+        documents = embedder.load_data_sources()
+        print(f"Loaded {len(documents)} documents")
+        # print(documents[0])
+        chunks = embedder.split_documents(documents)
+        print(f"Split into {len(chunks)} chunks")
+        # print(chunks[0])
+        embedder.add_to_chroma(chunks)
+        
+
 if __name__ == "__main__":
     embedder = EmbeddingGenerator()
-    documents = embedder.load_data_sources()
-    print(f"Loaded {len(documents)} documents")
-    # print(documents[0])
-    chunks = embedder.split_documents(documents)
-    print(f"Split into {len(chunks)} chunks")
-    # print(chunks[0])
-    embedder.add_to_chroma(chunks)
-
-
+    embedder.construct_chroma()
     # embedder.clear_chroma()

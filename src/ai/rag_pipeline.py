@@ -1,5 +1,9 @@
+# Project files
 from student_profiles import create_student_profile, Interest, STUDENT_TEMPLATES, StudentProfile
 from embedding import EmbeddingGenerator
+from profile_builder import StudentProfileBuilder
+
+# External imports
 from dotenv import load_dotenv
 from colorama import Fore, Style
 import time
@@ -68,7 +72,7 @@ class RAG:
             Current Interests: {interests}
             
             Match your words, language, and behavior to match this profile.
-            The provided context can help you know how to act and respond. If the context 
+            The provided context can help you understand how to act and respond. If the context 
             doesn't contain relevant information, please decide how to best respond while
             staying in character.
             
@@ -108,7 +112,7 @@ class RAG:
         # Get the user's message
         user_message = state['messages'][-1].content
 
-        # Get student profile from state
+        # Get student profile from state or use default template
         student_profile = state.get(
             'student_profile', STUDENT_TEMPLATES['active_learner'])
 
@@ -156,9 +160,9 @@ class RAG:
         return self.agent
 
 
-def create_pipeline(tools: list[BaseTool] = None, student_template: str = "active_learner") -> CompiledStateGraph:
+def create_pipeline(tools: list[BaseTool] = None) -> CompiledStateGraph:
     """Create and return a compiled RAG pipeline with specified student profile."""
-    return RAG(tools or []).create_agent()
+    return RAG(tools=tools or []).create_agent()
 
 
 def typing_effect(text: str, delay: float = 0.01) -> None:
@@ -173,16 +177,27 @@ def typing_effect(text: str, delay: float = 0.01) -> None:
 def main() -> None:
     """Run the RAG pipeline in interactive mode."""
     # Create a student profile
-    student = create_student_profile(
-        template_name="active_learner",  # or choose another template
-        name="Alex",
-        grade_level=2,
-        interests=[Interest.SPORTS, Interest.SCIENCE],
-        academic_strengths=["mental math", "science experiments"],
-        academic_challenges=["reading comprehension", "sitting still"],
-        support_strategies=["movement breaks",
-                            "hands-on learning", "visual aids"]
-    )
+    # student = create_student_profile(
+    #     template_name="struggling_student",  # or choose another template
+    #     name="Alex",
+    #     grade_level=2,
+    #     interests=[Interest.SPORTS, Interest.SCIENCE],
+    #     academic_strengths=["mental math", "science experiments"],
+    #     academic_challenges=["reading comprehension", "sitting still"],
+    #     support_strategies=["movement breaks",
+    #                         "hands-on learning", "visual aids"]
+    # )
+
+    builder = StudentProfileBuilder()
+    description = """
+    Sarah is a bright but sometimes anxious 2nd grader who loves science experiments 
+    and reading about nature. She's usually focused in the morning but gets tired 
+    and distracted in the afternoon. She works well in small groups but can be 
+    hesitant to speak up in larger class discussions. Sarah excels at math but 
+    struggles with writing long passages. She benefits from visual aids and 
+    frequent positive reinforcement.    
+    """
+    student = builder.build_profile_from_text(description)
 
     agent = create_pipeline()
     print(Fore.GREEN + f"Student {student.name} is ready! ")
