@@ -48,19 +48,6 @@ class LlamaRAG:
 
         self.vectorstore = None
 
-    def load_documents(self, documents):
-        """
-        Load and process documents into the vector store.
-
-        Args:
-            documents (list): List of document texts
-        """
-        # Split documents into chunks
-        texts = self.text_splitter.create_documents(documents)
-
-        # Create vector store
-        self.vectorstore = FAISS.from_documents(texts, self.embeddings)
-
     def generate_response(self, query, k=3):
         """
         Generate a response using RAG methodology.
@@ -92,64 +79,64 @@ class LlamaRAG:
         # print(response)
         return response
 
-    # Load data from different sources and combine into a single DataFrame
-    def load_data_sources(self):
-        # Load CSV data
-        print("loading csv")
-        csv_path = "data/collection/question-responses/second_grade_qa.csv"
-        df = pd.read_csv(csv_path)
+# Load data from different sources and combine into a single DataFrame
+def load_data_sources():
+    # Load CSV data
+    print("loading csv")
+    csv_path = "data/collection/question-responses/second_grade_qa.csv"
+    df = pd.read_csv(csv_path)
 
-        # Load JSON data
-        print("loading json")
-        json_path = "data/collection/question-responses/second-grade_qa.json"
-        with open(json_path, 'r') as f:
-            qa_data = json.load(f)
-            json_df = pd.DataFrame([{
-                'question': qa['question'],
-                'answer': qa['answer']
-            } for qa in qa_data])
+    # Load JSON data
+    print("loading json")
+    json_path = "data/collection/question-responses/second-grade_qa.json"
+    with open(json_path, 'r') as f:
+        qa_data = json.load(f)
+        json_df = pd.DataFrame([{
+            'question': qa['question'],
+            'answer': qa['answer']
+        } for qa in qa_data])
 
-        print("loading examples.json")
-        json_path = "data/collection/writing_example/examples.json"
-        with open(json_path, 'r') as f:
-            examples_data = json.load(f)
-            examples_rows = []
-            for example in examples_data['Examples']:
-                for example_key, example_value in example.items():
-                    capabilities = example_value.get(
-                        'writing-capabilities', [{}])[0]
-                    text = example_value.get('text', '')
-                    row = {
-                        'example': example_key,
-                        'text': text,
-                        **capabilities
-                    }
-                    examples_rows.append(row)
-            examples_df = pd.DataFrame(examples_rows)
+    print("loading examples.json")
+    json_path = "data/collection/writing_example/examples.json"
+    with open(json_path, 'r') as f:
+        examples_data = json.load(f)
+        examples_rows = []
+        for example in examples_data['Examples']:
+            for example_key, example_value in example.items():
+                capabilities = example_value.get(
+                    'writing-capabilities', [{}])[0]
+                text = example_value.get('text', '')
+                row = {
+                    'example': example_key,
+                    'text': text,
+                    **capabilities
+                }
+                examples_rows.append(row)
+        examples_df = pd.DataFrame(examples_rows)
 
-        # Load markdown files
-        markdown_rows = []
-        markdown_dir = "data/collection/markdown_files"
+    # Load markdown files
+    markdown_rows = []
+    markdown_dir = "data/collection/markdown_files"
 
-        for file in glob.glob(f"{markdown_dir}/**/*.md", recursive=True):
-            with open(file, 'r', encoding='utf-8') as f:
-                markdown_rows.append({
-                    'file': os.path.basename(file),
-                    'content': f.read()
-                })
+    for file in glob.glob(f"{markdown_dir}/**/*.md", recursive=True):
+        with open(file, 'r', encoding='utf-8') as f:
+            markdown_rows.append({
+                'file': os.path.basename(file),
+                'content': f.read()
+            })
 
-        # Combine all data sources
-        if markdown_rows:
-            print("Combining data sources")
-            markdown_df = pd.DataFrame(markdown_rows)
-            df = pd.concat([df, markdown_df, json_df,
-                           examples_df], ignore_index=True)
-        else:
-            print("no markdown files")
-            print("Combining data sources")
-            df = pd.concat([df, json_df, examples_df], ignore_index=True)
+    # Combine all data sources
+    if markdown_rows:
+        print("Combining data sources")
+        markdown_df = pd.DataFrame(markdown_rows)
+        df = pd.concat([df, markdown_df, json_df,
+                        examples_df], ignore_index=True)
+    else:
+        print("no markdown files")
+        print("Combining data sources")
+        df = pd.concat([df, json_df, examples_df], ignore_index=True)
 
-        return df
+    return df
 
 
 class GPTRAG:
@@ -273,20 +260,20 @@ def main():
     rag = LlamaRAG()
     # rag = GPTRAG()
 
-    # Load and combine all data
-    print("loading data")
-    df = rag.load_data_sources()
-    # Convert DataFrame to text format
-    # Adjust this based on which columns you want to include
-    documents = []
-    for _, row in df.iterrows():
-        # Convert each row to a string, joining all columns
-        doc = " ".join(str(value) for value in row)
-        documents.append(doc)
+    # # Load and combine all data
+    # print("loading data")
+    # df = load_data_sources()
+    # # Convert DataFrame to text format
+    # # Adjust this based on which columns you want to include
+    # documents = []
+    # for _, row in df.iterrows():
+    #     # Convert each row to a string, joining all columns
+    #     doc = " ".join(str(value) for value in row)
+    #     documents.append(doc)
 
-    # Load documents
-    print("loading documents")
-    rag.load_documents(documents)
+    # # Load documents
+    # print("loading documents")
+    # # load_documents(documents)
 
     while True:
         # Example query
@@ -297,7 +284,8 @@ def main():
         # Generate response
         # print("\nQuery:", query)
         print("\nResponse:")
-        response = rag.generate_response(query)
+        # response = rag.generate_response(query)
+        response = rag.llm.invoke(query)
         print(response)
 
 
