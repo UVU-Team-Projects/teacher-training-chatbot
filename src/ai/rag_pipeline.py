@@ -78,7 +78,7 @@ class RAG:
 
             ---
 
-            Answer the teacher's question based on the above context: {question}
+            Answer the teacher's question concisely based on the above context: {question}
         """
 
     def should_continue(self, state: MessageStateWithContext) -> Literal["tools", END]:
@@ -97,7 +97,9 @@ class RAG:
         results = db.similarity_search_with_score(query, k=5)
         context = "\n\n---\n\n".join([doc.page_content for doc,
                                      _score in results])
-        print(context)  # DEBUG
+        print("Results:\n ")
+        for result in results:
+            print(result, end="\n\n")  # DEBUG
         return {**state, "context": context}
 
     def generate_response(self, state: MessageStateWithContext) -> MessageStateWithContext:
