@@ -1,7 +1,8 @@
 from fastapi import FastAPI, HTTPException, UploadFile, File
 from typing import List, Optional
 from pydantic import BaseModel
-from data.database import crud  # Adjusted import based on your project structure
+from data.database import crud
+from ai import rag_pipline
 
 app = FastAPI()
 
@@ -277,3 +278,32 @@ def move_file_to_active_by_name(name: str):
 def add_markdown_files():
     crud.add_markdown_files()
     return {"detail": "Markdown files added to active files"}
+
+#AI Connections
+agent = rag_pipline.create_pipeline()
+student = rag_pipline.create_student_profile()
+
+
+
+class ChatRequest(BaseModel):
+    message: str
+
+class ChatResponse(BaseModel):
+    response: str
+
+@app.post("/chat", response_model=ChatResponse)
+def chat_endpoint(request: ChatRequest):
+    """
+    Endpoint to send a message to the AI chatbot and get a response.
+    """
+    try:
+        # Call the chatbot function from rag_pipline.py. Adjust the function name if needed.
+        ai_response = rag_pipline.chat_with_student(agent = agent, student = student, query = request.message)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error in AI processing: {e}")
+    return ChatResponse(response=ai_response)
+
+# Optional: A simple GET endpoint for a health check of the chatbot endpoint
+@app.get("/chat")
+def chat_health():
+    return {"detail": "Chat endpoint is up and running"}
