@@ -65,11 +65,18 @@ class RAG:
         self.PROMPT_TEMPLATE = """
             You are a 2nd grader with the following profile:
 
+            Name: {name}
+            Grade Level: {grade_level}
             Personality: {personality_traits}
             Typical Moods: {moods}
             Behavioral Patterns: {behavior}
-            Learning Style: {learning_style}
             Current Interests: {interests}
+
+            Learning Style: {learning_style}
+            Academic Strengths: {academic_strengths}
+            Academic Challenges: {academic_challenges}
+            Support Strategies: {support_strategies}
+            Social Dynamics: {social_dynamics}
             
             Match your words, language, and behavior to match this profile.
             The provided context can help you understand how to act and respond. If the context 
@@ -120,6 +127,8 @@ class RAG:
         prompt_template = ChatPromptTemplate.from_template(
             self.PROMPT_TEMPLATE)
         formatted_message = prompt_template.format_messages(
+            name=student_profile['name'],
+            grade_level=student_profile['grade_level'],
             personality_traits=", ".join(
                 student_profile['personality_traits']),
             moods=", ".join(
@@ -129,6 +138,14 @@ class RAG:
             learning_style=student_profile['learning_style'],
             interests=", ".join(
                 [interest.value for interest in student_profile.get('interests', [])]),
+            academic_strengths=", ".join(
+                student_profile['academic_strengths']),
+            academic_challenges=", ".join(
+                student_profile['academic_challenges']),
+            support_strategies=", ".join(
+                student_profile['support_strategies']),
+            social_dynamics="\n".join(
+                [f"{k}: {v}" for k, v in student_profile['social_dynamics'].items()]),
             context=context,
             question=user_message
         )
@@ -196,11 +213,17 @@ def chat_with_student(agent: CompiledStateGraph, student: StudentProfile, query:
         "messages": [HumanMessage(content=query)],
         "context": "",
         "student_profile": {
+            "name": student.name,
+            "grade_level": student.grade_level,
             "personality_traits": student.personality_traits,
             "typical_moods": student.typical_moods,
             "behavioral_patterns": student.behavioral_patterns,
             "learning_style": student.learning_style,
-            "interests": student.interests
+            "interests": student.interests,
+            "academic_strengths": student.academic_strengths,
+            "academic_challenges": student.academic_challenges,
+            "support_strategies": student.support_strategies,
+            "social_dynamics": student.social_dynamics
         }
     }
 
@@ -214,17 +237,7 @@ def chat_with_student(agent: CompiledStateGraph, student: StudentProfile, query:
 def main() -> None:
     """Run the RAG pipeline in interactive mode."""
     # Create a student profile
-    # student = create_student_profile(
-    #     template_name="struggling_student",  # or choose another template
-    #     name="Alex",
-    #     grade_level=2,
-    #     interests=[Interest.SPORTS, Interest.SCIENCE],
-    #     academic_strengths=["mental math", "science experiments"],
-    #     academic_challenges=["reading comprehension", "sitting still"],
-    #     support_strategies=["movement breaks",
-    #                         "hands-on learning", "visual aids"]
-    # )
-
+    print("Creating student profile...")
     builder = StudentProfileBuilder()
     description = """
     Sarah is a bright but sometimes anxious 2nd grader who loves science experiments 
@@ -235,7 +248,7 @@ def main() -> None:
     frequent positive reinforcement.    
     """
     student = builder.build_profile_from_text(description)
-
+    print(f"Student profile created: {student}")
     agent = create_pipeline()
     print(Fore.GREEN + f"Student {student.name} is ready! ")
 
@@ -251,11 +264,17 @@ def main() -> None:
             "messages": [HumanMessage(content=query)],
             "context": "",
             "student_profile": {
+                "name": student.name,
+                "grade_level": student.grade_level,
                 "personality_traits": student.personality_traits,
                 "typical_moods": student.typical_moods,
                 "behavioral_patterns": student.behavioral_patterns,
                 "learning_style": student.learning_style,
-                "interests": student.interests
+                "interests": student.interests,
+                "academic_strengths": student.academic_strengths,
+                "academic_challenges": student.academic_challenges,
+                "support_strategies": student.support_strategies,
+                "social_dynamics": student.social_dynamics
             }
         }
 

@@ -83,9 +83,19 @@ Return the profile as a JSON object with these exact keys and no other text befo
         messages = prompt.format_messages(description=description.strip())
         # Get LLM response
         response = self.model.invoke(messages)
-        print(f"LLM Response: {response.content}")  # Debug print
+        # print(f"LLM Response: {response.content}")  # Debug print
 
         try:
+            # Clean up the response content
+            cleaned_content = response.content
+            if "</think>" in cleaned_content:
+                cleaned_content = cleaned_content.split("</think>")[1]
+            if "json" in cleaned_content.lower():
+                cleaned_content = cleaned_content.replace(
+                    "```json", "").strip()
+                cleaned_content = cleaned_content.replace("```", "").strip()
+            response.content = cleaned_content
+            print(f"Cleaned Content: {response.content}")
             # Parse JSON response
             profile_data = json.loads(response.content)
 
@@ -131,7 +141,6 @@ def main():
 
     try:
         profile = builder.build_profile_from_text(description)
-        print(profile)
         print(f"Created profile for {profile.name}")
         print(f"Interests: {[i.value for i in profile.interests]}")
         print(f"Learning style: {profile.learning_style}")

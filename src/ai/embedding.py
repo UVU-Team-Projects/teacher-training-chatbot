@@ -26,6 +26,11 @@ import glob
 import os
 import torch
 
+'''
+ssh d19559
+username:
+password:
+'''
 
 class EmbeddingGenerator:
     """
@@ -284,5 +289,5 @@ class EmbeddingGenerator:
 
 if __name__ == "__main__":
     embedder = EmbeddingGenerator()
-    embedder.construct_chroma()
-    # embedder.clear_chroma()
+    # embedder.construct_chroma()
+    embedder.clear_chroma()
