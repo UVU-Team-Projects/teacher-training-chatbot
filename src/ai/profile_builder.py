@@ -13,7 +13,7 @@ class StudentProfileBuilder:
     def __init__(self):
         self.model = ChatOllama(model="deepseek-r1:14b")
 
-        self.PROFILE_PROMPT = """As an educational expert, analyze the following student description and create a detailed student profile.
+        self.PROFILE_PROMPT: str = '''As an educational expert, analyze the following student description and create a detailed student profile.
 Extract key characteristics and format them according to the specified structure.
 
 Student Description: {description}
@@ -22,30 +22,30 @@ Create a profile with these exact categories. Use only the provided enums for in
 Available Interests: science, arts, math, reading, sports, music, technology, nature
 Available Moods: happy, frustrated, anxious, excited, tired, distracted, focused, confused
 
-Return the profile as a JSON object with these exact keys:
-{
-    "name": "extracted or default to 'Student'",
-    "grade_level": "extracted or default to 2",
-    "personality_traits": ["list", "of", "traits"],
-    "learning_style": "primary learning style",
-    "interests": ["list", "of", "valid", "interests"],
-    "typical_moods": ["list", "of", "valid", "moods"],
-    "behavioral_patterns": {
-        "morning": "behavior description",
-        "afternoon": "behavior description",
-        "during_group_work": "behavior description",
-        "during_independent_work": "behavior description",
-        "transitions": "behavior description"
-    },
-    "academic_strengths": ["list", "of", "strengths"],
-    "academic_challenges": ["list", "of", "challenges"],
-    "social_dynamics": {
-        "peer_interactions": "description",
-        "group_work": "description",
-        "teacher_interaction": "description"
-    },
-    "support_strategies": ["list", "of", "strategies"]
-}"""
+Return the profile as a JSON object with these exact keys and no other text before or after:
+{{
+    "name": "Sarah",
+    "grade_level": 2,
+    "personality_traits": ["bright", "anxious", "hesitant"],
+    "learning_style": "visual",
+    "interests": ["science", "nature", "math"],
+    "typical_moods": ["focused", "tired", "distracted"],
+    "behavioral_patterns": {{
+        "morning": "focused and attentive",
+        "afternoon": "becomes tired and distracted",
+        "during_group_work": "works well in small groups",
+        "during_independent_work": "can maintain focus but may need support",
+        "transitions": "handles smoothly with structure"
+    }},
+    "academic_strengths": ["math", "science experiments"],
+    "academic_challenges": ["writing long passages", "speaking in large groups"],
+    "social_dynamics": {{
+        "peer_interactions": "comfortable in small groups",
+        "group_work": "participates well in small settings",
+        "teacher_interaction": "may need encouragement to speak up"
+    }},
+    "support_strategies": ["visual aids", "positive reinforcement", "small group settings"]
+}}'''
 
     def _validate_interests(self, interests: List[str]) -> List[Interest]:
         """Validate and convert interest strings to Interest enums."""
@@ -78,14 +78,9 @@ Return the profile as a JSON object with these exact keys:
             StudentProfile: Structured student profile
         """
         # Create prompt for profile generation
-        prompt = ChatPromptTemplate.from_messages([
-            ("system", "You are an educational expert assistant who creates detailed student profiles."),
-            ("human", self.PROFILE_PROMPT)
-        ])
+        prompt = ChatPromptTemplate.from_template(self.PROFILE_PROMPT)
 
-        print(f"Prompt: {prompt}")
         messages = prompt.format_messages(description=description.strip())
-        print(f"Messages: {messages}")
         # Get LLM response
         response = self.model.invoke(messages)
         print(f"LLM Response: {response.content}")  # Debug print
