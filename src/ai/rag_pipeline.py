@@ -174,6 +174,43 @@ def typing_effect(text: str, delay: float = 0.01) -> None:
     print()
 
 
+def create_student_profile():
+    # Create a student profile
+    student = create_student_profile(
+        template_name="struggling_student",  # or choose another template
+        name="Alex",
+        grade_level=2,
+        interests=[Interest.SPORTS, Interest.SCIENCE],
+        academic_strengths=["mental math", "science experiments"],
+        academic_challenges=["reading comprehension", "sitting still"],
+        support_strategies=["movement breaks",
+                            "hands-on learning", "visual aids"]
+    )
+    return student
+
+
+def chat_with_student(agent: CompiledStateGraph, student: StudentProfile, query: str) -> str:
+    """Chat with a student profile."""
+    # Initialize state with both messages and student profile
+    initial_state = {
+        "messages": [HumanMessage(content=query)],
+        "context": "",
+        "student_profile": {
+            "personality_traits": student.personality_traits,
+            "typical_moods": student.typical_moods,
+            "behavioral_patterns": student.behavioral_patterns,
+            "learning_style": student.learning_style,
+            "interests": student.interests
+        }
+    }
+
+    response = agent.invoke(
+        initial_state,
+        config={"configurable": {"thread_id": 42}}
+    )
+    return response["messages"][-1].content
+
+
 def main() -> None:
     """Run the RAG pipeline in interactive mode."""
     # Create a student profile
