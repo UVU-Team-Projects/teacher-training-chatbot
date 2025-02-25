@@ -1,4 +1,4 @@
-from database import StudentProfile, get_db, Scenario, Dialogue, ActiveFile, InactiveFile
+from .database import StudentProfile, get_db, Scenario, Dialogue, ActiveFile, InactiveFile
 from sqlalchemy.exc import IntegrityError
 from typing import List, Union
 import os

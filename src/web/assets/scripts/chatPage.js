@@ -108,35 +108,45 @@ function loadChat() {
     renderChat(session);
 }
 
-function sendMessage() {
+async function sendMessage() {
     const messageInput = document.getElementById("teacherMessage");
     const messageText = messageInput.value.trim();
-
     if (!messageText) return;
 
     const activeId = localStorage.getItem("activeChatSessionId");
     let sessions = JSON.parse(localStorage.getItem("chatSessions")) || [];
     let session = sessions.find(s => s.id === activeId);
-
     if (!session) return;
 
-    // Add teacher message
+    // Add teacher's message to the chat log
     session.chatLog.push({ sender: "teacher", text: messageText });
-
-    // Simulated bot response (Optional)
-    const botResponse = generateBotResponse(session);
-    if (botResponse) {
-        session.chatLog.push({ sender: "bot", text: botResponse });
-    }
-
     saveSessionsToStorage(sessions);
     renderChat(session);
-
     messageInput.value = "";
-}
 
-function generateBotResponse(session) {
-    return `Hmm, interesting! You’re in a "${session.scenario}" situation. Let's discuss.`;
+    // Call the chatbot API endpoint
+    try {
+        const response = await fetch("http://127.0.0.1:8000/chat", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ message: messageText })
+        });
+
+        if (!response.ok) {
+            console.error("Chat API call failed:", response.statusText);
+            return;
+        }
+
+        const data = await response.json();
+        // Add bot's response to the chat log
+        session.chatLog.push({ sender: "bot", text: data.response });
+        saveSessionsToStorage(sessions);
+        renderChat(session);
+    } catch (error) {
+        console.error("Error communicating with the chatbot:", error);
+    }
 }
 
 function renderChat(session) {

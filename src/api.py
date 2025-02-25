@@ -1,15 +1,15 @@
 from fastapi import FastAPI, HTTPException, UploadFile, File
 from typing import List, Optional
 from pydantic import BaseModel
-from data.database import crud
-from ai import rag_pipline
+#from data.database import crud
+from ai import rag_pipeline
 
 app = FastAPI()
 
 # ---------------------------------------------
 # Models for Students
 # ---------------------------------------------
-class StudentBase(BaseModel):
+"""class StudentBase(BaseModel):
     name: str
     traits: List[str]
     strengths: Optional[List[str]] = None
@@ -278,6 +278,7 @@ def move_file_to_active_by_name(name: str):
 def add_markdown_files():
     crud.add_markdown_files()
     return {"detail": "Markdown files added to active files"}
+"""
 
 #AI Connections
 agent = rag_pipline.create_pipeline()
