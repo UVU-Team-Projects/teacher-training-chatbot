@@ -32,6 +32,7 @@ username:
 password:
 '''
 
+
 class EmbeddingGenerator:
     """
     A class to generate embeddings for text using SentenceTransformer.
@@ -44,7 +45,7 @@ class EmbeddingGenerator:
         dimension (int): The dimension of generated embeddings (default: 384)
     """
 
-    def __init__(self, model_name: str = 'all-MiniLM-L6-v2'):
+    def __init__(self, model_name: str = 'all-MiniLM-L12-v2'):
         """
         Initialize the EmbeddingGenerator with a specified model.
 
@@ -233,7 +234,8 @@ class EmbeddingGenerator:
         chunks_with_ids = self.calculate_chunk_ids(chunks)
 
         # Add or Update the documents
-        existing_items = db.get(include=[]) # IDs are always included by default
+        # IDs are always included by default
+        existing_items = db.get(include=[])
         existing_ids = set(existing_items["ids"])
         print(f"Number of existing documents in DB: {len(existing_ids)}")
 
@@ -245,7 +247,8 @@ class EmbeddingGenerator:
 
         # Add new documents to the DB
         if new_chunks:
-            new_chunk_ids = [chunk.metadata["chunk_id"] for chunk in new_chunks]
+            new_chunk_ids = [chunk.metadata["chunk_id"]
+                             for chunk in new_chunks]
             db.add_documents(new_chunks, ids=new_chunk_ids)
             # db.persist()
             print(f"Added {len(new_chunks)} new chunks to the DB")
@@ -285,7 +288,7 @@ class EmbeddingGenerator:
         print(f"Split into {len(chunks)} chunks")
         # print(chunks[0])
         embedder.add_to_chroma(chunks)
-        
+
 
 if __name__ == "__main__":
     embedder = EmbeddingGenerator()
