@@ -140,8 +140,6 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 
 # Initialize the RAG system
-
-
 @st.cache_resource
 def initialize_rag_system(model_type: str, model_name: str):
     """Initialize the appropriate RAG system based on user selection"""

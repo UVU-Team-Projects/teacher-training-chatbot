@@ -96,7 +96,7 @@ class EmbeddingGenerator:
         )
 
         # data_dir = "data/collection"
-        data_dir = "/tmp/shared/UTTA/knowledge_base/books"
+        data_dir = "data/books"
 
         # Track files that failed to load
         failed_files = []
