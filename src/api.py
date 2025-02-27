@@ -1,15 +1,29 @@
 from fastapi import FastAPI, HTTPException, UploadFile, File
 from typing import List, Optional
 from pydantic import BaseModel
-#from data.database import crud
-from ai import rag_pipeline
+from src.data.database import crud
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from datetime import datetime
 
 app = FastAPI()
+
+# Setup CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://0.0.0.0:5500", "http://localhost:5500"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Mount the static files directory
+app.mount("/static", StaticFiles(directory="src/web"), name="static")
 
 # ---------------------------------------------
 # Models for Students
 # ---------------------------------------------
-"""class StudentBase(BaseModel):
+class StudentBase(BaseModel):
     name: str
     traits: List[str]
     strengths: Optional[List[str]] = None
@@ -278,13 +292,29 @@ def move_file_to_active_by_name(name: str):
 def add_markdown_files():
     crud.add_markdown_files()
     return {"detail": "Markdown files added to active files"}
-"""
 
-#AI Connections
-agent = rag_pipline.create_pipeline()
-student = rag_pipline.create_student_profile()
+@app.get("/files/active")
+def get_active_files():
+    try:
+        return crud.get_all_active_files()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/files/inactive")
+def get_inactive_files():
+    try:
+        return crud.get_all_inactive_files()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/database-health")
+def database_health():
+    try:
+        # Try to access the database through crud
+        crud.get_all_students()
+        return {"status": "healthy", "message": "Database connection successful"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 class ChatRequest(BaseModel):
     message: str
@@ -293,18 +323,14 @@ class ChatResponse(BaseModel):
     response: str
 
 @app.post("/chat", response_model=ChatResponse)
-def chat_endpoint(request: ChatRequest):
+async def chat_endpoint(request: ChatRequest):
     """
     Endpoint to send a message to the AI chatbot and get a response.
+    Currently returns a default message for testing purposes.
     """
     try:
-        # Call the chatbot function from rag_pipline.py. Adjust the function name if needed.
-        ai_response = rag_pipline.chat_with_student(agent = agent, student = student, query = request.message)
+        # Return a default response for now
+        default_response = "This is a default response. AI integration coming soon!"
+        return ChatResponse(response=default_response)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error in AI processing: {e}")
-    return ChatResponse(response=ai_response)
-
-# Optional: A simple GET endpoint for a health check of the chatbot endpoint
-@app.get("/chat")
-def chat_health():
-    return {"detail": "Chat endpoint is up and running"}
+        raise HTTPException(status_code=500, detail=f"Error processing request: {e}")
