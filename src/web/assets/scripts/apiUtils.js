@@ -1,112 +1,114 @@
-const API_BASE_URL = "https://your-api-endpoint.com"; // Replace with actual API URL
-
 /**
- * Fetches the list of default students from the API.
- * @returns {Promise<Array>} A promise that resolves to an array of students.
+ * Configuration file for API endpoints and utilities
  */
-async function fetchStudents() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/students`);
-        if (!response.ok) throw new Error("Failed to fetch students");
-        return await response.json();
-    } catch (error) {
-        console.error("Error fetching students:", error);
-        return [];
+const API_BASE_URL = 'http://localhost:8000';
+
+// API endpoint definitions
+export const apiEndpoints = {
+    students: `${API_BASE_URL}/students`,
+    scenarios: `${API_BASE_URL}/scenarios`,
+    chat: `${API_BASE_URL}/chat`,
+    files: {
+        active: `${API_BASE_URL}/files/active`,
+        inactive: `${API_BASE_URL}/files/inactive`,
+        moveToActive: (id) => `${API_BASE_URL}/files/move-to-active/${id}`,
+        moveToInactive: (id) => `${API_BASE_URL}/files/move-to-inactive/${id}`
     }
-}
+};
 
-/**
- * Fetches the list of default scenarios from the API.
- * @returns {Promise<Array>} A promise that resolves to an array of scenarios.
- */
-async function fetchScenarios() {
+// Base API fetch function
+export async function fetchFromAPI(endpoint, options = {}) {
     try {
-        const response = await fetch(`${API_BASE_URL}/scenarios`);
-        if (!response.ok) throw new Error("Failed to fetch scenarios");
-        return await response.json();
-    } catch (error) {
-        console.error("Error fetching scenarios:", error);
-        return [];
-    }
-}
-
-/**
- * Sends a message to the AI.
- * @param {string} sessionId - The active chat session ID.
- * @param {string} message - The message text to send.
- * @returns {Promise<Object>} A promise that resolves to the AI's response.
- */
-async function sendMessageToAI(sessionId, message) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/chat/send`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ sessionId, message }),
+        const response = await fetch(endpoint, {
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                ...options.headers
+            }
         });
-        if (!response.ok) throw new Error("Failed to send message");
+        
+        if (!response.ok) {
+            const errorData = await response.text();
+            throw new Error(`API Error: ${response.status} - ${errorData}`);
+        }
+        
         return await response.json();
     } catch (error) {
-        console.error("Error sending message:", error);
-        return null;
+        console.error('API Error:', error);
+        throw error;
     }
 }
 
 /**
- * Fetches AI responses for the active chat session.
- * @param {string} sessionId - The active chat session ID.
- * @returns {Promise<Array>} A promise that resolves to an array of chat messages.
+ * Student-related API functions
  */
-async function fetchAIResponses(sessionId) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/chat/responses?sessionId=${sessionId}`);
-        if (!response.ok) throw new Error("Failed to fetch AI responses");
-        return await response.json();
-    } catch (error) {
-        console.error("Error fetching AI responses:", error);
-        return [];
-    }
-}
+export const studentAPI = {
+    async getAll() {
+        return await fetchFromAPI(apiEndpoints.students);
+    },
 
-/**
- * Fetches the list of documents and their active status.
- * @returns {Promise<Array>} A promise that resolves to an array of documents.
- */
-async function fetchDocuments() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/documents`);
-        if (!response.ok) throw new Error("Failed to fetch documents");
-        return await response.json();
-    } catch (error) {
-        console.error("Error fetching documents:", error);
-        return [];
-    }
-}
-
-/**
- * Sends a list of documents to be set as active or revectorized.
- * @param {Array<string>} documentIds - Array of document IDs to activate/revectorize.
- * @returns {Promise<boolean>} A promise that resolves to a boolean indicating success.
- */
-async function setActiveDocuments(documentIds) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/documents/activate`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ documentIds }),
+    async create(studentData) {
+        return await fetchFromAPI(apiEndpoints.students, {
+            method: 'POST',
+            body: JSON.stringify(studentData)
         });
-        if (!response.ok) throw new Error("Failed to update document status");
-        return true;
-    } catch (error) {
-        console.error("Error updating document status:", error);
-        return false;
     }
-}
+};
 
-export {
-    fetchStudents,
-    fetchScenarios,
-    sendMessageToAI,
-    fetchAIResponses,
-    fetchDocuments,
-    setActiveDocuments,
+/**
+ * Scenario-related API functions
+ */
+export const scenarioAPI = {
+    async getAll() {
+        return await fetchFromAPI(apiEndpoints.scenarios);
+    },
+
+    async create(scenarioData) {
+        return await fetchFromAPI(apiEndpoints.scenarios, {
+            method: 'POST',
+            body: JSON.stringify(scenarioData)
+        });
+    }
+};
+
+/**
+ * Chat-related API functions
+ */
+export const chatAPI = {
+    async sendMessage(message, sessionId) {
+        return await fetchFromAPI(apiEndpoints.chat, {
+            method: 'POST',
+            body: JSON.stringify({ message, sessionId })
+        });
+    },
+
+    async getResponses(sessionId) {
+        return await fetchFromAPI(`${apiEndpoints.chat}/responses?sessionId=${sessionId}`);
+    }
+};
+
+/**
+ * File-related API functions
+ */
+export const fileAPI = {
+    async getActiveFiles() {
+        return await fetchFromAPI(apiEndpoints.files.active);
+    },
+
+    async getInactiveFiles() {
+        return await fetchFromAPI(apiEndpoints.files.inactive);
+    },
+
+    async moveToActive(fileId) {
+        return await fetchFromAPI(apiEndpoints.files.moveToActive(fileId), {
+            method: 'PUT'
+        });
+    },
+
+    async moveToInactive(fileId) {
+        return await fetchFromAPI(apiEndpoints.files.moveToInactive(fileId), {
+            method: 'PUT'
+        });
+    }
 };

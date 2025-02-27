@@ -1,177 +1,233 @@
-document.addEventListener("DOMContentLoaded", () => {
-    loadChat();
-    loadDocuments();
+import { chatAPI, fileAPI } from './apiUtils.js';
 
-    document.getElementById("sendBtn").addEventListener("click", sendMessage);
-    document.getElementById("teacherMessage").addEventListener("keypress", (event) => {
-        if (event.key === "Enter" && !event.shiftKey) {
-            event.preventDefault();
-            sendMessage();
-        }
+/**
+ * Global state variables for chat functionality
+ */
+let currentChat = null;  // Stores current chat session
+let activeFiles = [];    // Stores list of active files
+let inactiveFiles = []; // Stores list of inactive files
+let selectedDocuments = new Set(); // Stores selected document IDs
+
+/**
+ * Initialize the chat page when DOM is loaded
+ */
+document.addEventListener("DOMContentLoaded", async () => {
+    try {
+        await loadFiles();
+        await loadAndInitializeChat();
+        setupEventListeners();
+    } catch (error) {
+        console.error('Error initializing chat page:', error);
+    }
+});
+
+/**
+ * Load active and inactive files from the API
+ */
+async function loadFiles() {
+    try {
+        activeFiles = await fileAPI.getActiveFiles();
+        inactiveFiles = await fileAPI.getInactiveFiles();
+        updateDocumentList();
+    } catch (error) {
+        console.error('Error loading files:', error);
+    }
+}
+
+function updateDocumentList() {
+    const documentList = document.getElementById("documentList");
+    documentList.innerHTML = "";
+
+    [...activeFiles, ...inactiveFiles].forEach(file => {
+        const fileDiv = createDocumentElement(file, activeFiles.includes(file));
+        documentList.appendChild(fileDiv);
     });
+}
 
+function createDocumentElement(file, isActive) {
+    const fileDiv = document.createElement("div");
+    fileDiv.classList.add("document-item");
+    if (selectedDocuments.has(file.id)) {
+        fileDiv.classList.add("selected");
+    }
+
+    const statusDot = document.createElement("span");
+    statusDot.classList.add("status-dot");
+    if (isActive) statusDot.classList.add("active");
+
+    const fileName = document.createElement("span");
+    fileName.textContent = file.name;
+
+    fileDiv.appendChild(statusDot);
+    fileDiv.appendChild(fileName);
+
+    fileDiv.addEventListener("click", () => toggleDocumentSelection(file.id));
+
+    return fileDiv;
+}
+
+function toggleDocumentSelection(fileId) {
+    if (selectedDocuments.has(fileId)) {
+        selectedDocuments.delete(fileId);
+    } else {
+        selectedDocuments.add(fileId);
+    }
+    updateDocumentList();
+}
+
+async function handleActivateDocuments() {
+    try {
+        for (const fileId of selectedDocuments) {
+            await fileAPI.moveToActive(fileId);
+        }
+        selectedDocuments.clear();
+        await loadFiles(); // Refresh the list
+    } catch (error) {
+        console.error('Error activating documents:', error);
+        alert('Failed to activate selected documents');
+    }
+}
+
+/**
+ * Set up all event listeners for the chat interface
+ */
+function setupEventListeners() {
+    // Navigation event listener
     document.getElementById("backBtn").addEventListener("click", () => {
         window.location.href = "index.html";
     });
 
-    document.getElementById("activateBtn").addEventListener("click", activateSelectedDocuments);
-});
-
-// Sample document list (to be replaced with database fetching)
-let documents = [
-    { id: 1, name: "Introduction to AI", active: false, selected: false },
-    { id: 2, name: "Neural Networks Explained", active: false, selected: false },
-    { id: 3, name: "Data Science Handbook", active: false, selected: false },
-    { id: 4, name: "Large Language Models", active: false, selected: false },
-    { id: 5, name: "Natural Language Processing", active: false, selected: false },
-    { id: 6, name: "Deep Learning for Dummies", active: false, selected: false },
-    { id: 7, name: "Vector Embeddings 101", active: false, selected: false },
-    { id: 8, name: "The Mathematics of ML", active: false, selected: false },
-    { id: 9, name: "AI Ethics and Fairness", active: false, selected: false },
-    { id: 10, name: "Deploying AI in Production", active: false, selected: false }
-];
-
-function loadDocuments() {
-    const documentList = document.getElementById("documentList");
-    documentList.innerHTML = "";
-
-    documents.forEach(doc => {
-        const docItem = document.createElement("div");
-        docItem.classList.add("document-item");
-        docItem.dataset.id = doc.id;
-
-        // Highlight selected documents
-        if (doc.selected) {
-            docItem.classList.add("selected");
-        }
-
-        // Document active status indicator
-        const statusIndicator = document.createElement("span");
-        statusIndicator.classList.add("document-status");
-        statusIndicator.textContent = doc.active ? "🟢" : "⚪";
-
-        // Document name
-        const docName = document.createElement("span");
-        docName.textContent = doc.name;
-
-        // Click selection for activation
-        docItem.addEventListener("click", () => toggleDocumentSelection(doc.id));
-        
-        docItem.appendChild(docName);
-        docItem.appendChild(statusIndicator);
-        documentList.appendChild(docItem);
-    });
-}
-
-function toggleDocumentSelection(docId) {
-    let doc = documents.find(d => d.id === docId);
-    if (doc) {
-        doc.selected = !doc.selected;
-        loadDocuments();
-    }
-}
-
-function activateSelectedDocuments() {
-    // Set all documents inactive first
-    documents.forEach(doc => doc.active = false);
-
-    // Activate only selected ones
-    documents.forEach(doc => {
-        if (doc.selected) {
-            doc.active = true;
-            doc.selected = false; // Reset selection after activation
-        }
-    });
-
-    loadDocuments(); // Refresh UI
-}
-
-/* ==========================
-   CHAT FUNCTIONALITY
-============================= */
-
-function loadChat() {
-    const activeId = localStorage.getItem("activeChatSessionId");
-    const sessions = JSON.parse(localStorage.getItem("chatSessions")) || [];
-    const session = sessions.find(s => s.id === activeId);
-
-    if (!session) return;
-
-    document.getElementById("chatTitle").textContent = `Chat with ${session.student}`;
-
-    // Ensure the scenario description is the first message
-    if (!session.chatLog || session.chatLog.length === 0) {
-        session.chatLog = [{ sender: "student", text: session.scenario }];
-        saveSessionsToStorage(sessions);
-    }
-
-    renderChat(session);
-}
-
-async function sendMessage() {
+    // Message input event listeners
     const messageInput = document.getElementById("teacherMessage");
-    const messageText = messageInput.value.trim();
-    if (!messageText) return;
+    const sendBtn = document.getElementById("sendBtn");
 
-    const activeId = localStorage.getItem("activeChatSessionId");
-    let sessions = JSON.parse(localStorage.getItem("chatSessions")) || [];
-    let session = sessions.find(s => s.id === activeId);
-    if (!session) return;
-
-    // Add teacher's message to the chat log
-    session.chatLog.push({ sender: "teacher", text: messageText });
-    saveSessionsToStorage(sessions);
-    renderChat(session);
-    messageInput.value = "";
-
-    // Call the chatbot API endpoint
-    try {
-        const response = await fetch("http://127.0.0.1:8000/chat", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ message: messageText })
-        });
-
-        if (!response.ok) {
-            console.error("Chat API call failed:", response.statusText);
-            return;
+    messageInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            handleSendMessage();
         }
+    });
 
-        const data = await response.json();
-        // Add bot's response to the chat log
-        session.chatLog.push({ sender: "bot", text: data.response });
-        saveSessionsToStorage(sessions);
-        renderChat(session);
-    } catch (error) {
-        console.error("Error communicating with the chatbot:", error);
+    sendBtn.addEventListener("click", handleSendMessage);
+
+    document.getElementById("activateBtn").addEventListener("click", handleActivateDocuments);
+}
+
+/**
+ * Load and initialize the chat session from local storage
+ */
+async function loadAndInitializeChat() {
+    const sessionId = localStorage.getItem("activeChatSessionId");
+    if (!sessionId) {
+        window.location.href = "index.html";
+        return;
+    }
+
+    // Load chat session from local storage
+    const sessions = JSON.parse(localStorage.getItem("chatSessions")) || [];
+    currentChat = sessions.find(s => s.id === sessionId);
+
+    if (!currentChat) {
+        window.location.href = "index.html";
+        return;
+    }
+
+    // Update UI with chat information
+    document.getElementById("chatTitle").textContent = 
+        `Chat with ${currentChat.student} - ${currentChat.scenario}`;
+
+    // Display chat history and handle initial message
+    displayChatHistory();
+    if (currentChat.chatLog.length === 1) {
+        const initialMessage = currentChat.chatLog[0].text;
+        await getAIResponse(initialMessage);
     }
 }
 
-function renderChat(session) {
-    const messagesDiv = document.getElementById("messages");
-    messagesDiv.innerHTML = "";
-
-    session.chatLog.forEach(msg => {
-        const messageDiv = document.createElement("div");
-        messageDiv.classList.add("message");
-        if (msg.sender === "teacher") {
-            messageDiv.classList.add("teacherMessage");
-            messageDiv.textContent = `You: ${msg.text}`;
-        } else if (msg.sender === "student") {
-            messageDiv.classList.add("studentMessage");
-            messageDiv.textContent = `Student: ${msg.text}`;
-        } else {
-            messageDiv.classList.add("botMessage");
-            messageDiv.textContent = `Bot: ${msg.text}`;
-        }
-        messagesDiv.appendChild(messageDiv);
+/**
+ * Display all messages in the chat history
+ */
+function displayChatHistory() {
+    const messages = document.getElementById("messages");
+    messages.innerHTML = "";
+    
+    currentChat.chatLog.forEach(msg => {
+        addMessageToChat(msg.sender, msg.text);
     });
-
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
 }
 
-function saveSessionsToStorage(sessions) {
-    localStorage.setItem("chatSessions", JSON.stringify(sessions));
+/**
+ * Handle sending a new message
+ */
+async function handleSendMessage() {
+    const messageInput = document.getElementById("teacherMessage");
+    const message = messageInput.value.trim();
+    
+    if (!message) return;
+
+    addMessageToChat("user", message);
+    saveMessageToHistory("user", message);
+    messageInput.value = "";
+    
+    await getAIResponse(message);
+}
+
+/**
+ * Get response from AI API
+ * @param {string} message - Message to send to AI
+ */
+async function getAIResponse(message) {
+    try {
+        const response = await chatAPI.sendMessage(message, currentChat.id);
+        addMessageToChat("ai", response.response);
+        saveMessageToHistory("ai", response.response);
+    } catch (error) {
+        console.error("Error getting AI response:", error);
+        addMessageToChat("system", "Failed to get AI response");
+        saveMessageToHistory("system", "Failed to get AI response");
+    }
+}
+
+/**
+ * Add a message to the chat UI
+ * @param {string} sender - Message sender (user/ai/system)
+ * @param {string} text - Message content
+ */
+function addMessageToChat(sender, text) {
+    const messages = document.getElementById("messages");
+    if (!messages) {
+        console.error('Messages element not found');
+        return;
+    }
+    
+    const messageDiv = document.createElement("div");
+    messageDiv.classList.add("message", sender);
+    
+    const textContent = document.createElement("p");
+    textContent.textContent = text;
+    
+    messageDiv.appendChild(textContent);
+    messages.appendChild(messageDiv);
+    messages.scrollTop = messages.scrollHeight;
+}
+
+/**
+ * Save message to local storage
+ * @param {string} sender - Message sender
+ * @param {string} text - Message content
+ */
+function saveMessageToHistory(sender, text) {
+    currentChat.chatLog.push({
+        sender,
+        text,
+        timestamp: new Date().toISOString()
+    });
+
+    // Update local storage with new message
+    const sessions = JSON.parse(localStorage.getItem("chatSessions")) || [];
+    const index = sessions.findIndex(s => s.id === currentChat.id);
+    if (index !== -1) {
+        sessions[index] = currentChat;
+        localStorage.setItem("chatSessions", JSON.stringify(sessions));
+    }
 }

@@ -1,12 +1,117 @@
+:root {
+    --primary-color: #1e88e5;
+    --primary-dark: #1565c0;
+    --secondary-color: #43a047;
+    --background-color: #121212;
+    --container-bg: #1e1e1e;
+    --text-color: #e0e0e0;
+    --card-shadow: rgba(0, 0, 0, 0.8);
+    --card-hover-shadow: rgba(0, 0, 0, 0.9);
+    --hover-color: #333333;
+}
+
+/* Basic reset and dark body styling */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background: var(--background-color);
+    color: var(--text-color);
+}
+
+/* Container for page content */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+/* Section headings */
+h1 {
+    text-align: center;
+    margin-bottom: 1rem;
+    color: var(--text-color);
+}
+
+/* Utility for hidden sections */
+.hidden {
+    display: none;
+}
+
+/* Responsive card grid: auto-fit cards (minimum 250px wide) */
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin: 1rem 0;
+}
+
+/* Card styling */
+.card {
+    background: var(--container-bg);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px var(--card-shadow);
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 8px var(--card-hover-shadow);
+}
+
+/* Card header styling */
+.card-header {
+    padding: 1rem;
+    background: var(--primary-color);
+    color: white;
+    font-size: 1.2rem;
+    text-align: center;
+}
+
+/* Card body styling */
+.card-body {
+    padding: 1rem;
+    color: var(--text-color);
+    text-align: center;
+}
+
+/* Back button styling */
+.back-button {
+    margin: 1rem auto;
+    padding: 0.5rem 1rem;
+    background: none;
+    border: 1px solid var(--primary-color);
+    border-radius: 4px;
+    color: var(--primary-color);
+    font-size: 1rem;
+    cursor: pointer;
+    display: block;
+    transition: background-color 0.2s;
+}
+
+.back-button:hover {
+    background-color: var(--primary-dark);
+    color: var(--text-color);
+}
+
+/* "Create New" card header override */
+.new-item-card .card-header {
+    background: var(--secondary-color);
+}
+
 .scrollable-container {
+    position: relative;
     max-height: 0;
     overflow: hidden;
     transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
     opacity: 0;
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    padding: 0;
+    border: 1px solid #eee;
+    border-radius: 4px;
     background: var(--container-bg);
+    margin-top: 5px;
+    z-index: 1000;
 }
 
 .scrollable-container.open {
@@ -27,49 +132,183 @@
 
 /* Style for each selectable item */
 .list-item {
-    padding: 10px;
-    background: var(--button-bg);
+    padding: 0.5rem;
+    background: var(--button-bg, #fff);
     cursor: pointer;
     border-radius: 5px;
-    transition: background 0.2s;
+    transition: background-color 0.2s;
+    margin: 2px 0;
 }
 
 .list-item:hover {
-    background: var(--button-hover-bg);
+    background-color: var(--hover-color, #f0f0f0);
 }
 
 /* Selected student/scenario styling */
 .selected {
-    background: var(--primary-color);
-    padding: 10px;
-    border-radius: 5px;
+    background: var(--background-color, #fff);
+    color: var(--text-color, #333);
+    padding: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin: 1rem 0;
     text-align: center;
     cursor: pointer;
     transition: background 0.3s;
+    position: relative;
 }
 
 .selected:hover {
-    background: var(--primary-hover);
+    background: var(--hover-color, #f5f5f5);
 }
 
 /* Centered Buttons */
 .centered-button {
     display: block;
-    margin: 10px auto;
-    width: 50%;
+    margin: 1rem auto;
+    padding: 0.5rem 1rem;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.centered-button:hover {
+    background-color: #0056b3;
 }
 
 /* Start Chat Button */
 #startChatBtn {
+    width: 100%;
     display: block;
     margin: 20px auto;
-    padding: 12px 20px;
-    font-size: 18px;
+    padding: 1rem;
+    font-size: 1.2rem;
     background: var(--primary-color);
     border-radius: 8px;
     transition: background 0.3s;
+    margin-bottom: 2rem;
 }
 
 #startChatBtn:hover {
     background: var(--primary-hover);
+}
+
+#startChatBtn:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+/* Container for the entire page */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+/* Section titles */
+h1 {
+    text-align: center;
+    margin-bottom: 2rem;
+    color: var(--text-color, #333);
+}
+
+.selection-list {
+    padding: 0.5rem;
+}
+
+/* Add a container for better positioning */
+.selection-wrapper {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.selection-section {
+    opacity: 1;
+    transition: opacity 0.3s ease-in-out;
+}
+
+/* Hide sections when not needed */
+.hidden {
+    display: none;
+}
+
+/* Card grid setup for responsive layout, aiming for 4 across on large screens */
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin: 2rem 0;
+}
+
+/* Card styling */
+.card {
+    background: var(--container-bg, #fff);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Hover effects for card */
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Card header with a distinctive background */
+.card-header {
+    padding: 1rem;
+    background: var(--primary-color, #007bff);
+    color: white;
+    font-size: 1.2rem;
+    text-align: center;
+}
+
+/* Card body styling */
+.card-body {
+    padding: 1rem;
+    color: var(--text-color, #333);
+    text-align: center;
+}
+
+/* Action button styling */
+.action-button {
+    display: block;
+    margin: 2rem auto;
+    padding: 1rem 2rem;
+    background: var(--primary-color, #007bff);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: background-color 0.2s;
+}
+
+.action-button:hover {
+    background: var(--primary-dark, #0056b3);
+}
+
+/* Back button styling */
+.back-button {
+    display: block;
+    margin: 1rem auto;
+    padding: 0.5rem 1rem;
+    background: none;
+    border: none;
+    color: var(--primary-color, #007bff);
+    cursor: pointer;
+    font-size: 1.1rem;
+}
+
+.back-button:hover {
+    text-decoration: underline;
+}
+
+/* Action button styling for "Create New" cards if needed */
+.new-item-card .card-header {
+    background: var(--secondary-color, #28a745);
 }

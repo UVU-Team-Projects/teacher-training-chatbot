@@ -628,3 +628,23 @@ def move_file_to_active_by_name(name: str) -> bool:
         print(f"Error moving file to active: {e}")
         return False
 
+def get_all_active_files():
+    """Get all active files from the database."""
+    db = next(get_db())  # Use next() to get the actual session
+    try:
+        active_files = db.query(ActiveFile).all()
+        return [{"id": f.id, "name": f.name} for f in active_files]
+    except Exception as e:
+        print(f"Error getting active files: {e}")
+        raise
+
+def get_all_inactive_files():
+    """Get all inactive files from the database."""
+    db = next(get_db())  # Use next() to get the actual session
+    try:
+        inactive_files = db.query(InactiveFile).all()
+        return [{"id": f.id, "name": f.name} for f in inactive_files]
+    except Exception as e:
+        print(f"Error getting inactive files: {e}")
+        raise
+
