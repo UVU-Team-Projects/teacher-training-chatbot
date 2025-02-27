@@ -11,7 +11,7 @@ import streamlit as st
 import json
 from datetime import datetime
 from utils.storage import save_chats, load_chats
-from pages import create_chat, chat
+from .pages import create_chat, chat
 
 # Must be the first Streamlit command
 st.set_page_config(
