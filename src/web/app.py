@@ -1,18 +1,16 @@
-from .pages import create_chat, chat
-from utils.storage import save_chats, load_chats # What is this? -Ethan
-from datetime import datetime
-import json
+from pages import create_chat, chat
 import streamlit as st
+import json
+from datetime import datetime
 import sys
 import os
 from pathlib import Path
 
-# Add the project root directory to the path so we can import modules correctly
+# Add the project root directory to the path
 current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
 sys.path.append(parent_dir)
 
-# Rest of your imports
 
 # Must be the first Streamlit command
 st.set_page_config(
@@ -25,102 +23,18 @@ st.set_page_config(
 # Initialize session state for navigation and chat storage
 if 'page' not in st.session_state:
     st.session_state.page = 'home'
-if 'chats' not in st.session_state:
-    st.session_state.chats = load_chats()
+# if 'chats' not in st.session_state:
+#     st.session_state.chats = load_chats() TODO: Fix this
 
-# Custom CSS for dark mode and styling
-st.markdown("""
-<style>
-    /* Dark theme colors */
-    :root {
-        --primary-color: #1e88e5;
-        --primary-dark: #1565c0;
-        --background-color: #121212;
-        --container-bg: #1e1e1e;
-        --text-color: #e0e0e0;
-    }
-
-    /* Main container styling */
-    .main {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 2rem;
-        text-align: center;
-    }
-
-    /* Center all text elements */
-    .stMarkdown, .stText, div[data-testid="stVerticalBlock"] {
-        text-align: center !important;
-    }
-
-    /* Center title and headers */
-    h1, h2, h3, .centered-title {
-        text-align: center !important;
-        width: 100%;
-        margin-bottom: 2rem;
-        padding-top: 2rem;
-    }
-
-    /* Chat list container */
-    .chat-list {
-        max-width: 800px;
-        margin: 20px auto;
-        padding: 15px;
-        border-radius: 8px;
-        background-color: var(--container-bg);
-    }
-
-    /* Chat item styling */
-    .chat-item {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        padding: 10px;
-        margin: 5px auto;
-        border-radius: 4px;
-        background-color: var(--chat-item-bg);
-        max-width: 700px;
-    }
-
-    /* Button styling */
-    .stButton {
-        display: flex;
-        justify-content: center;
-    }
-
-    .stButton > button {
-        max-width: 300px;
-        margin: 0 auto;
-        background-color: var(--primary-color);
-        color: white;
-        border: none;
-        padding: 0.75rem;
-        border-radius: 4px;
-        transition: background-color 0.2s;
-    }
-
-    /* Column alignment */
-    [data-testid="column"] {
-        text-align: center;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-
-    /* Write element alignment */
-    .element-container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-</style>
-""", unsafe_allow_html=True)
+# Load CSS from file
+with open(os.path.join(current_dir, "assets", "styles.css")) as f:
+    st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 
 def display_home_page():
     st.title("Teacher Training Chatbot")
 
-# Create new chat button at the top with center alignment
+    # Create new chat button at the top with center alignment
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         if st.button("Create New Chat", use_container_width=True):
@@ -147,41 +61,6 @@ def display_home_page():
 
 
 def main():
-    # Initialize session state
-    if 'page' not in st.session_state:
-        st.session_state.page = 'home'
-    if 'chats' not in st.session_state:
-        st.session_state.chats = []
-
-    # Add CSS
-    st.markdown("""
-    <style>
-        .chat-list {
-            margin: 20px 0;
-            padding: 15px;
-            border-radius: 8px;
-            background-color: var(--container-bg);
-        }
-        .chat-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px;
-            margin: 5px 0;
-            border-radius: 4px;
-            background-color: var(--chat-item-bg);
-        }
-        .chat-item:hover {
-            background-color: var(--chat-item-hover-bg);
-        }
-        .main-button {
-            width: 100%;
-            margin: 10px 0;
-            padding: 15px;
-        }
-    </style>
-    """, unsafe_allow_html=True)
-
     # Page routing
     if st.session_state.page == 'home':
         display_home_page()
