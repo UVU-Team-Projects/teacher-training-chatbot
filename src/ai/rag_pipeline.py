@@ -1,7 +1,7 @@
 # Project files
-from student_profiles import create_student_profile, Interest, STUDENT_TEMPLATES, StudentProfile
-from embedding import EmbeddingGenerator
-from profile_builder import StudentProfileBuilder
+from .student_profiles import create_student_profile, Interest, STUDENT_TEMPLATES, StudentProfile
+from .embedding import EmbeddingGenerator
+from .profile_builder import StudentProfileBuilder
 
 # External imports
 from dotenv import load_dotenv
@@ -284,7 +284,8 @@ def main() -> None:
         )
 
         print(Fore.LIGHTBLUE_EX, end=" ")
-        typing_effect(response["messages"][-1].content)
+        # typing_effect(response["messages"][-1].content)
+        print(response["messages"][-1].content)
         print(Style.RESET_ALL)
 
 
