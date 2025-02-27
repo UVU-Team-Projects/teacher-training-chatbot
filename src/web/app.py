@@ -1,17 +1,18 @@
+from .pages import create_chat, chat
+from utils.storage import save_chats, load_chats # What is this? -Ethan
+from datetime import datetime
+import json
+import streamlit as st
 import sys
 import os
 from pathlib import Path
 
-# Add project root to Python path
-project_root = Path(__file__).parent.parent.parent
-sys.path.append(str(project_root))
+# Add the project root directory to the path so we can import modules correctly
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+sys.path.append(parent_dir)
 
 # Rest of your imports
-import streamlit as st
-import json
-from datetime import datetime
-from utils.storage import save_chats, load_chats
-from .pages import create_chat, chat
 
 # Must be the first Streamlit command
 st.set_page_config(
@@ -115,16 +116,17 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+
 def display_home_page():
     st.title("Teacher Training Chatbot")
-    
+
 # Create new chat button at the top with center alignment
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         if st.button("Create New Chat", use_container_width=True):
             st.session_state.page = 'create_chat'
             st.rerun()
-    
+
     # Display saved chats if any exist
     if st.session_state.chats:
         st.subheader("Saved Chats")
@@ -135,12 +137,14 @@ def display_home_page():
             with col2:
                 st.write(f"Scenario: {chat_session['scenario']}")
             with col3:
-                st.write(f"Created: {datetime.fromisoformat(chat_session['created_at']).strftime('%Y-%m-%d')}")
+                st.write(
+                    f"Created: {datetime.fromisoformat(chat_session['created_at']).strftime('%Y-%m-%d')}")
             with col4:
                 if st.button("Continue", key=f"continue_{chat_session['id']}", use_container_width=True):
                     st.session_state.current_chat = chat_session
                     st.session_state.page = 'chat'
                     st.rerun()
+
 
 def main():
     # Initialize session state
@@ -185,6 +189,7 @@ def main():
         create_chat.create_chat_page()
     elif st.session_state.page == 'chat':
         chat.chat_page()
+
 
 if __name__ == "__main__":
     main()
