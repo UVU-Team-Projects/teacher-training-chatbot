@@ -92,7 +92,7 @@ class RAG:
             Answer the teacher's question concisely based on the above context: {question}
         """
 
-    def should_continue(self, state: MessageStateWithContext) -> Literal["tools", END]:
+    def should_continue(self, state: MessageStateWithContext) -> Literal["tools", "end"]:
         """Determine whether to continue processing or return response."""
         if state['messages'][-1].tool_calls:
             return "tools"
