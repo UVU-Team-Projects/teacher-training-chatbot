@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, ARRAY, Text, MetaData, inspect, ForeignKey, LargeBinary
+from sqlalchemy import create_engine, Column, Integer, String, ARRAY, Text, MetaData, inspect, ForeignKey, LargeBinary, text, JSON
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 from sqlalchemy import UniqueConstraint
 from sqlalchemy.exc import OperationalError
@@ -10,19 +10,65 @@ engine = create_engine(DATABASE_URL)
 metadata = MetaData()
 Base = declarative_base(metadata=metadata)
 
+
+        # initial_state = {
+        #     "messages": [HumanMessage(content=query)],
+        #     "context": "",
+        #     "student_profile": {
+        #         "name": student.name,
+        #         "grade_level": student.grade_level,
+        #         "personality_traits": student.personality_traits,
+        #         "typical_moods": student.typical_moods,
+        #         "behavioral_patterns": student.behavioral_patterns,
+        #         "learning_style": student.learning_style,
+        #         "interests": student.interests,
+        #         "academic_strengths": student.academic_strengths,
+        #         "academic_challenges": student.academic_challenges,
+        #         "support_strategies": student.support_strategies,
+        #         "social_dynamics": student.social_dynamics
+        #     }
+        # }
+
+#         {{
+#     "name": "Sarah",
+#     "grade_level": 2,
+#     "personality_traits": ["bright", "anxious", "hesitant"],
+#     "learning_style": "visual",
+#     "interests": ["science", "nature", "math"],
+#     "typical_moods": ["focused", "tired", "distracted"],
+#     "behavioral_patterns": {{
+#         "morning": "focused and attentive",
+#         "afternoon": "becomes tired and distracted",
+#         "during_group_work": "works well in small groups",
+#         "during_independent_work": "can maintain focus but may need support",
+#         "transitions": "handles smoothly with structure"
+#     }},
+#     "academic_strengths": ["math", "science experiments"],
+#     "academic_challenges": ["writing long passages", "speaking in large groups"],
+#     "social_dynamics": {{
+#         "peer_interactions": "comfortable in small groups",
+#         "group_work": "participates well in small settings",
+#         "teacher_interaction": "may need encouragement to speak up"
+#     }},
+#     "support_strategies": ["visual aids", "positive reinforcement", "small group settings"]
+# }}
+
 class StudentProfile(Base):
     __tablename__ = "student_profiles"
     __table_args__ = (UniqueConstraint('name'),)
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, index=True)
-    traits = Column(ARRAY(String))
-    strengths = Column(ARRAY(String), nullable=True)
-    weaknesses = Column(ARRAY(String), nullable=True)
-    motivations = Column(ARRAY(String), nullable=True)
-    fears = Column(ARRAY(String), nullable=True)
-    communication_style = Column(Text, nullable=True)
-    engagement_level = Column(Integer, nullable=True)
+    grade_level = Column(Integer)
+    personality_traits = Column(ARRAY(String), nullable=True)
+    typical_moods = Column(ARRAY(String), nullable=True)
+    behavioral_patterns = Column(JSON, nullable=True)
+    learning_style = Column(String, nullable=True)
+    interests = Column(ARRAY(String), nullable=True)
+    academic_strengths = Column(ARRAY(String), nullable=True)
+    academic_challenges = Column(ARRAY(String), nullable=True)
+    support_strategies = Column(ARRAY(String), nullable=True)
+    social_dynamics = Column(JSON, nullable=True)
 
 class Scenario(Base):
     __tablename__ = "scenarios"
@@ -61,7 +107,6 @@ class InactiveFile(Base):
     name = Column(String, nullable=False)
     file_content = Column(LargeBinary, nullable=False)  # Store the file content as binary data
 
-
 # Check if the table exists and if its schema matches the model
 inspector = inspect(engine)
 for table_name in ["student_profiles", "scenarios", "dialogues", "active_files", "inactive_files"]:
@@ -69,16 +114,26 @@ for table_name in ["student_profiles", "scenarios", "dialogues", "active_files",
     if table_exists:
         table_columns = [c["name"] for c in inspector.get_columns(table_name)]
         model_columns = [c.name for c in Base.metadata.tables[table_name].columns]
-        if table_columns!= model_columns:
-            # Drop the table if the schema doesn't match
+
+        # Sort the lists before comparing
+        table_columns.sort()
+        model_columns.sort()
+
+        if table_columns != model_columns:
+            # Drop the table using a raw SQL statement
             try:
-                Base.metadata.tables[table_name].drop(engine)
+                with engine.connect() as conn:
+                    conn.execute(text(f"DROP TABLE {table_name} CASCADE;"))
                 print(f"{table_name} table dropped due to schema changes.")
+
+                # Recreate the table with the new schema
+                metadata.create_all(bind=engine, tables=[Base.metadata.tables[table_name]])
+                print(f"{table_name} table created.")
             except OperationalError:
-                print(f"Error dropping {table_name} table.")
+                print(f"Error dropping or creating {table_name} table.")
     else:
         # Create the table if it doesn't exist
-        metadata.create_all(bind=engine)
+        metadata.create_all(bind=engine, tables=[Base.metadata.tables[table_name]])
         print(f"{table_name} table created.")
 
 # Create a Session
@@ -90,3 +145,5 @@ def get_db():
         yield db
     finally:
         db.close()
+
+

@@ -3,6 +3,19 @@ from sqlalchemy.exc import IntegrityError
 from typing import List, Union
 import os
 
+    # id = Column(Integer, primary_key=True, index=True)
+    # name = Column(String, index=True)
+    # grade_level = Column(Integer)
+    # personality_traits = Column(ARRAY(String), nullable=True)
+    # typical_moods = Column(ARRAY(String), nullable=True)
+    # behavioral_patterns = Column(String, nullable=True)
+    # learning_style = Column(String, nullable=True)
+    # interests = Column(ARRAY(String), nullable=True)
+    # academic_strengths = Column(ARRAY(String), nullable=True)
+    # academic_challenges = Column(ARRAY(String), nullable=True)
+    # support_strategies = Column(ARRAY(String), nullable=True)
+    # social_dynamics = Column(String, nullable=True)
+
 def print_table_contents(table_name: str):
     """
     Prints the contents of the specified table.
@@ -18,13 +31,16 @@ def print_table_contents(table_name: str):
         for student in students:
             print(f"  ID: {student.id}")
             print(f"  Name: {student.name}")
-            print(f"  Traits: {', '.join(student.traits)}")
-            print(f"  Strengths: {', '.join(student.strengths) if student.strengths else 'None'}")
-            print(f"  Weaknesses: {', '.join(student.weaknesses) if student.weaknesses else 'None'}")
-            print(f"  Motivations: {', '.join(student.motivations) if student.motivations else 'None'}")
-            print(f"  Fears: {', '.join(student.fears) if student.fears else 'None'}")
-            print(f"  Communication Style: {student.communication_style}")
-            print(f"  Engagement Level: {student.engagement_level}")
+            print(f"  Grade Level: {student.grade_level}")
+            print(f"  Personality Traits: {', '.join(student.personality_traits) if student.personality_traits else 'None'}")
+            print(f"  Typical Moods: {', '.join(student.typical_moods) if student.typical_moods else 'None'}")
+            print(f"  Behavioral Patterns: {student.behavioral_patterns}")
+            print(f"  Learning Style: {student.learning_style}")
+            print(f"  Interests: {', '.join(student.interests) if student.interests else 'None'}")
+            print(f"  Academic Strengths: {', '.join(student.academic_strengths) if student.academic_strengths else 'None'}")
+            print(f"  Academic Challenges: {', '.join(student.academic_challenges) if student.academic_challenges else 'None'}")
+            print(f"  Support Strategies: {', '.join(student.support_strategies) if student.support_strategies else 'None'}")
+            print(f"  Social Dynamics: {student.social_dynamics}")
             print("-" * 20)  # Separator between students
     elif table_name == "scenarios":
         scenarios = db.query(Scenario).all()
@@ -98,18 +114,34 @@ def get_all_students() -> List[StudentProfile]:
     students = db.query(StudentProfile).all()
     return students
 
-def create_student(name: str, traits: list, strengths: list = None, weaknesses: list = None, motivations: list = None, fears: list = None, communication_style: str = None) -> StudentProfile:
+def create_student(
+    name: str, 
+    grade_level: int, 
+    personality_traits: list = None, 
+    typical_moods: list = None, 
+    behavioral_patterns: dict = None, 
+    learning_style: str = None, 
+    interests: list = None, 
+    academic_strengths: list = None, 
+    academic_challenges: list = None, 
+    support_strategies: list = None, 
+    social_dynamics: dict = None
+) -> StudentProfile:
     """
     Creates a new student profile in the database.
 
     Args:
         name (str): The name of the student.
-        traits (list): A list of personality traits for the student.
-        strengths (list, optional): A list of strengths for the student. Defaults to None.
-        weaknesses (list, optional): A list of weaknesses for the student. Defaults to None.
-        motivations (list, optional): A list of motivations for the student. Defaults to None.
-        fears (list, optional): A list of fears for the student. Defaults to None.
-        communication_style (str, optional): A description of the student's communication style. Defaults to None.
+        grade_level (int): The grade level of the student.
+        personality_traits (list, optional): A list of personality traits. Defaults to None.
+        typical_moods (list, optional): A list of typical moods. Defaults to None.
+        behavioral_patterns (dict, optional): A dictionary of behavioral patterns. Defaults to None.
+        learning_style (str, optional): The student's learning style. Defaults to None.
+        interests (list, optional): A list of interests. Defaults to None.
+        academic_strengths (list, optional): A list of academic strengths. Defaults to None.
+        academic_challenges (list, optional): A list of academic challenges. Defaults to None.
+        support_strategies (list, optional): A list of support strategies. Defaults to None.
+        social_dynamics (dict, optional): A dictionary of social dynamics. Defaults to None.
 
     Returns:
         StudentProfile: The created StudentProfile object, or None if creation failed.
@@ -118,20 +150,24 @@ def create_student(name: str, traits: list, strengths: list = None, weaknesses: 
     try:
         student = StudentProfile(
             name=name,
-            traits=traits,
-            strengths=strengths,
-            weaknesses=weaknesses,
-            motivations=motivations,
-            fears=fears,
-            communication_style=communication_style
+            grade_level=grade_level,
+            personality_traits=personality_traits,
+            typical_moods=typical_moods,
+            behavioral_patterns=behavioral_patterns,
+            learning_style=learning_style,
+            interests=interests,
+            academic_strengths=academic_strengths,
+            academic_challenges=academic_challenges,
+            support_strategies=support_strategies,
+            social_dynamics=social_dynamics
         )
         db.add(student)
         db.commit()
-        db.refresh(student)  # Refresh to get the generated ID
+        db.refresh(student)
         return student
     except IntegrityError:
         db.rollback()
-        return None  # Or raise an exception, depending on your error handling strategy
+        return None
 
 def update_student(student_id: int, **kwargs) -> StudentProfile:
     """
@@ -153,7 +189,7 @@ def update_student(student_id: int, **kwargs) -> StudentProfile:
         return student
     return None
 
-def delete_student(student_id: int) -> bool:
+def delete_student_by_id(student_id: int) -> bool:
     """
     Deletes a student profile from the database.
 
@@ -165,6 +201,24 @@ def delete_student(student_id: int) -> bool:
     """
     db = next(get_db())
     student = db.query(StudentProfile).filter(StudentProfile.id == student_id).first()
+    if student:
+        db.delete(student)
+        db.commit()
+        return True
+    return False
+
+def delete_student_by_name(student_name: str) -> bool:
+    """
+    Deletes a student profile from the database.
+
+    Args:
+        student_name (str): The name of the student to delete.
+
+    Returns:
+        bool: True if the deletion was successful, False otherwise.
+    """
+    db = next(get_db())
+    student = db.query(StudentProfile).filter(StudentProfile.name == student_name).first()
     if student:
         db.delete(student)
         db.commit()
