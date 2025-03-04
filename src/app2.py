@@ -1,20 +1,27 @@
-from ai.student_profiles import create_student_profile, Interest, STUDENT_TEMPLATES, StudentProfile
-from ai.profile_builder import StudentProfileBuilder
-from ai.rag_pipeline import RAG, create_pipeline, chat_with_student
-from ai.llama_rag import LlamaRAG
-from ai.embedding import EmbeddingGenerator
-import streamlit as st
 import os
 import sys
 import time
 from typing import List, Dict, Any, Optional
+import streamlit as st
 
 # Add the project root directory to the path so we can import modules correctly
 current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
 sys.path.append(parent_dir)
 
-# Import RAG implementations
+# Import project modules
+try:
+    from ai.student_profiles import create_student_profile, Interest, STUDENT_TEMPLATES, StudentProfile
+    from ai.profile_builder import StudentProfileBuilder
+    from ai.rag_pipeline import RAG, create_pipeline, chat_with_student
+    from ai.simple_rag import SimpleRAG
+    from ai.embedding import EmbeddingGenerator
+except ImportError:
+    from src.ai.student_profiles import create_student_profile, Interest, STUDENT_TEMPLATES, StudentProfile
+    from src.ai.profile_builder import StudentProfileBuilder
+    from src.ai.rag_pipeline import RAG, create_pipeline, chat_with_student
+    from src.ai.simple_rag import SimpleRAG
+    from src.ai.embedding import EmbeddingGenerator
 
 # Load custom CSS
 
@@ -59,7 +66,7 @@ model_type = st.sidebar.selectbox(
 # Model parameters
 model_name = st.sidebar.selectbox(
     "Select Model",
-    ["llama3.2:3b", "deepseek-r1:14b"],
+    ["gpt-4o-mini"],
     index=0
 )
 
@@ -140,12 +147,14 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 
 # Initialize the RAG system
+
+
 @st.cache_resource
 def initialize_rag_system(model_type: str, model_name: str):
     """Initialize the appropriate RAG system based on user selection"""
     with st.spinner("Initializing RAG system... This may take a moment."):
         if model_type == "Simple RAG":
-            return LlamaRAG(model_name=model_name)
+            return SimpleRAG(model_name=model_name)
         else:  # Student Profile RAG
             agent = create_pipeline()
             return agent

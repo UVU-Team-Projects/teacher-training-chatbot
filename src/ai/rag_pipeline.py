@@ -46,7 +46,7 @@ class RAG:
     Combines document retrieval with LLM generation for enhanced responses.
     """
 
-    def __init__(self, tools: list[BaseTool] = None, embedding_generator: EmbeddingGenerator = None):
+    def __init__(self, tools: list[BaseTool] = [], embedding_generator: EmbeddingGenerator = None):
         """
         Initialize the RAG pipeline.
 
@@ -167,6 +167,7 @@ class RAG:
 
         # Configure graph flow
         workflow.set_entry_point("retrieve")
+        # workflow.set_entry_point("generate")
         workflow.add_edge('retrieve', 'generate')
         # workflow.add_conditional_edges("generate", self.should_continue)
         # workflow.add_edge("tools", 'generate')

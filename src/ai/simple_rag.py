@@ -1,8 +1,11 @@
 # Project files
-from .embedding import EmbeddingGenerator
+try:
+    from .embedding import EmbeddingGenerator
+except ImportError:
+    from embedding import EmbeddingGenerator
 
 # External imports
-from langchain_ollama import ChatOllama
+from langchain_openai import ChatOpenAI
 from colorama import Fore, Style
 import pprint
 from dotenv import load_dotenv
@@ -12,27 +15,28 @@ import os
 load_dotenv()
 
 
-class LlamaRAG:
-    def __init__(self, model_name="llama3.2:3b"):
+class SimpleRAG:
+    def __init__(self, model_name: str = "gpt-4o-mini"):
         """
-        Initialize the RAG system with Meta's llama models.
+        Initialize the RAG system with OpenAI models.
 
         Args:
-            model_name (str): llama model name
+            model_name (str): OpenAI model name (default: gpt-4o-mini)
         """
+        # Check for OpenAI API key
+        if not os.getenv("OPENAI_API_KEY"):
+            raise ValueError("OPENAI_API_KEY environment variable is not set")
 
         # Initialize language model
         self.model = model_name
-        # self.client = InferenceClient(
-        #     api_key=os.getenv("HUGGINGFACE_API_KEY"),)
-
-        # Initialize Ollama client for local inference
-        # or whichever model you have pulled in Ollama
-        self.llm = ChatOllama(model=model_name)
+        self.llm = ChatOpenAI(
+            model_name=model_name,
+            temperature=0.7,
+            max_tokens=2000
+        )
 
         # Initialize embeddings model with correct device
         self.embeddings_generator = EmbeddingGenerator()
-
         self.chroma_db = self.embeddings_generator.return_chroma()
 
     def generate_response(self, query: str, k: int = 5):
@@ -63,7 +67,7 @@ class LlamaRAG:
 
 def main():
     # Initialize RAG system
-    rag = LlamaRAG(model_name='deepseek-r1:14b')
+    rag = SimpleRAG(model_name='gpt-4o-mini')
 
     while True:
         # Example query
@@ -77,7 +81,6 @@ def main():
         print("\nResponse:")
 
         response = rag.generate_response(query)
-
         print(response.content)
         print(Style.RESET_ALL)
 

@@ -1,4 +1,5 @@
 from pages import create_chat, chat
+from utils.storage import load_chats
 import streamlit as st
 import json
 from datetime import datetime
@@ -23,8 +24,8 @@ st.set_page_config(
 # Initialize session state for navigation and chat storage
 if 'page' not in st.session_state:
     st.session_state.page = 'home'
-# if 'chats' not in st.session_state:
-#     st.session_state.chats = load_chats() TODO: Fix this
+if 'chats' not in st.session_state:
+    st.session_state.chats = load_chats()
 
 # Load CSS from file
 with open(os.path.join(current_dir, "assets", "styles.css")) as f:
