@@ -1,6 +1,6 @@
 """Test configuration and fixtures."""
 import pytest
-from src.web.app import app as flask_app
+from src.web.app2 import app as flask_app
 from src.database import Base, engine, Session
 
 @pytest.fixture
