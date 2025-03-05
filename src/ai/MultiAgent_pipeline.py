@@ -3,12 +3,12 @@ try:
     from student_profiles import create_student_profile, Interest, STUDENT_TEMPLATES, StudentProfile
     from embedding import EmbeddingGenerator
     from profile_builder import StudentProfileBuilder
-    from scenario_generator import ScenarioGenerator, generate_random_scenario
+    from scenario_generator import ScenarioGenerator, generate_random_scenario, StudentBackground, ClassroomContext
 except ImportError:
     from .student_profiles import create_student_profile, Interest, STUDENT_TEMPLATES, StudentProfile
     from .embedding import EmbeddingGenerator
     from .profile_builder import StudentProfileBuilder
-    from .scenario_generator import ScenarioGenerator, generate_random_scenario
+    from .scenario_generator import ScenarioGenerator, generate_random_scenario, StudentBackground, ClassroomContext
 
 # External imports
 from dotenv import load_dotenv
@@ -968,3 +968,126 @@ def main_multi_agent() -> None:
 if __name__ == "__main__":
     # main()  # Run the original RAG pipeline
     main_multi_agent()  # Run the multi-agent system
+
+# Functions to help Streamlit integration
+
+
+def create_profile_for_streamlit(
+    profile_type: str,
+    **kwargs
+) -> StudentProfileType:
+    """
+    Create a student profile for use in Streamlit.
+
+    Args:
+        profile_type: One of "template", "custom", or "from_description"
+        **kwargs: Parameters specific to the profile type
+
+    Returns:
+        StudentProfileType dictionary ready for Streamlit state
+    """
+    student_profile = None
+
+    if profile_type == "template":
+        # Create from template
+        student_profile = create_student_profile(
+            template_name=kwargs.get("template_name", "active_learner"),
+            name=kwargs.get("name", "Student"),
+            grade_level=kwargs.get("grade_level", 5),
+            interests=kwargs.get("interests", []),
+            academic_strengths=kwargs.get("academic_strengths", []),
+            academic_challenges=kwargs.get("academic_challenges", []),
+            support_strategies=kwargs.get("support_strategies", [])
+        )
+
+    elif profile_type == "custom":
+        # Create custom profile
+        template = STUDENT_TEMPLATES.get(
+            kwargs.get("template_base", "active_learner"))
+        student_profile = StudentProfile(
+            name=kwargs.get("name", "Student"),
+            grade_level=kwargs.get("grade_level", 5),
+            personality_traits=kwargs.get("personality_traits", []),
+            learning_style=kwargs.get("learning_style", "visual"),
+            interests=kwargs.get("interests", []),
+            typical_moods=kwargs.get("typical_moods", []),
+            behavioral_patterns=kwargs.get(
+                "behavioral_patterns", template["behavioral_patterns"]) if template else {},
+            academic_strengths=kwargs.get("academic_strengths", []),
+            academic_challenges=kwargs.get("academic_challenges", []),
+            social_dynamics=kwargs.get(
+                "social_dynamics", template["social_dynamics"]) if template else {},
+            support_strategies=kwargs.get("support_strategies", [])
+        )
+
+    elif profile_type == "from_description":
+        # Use profile builder
+        description = kwargs.get("description", "")
+        if description:
+            builder = StudentProfileBuilder()
+            student_profile = builder.build_profile_from_text(description)
+
+    # Convert to dictionary format
+    if student_profile:
+        return student_profile_to_dict(student_profile)
+    return None
+
+
+def create_scenario_for_streamlit(
+    scenario_type: str,
+    **kwargs
+) -> ScenarioType:
+    """
+    Create a scenario for use in Streamlit.
+
+    Args:
+        scenario_type: Either "random" or "custom"
+        **kwargs: Parameters specific to the scenario type
+
+    Returns:
+        ScenarioType dictionary ready for Streamlit state
+    """
+    scenario = None
+
+    if scenario_type == "random":
+        # Generate a random scenario
+        scenario = generate_random_scenario()
+
+    elif scenario_type == "custom":
+        # Create a custom scenario
+        student_background = StudentBackground(
+            age=kwargs.get("age", 8),
+            grade=kwargs.get("grade", 3),
+            learning_style=kwargs.get("learning_style", "visual"),
+        )
+
+        classroom_context = ClassroomContext(
+            class_size=kwargs.get("class_size", 20),
+            time_of_day=kwargs.get("time_of_day", "Morning"),
+            class_duration=kwargs.get("class_duration", 45),
+            previous_activities=kwargs.get(
+                "previous_activities", ["reading", "math"]),
+            classroom_setup=kwargs.get("classroom_setup", "traditional desks"),
+            available_resources=kwargs.get("available_resources", [
+                                           "whiteboard", "computers"])
+        )
+
+        # Initialize scenario generator
+        grade_level = kwargs.get("grade_level")
+        subject = kwargs.get("subject")
+        challenge_type = kwargs.get("challenge_type")
+
+        if grade_level and subject and challenge_type:
+            scenario_gen = ScenarioGenerator()
+            scenario = scenario_gen.generate_scenario(
+                grade_level=grade_level,
+                subject=subject,
+                challenge_type=challenge_type,
+                student_background=student_background,
+                classroom_context=classroom_context
+            )
+
+    # Convert to dictionary format
+    if scenario:
+        return scenario_to_dict(scenario)
+    return None

@@ -8,7 +8,14 @@ from ai.embedding import EmbeddingGenerator
 from ai.student_profiles import StudentProfile, STUDENT_TEMPLATES, create_student_profile, Interest, Mood
 from ai.profile_builder import StudentProfileBuilder
 from ai.scenario_generator import GradeLevel, SubjectMatter, ChallengeType, StudentBackground, ClassroomContext, Scenario, ScenarioGenerator, generate_random_scenario
-from ai.MultiAgent_pipeline import create_multi_agent_pipeline, create_multi_agent_state, student_profile_to_dict, scenario_to_dict
+from ai.MultiAgent_pipeline import (
+    create_multi_agent_pipeline,
+    create_multi_agent_state,
+    student_profile_to_dict,
+    scenario_to_dict,
+    create_profile_for_streamlit,
+    create_scenario_for_streamlit
+)
 
 # Add the project root directory to the path so we can import modules correctly
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -80,7 +87,9 @@ if profile_creation_method == "Select Predefined":
 
     # Create a profile from the template with minimal custom fields
     if st.sidebar.button("Use This Profile"):
-        student_profile = create_student_profile(
+        # Use the new helper function from MultiAgent_pipeline.py
+        student_profile = create_profile_for_streamlit(
+            profile_type="template",
             template_name=selected_template,
             name=student_name,
             grade_level=grade_level,
@@ -142,19 +151,18 @@ elif profile_creation_method == "Create Simple Profile":
 
     # Create custom profile
     if st.sidebar.button("Create Profile"):
-        # Use the active_learner template as base but override with custom values
-        template = STUDENT_TEMPLATES["active_learner"]
-        student_profile = StudentProfile(
+        # Use the new helper function from MultiAgent_pipeline.py
+        student_profile = create_profile_for_streamlit(
+            profile_type="custom",
+            template_base="active_learner",
             name=student_name,
             grade_level=grade_level,
             personality_traits=personality_traits,
             learning_style=learning_style,
             interests=interests,
             typical_moods=[Mood.HAPPY, Mood.EXCITED],  # Default moods
-            behavioral_patterns=template["behavioral_patterns"],
             academic_strengths=academic_strengths,
             academic_challenges=academic_challenges,
-            social_dynamics=template["social_dynamics"],
             support_strategies=support_strategies
         )
         st.sidebar.success(f"Custom profile for {student_name} created!")
@@ -242,18 +250,20 @@ else:  # Create Custom
         # Initialize scenario generator
         scenario_gen = ScenarioGenerator()
 
-        # Generate scenario with custom parameters
-        scenario = scenario_gen.generate_scenario(
-            grade_level=GradeLevel(grade_level),
-            subject=SubjectMatter(subject),
-            challenge_type=ChallengeType(challenge_type),
-            student_background=student_background,
-            classroom_context=classroom_context
-        )
-
-        st.sidebar.success(f"Created scenario: {scenario.title}")
-        st.sidebar.markdown(
-            f"**Description:** {scenario.description[:100]}...")
+        # Generate scenario with chosen parameters
+        if st.sidebar.button("Generate Scenario"):
+            with st.sidebar:
+                # Use the new helper function from MultiAgent_pipeline.py
+                scenario = create_scenario_for_streamlit(
+                    scenario_type="custom",
+                    grade=grade_level,
+                    subject=subject,
+                    challenge_type=challenge_type,
+                    student_background=student_background,
+                    classroom_context=classroom_context
+                )
+                st.session_state.scenario = scenario
+                st.success("Scenario created successfully!")
 
 # Initialize session state for chat history
 if "messages" not in st.session_state:
@@ -279,9 +289,6 @@ if "scenario" not in st.session_state:
 # Update session state with current selections
 if student_profile:
     st.session_state.student_profile = student_profile
-
-if 'scenario' in locals() and scenario:
-    st.session_state.scenario = scenario
 
 # Display chat history
 for message in st.session_state.messages:
@@ -321,29 +328,22 @@ if prompt := st.chat_input("Your message"):
                 st.warning(
                     "No scenario selected. The student responses won't be scenario-specific. Please select or generate a scenario for a better experience.")
 
-                # Add a button to generate a scenario on demand
+                # Add a button to generate a scenario now
                 if st.button("Generate a scenario now"):
-                    # Create a state with the generate_scenario flag set
-                    temp_state = create_multi_agent_state(
-                        messages=[HumanMessage(content="Generate a scenario")],
-                        student_profile=st.session_state.student_profile,
-                        scenario=None,
-                        generate_missing=True
-                    )
+                    # Use our helper function to generate a random scenario
+                    profile = st.session_state.student_profile
+                    grade = profile.get("grade_level", "MIDDLE_SCHOOL")
 
-                    # Use the pipeline to generate just the scenario
-                    agent = create_multi_agent_pipeline()
-                    result = agent.invoke(
-                        temp_state,
-                        config={"configurable": {"thread_id": 44}}
+                    scenario = create_scenario_for_streamlit(
+                        scenario_type="random",
+                        grade=grade
                     )
 
                     # Update the session state with the generated scenario
-                    if result.get("scenario"):
-                        st.session_state.scenario = result["scenario"]
-                        st.success(
-                            f"Generated scenario: {result['scenario'].get('title', 'New scenario')}")
-                        st.experimental_rerun()  # Rerun to update the UI
+                    st.session_state.scenario = scenario
+                    st.success(
+                        f"Generated scenario: {scenario.get('title', 'New scenario')}")
+                    st.experimental_rerun()  # Rerun to update the UI
 
             # Ensure the state is properly structured
             # Log for debugging
