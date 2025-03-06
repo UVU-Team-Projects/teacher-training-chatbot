@@ -21,7 +21,7 @@ from colorama import Fore, Style  # For terminal color output
 import time
 from typing import Literal, Optional, List, TypedDict, Dict, Any, Union
 from langchain_openai import ChatOpenAI  # OpenAI API integration
-from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 from langchain_core.tools import BaseTool
 
 # Langgraph imports - for building the multi-agent system
@@ -242,13 +242,15 @@ class RAG:
 
     def llm_call_router(self, state: MultiAgentStateType):
         """Route the input to the correct node"""
-
+        print(Fore.YELLOW + f"STATE: {state.get('messages', [])[-1].content}" + Style.RESET_ALL)
         decision = self.llm.invoke([
             SystemMessage(content="Route the input to the correct node, scenario, profile, student, or feedback based on the state of the conversation."),
-            HumanMessage(content=state["messages"][-1].content)
+            HumanMessage(content=state.get("messages", [])[-1].content)
         ])
+        print(Fore.YELLOW + f"DECISION: {decision.content}" + Style.RESET_ALL)
         return {"decision": decision.content}
 
+# TODO: Add human-in-the-loop to the router so the conversation can be steered
 
     def router(self, state: MultiAgentStateType) -> Literal["scenario", "profile", "student", "feedback", "end"]:
         """Determine the next node in the multi-agent graph.
@@ -569,7 +571,6 @@ class StudentSimulator:
         self.llm = llm or ChatOpenAI(
             model_name=model_name,
             temperature=0.7,
-            max_tokens=2000
         )
         self.embedding_generator = embedding_generator or EmbeddingGenerator()
 
@@ -594,12 +595,6 @@ class StudentSimulator:
             student_profile = state.get("student_profile", {})
             context = state.get("context", "")
             scenario = state.get("scenario", {})
-
-            print(f"STUDENT PROFILE: {student_profile}")
-            print(f"SCENARIO: {scenario}")
-
-            print(f"Scenario type: {type(scenario)}")
-            print(f"Student profile type: {type(student_profile)}")
 
             # Scenario-specific information to include if available
             scenario_info = ""
@@ -701,7 +696,9 @@ class StudentSimulator:
             SystemMessage(content=system_prompt),
             HumanMessage(content=state['messages'][-1].content)
         ])
+        print(Fore.GREEN + f"RESPONSE: {response.content}" + Style.RESET_ALL)
 
+        # Return a proper AIMessage object instead of just the content string
         return {**state, "messages": state["messages"] + [response]}
 
 
@@ -724,6 +721,7 @@ class TeacherFeedbackGenerator:
         Analyze the interaction between teacher and student,
         then generate helpful feedback and suggestions.
         """
+        print(Fore.RED + "GENERATE FEEDBACK!" + Style.RESET_ALL)
         try:
             # Extract conversation history
             conversation = state.get("messages", [])
@@ -735,9 +733,15 @@ class TeacherFeedbackGenerator:
                 msg for msg in conversation if isinstance(msg, HumanMessage)]
             student_messages = [
                 msg for msg in conversation if not isinstance(msg, HumanMessage)]
+            
+            print(Fore.GREEN + f"TEACHER MESSAGES: {teacher_messages}" + Style.RESET_ALL)
+            print(Fore.GREEN + f"STUDENT MESSAGES: {student_messages}" + Style.RESET_ALL)
 
             last_teacher_message = teacher_messages[-1].content if teacher_messages else ""
             last_student_response = student_messages[-1].content if student_messages else ""
+
+            print(Fore.GREEN + f"LAST TEACHER MESSAGE: {last_teacher_message}" + Style.RESET_ALL)
+            print(Fore.GREEN + f"LAST STUDENT RESPONSE: {last_student_response}" + Style.RESET_ALL)
 
             # Format profile and scenario data safely
             student_name = student_profile.get('name', 'the student')
@@ -809,13 +813,14 @@ def main() -> None:
     This system will:
     1. Generate a teaching scenario
     2. Select an appropriate student profile
-    3. Allow you to interact with the simulated student
-    4. Provide feedback on your teaching approach
+    3. Allow you to interact with the simulated student in an ongoing conversation
+    4. Provide feedback on your teaching approach when requested
     
     Commands:
+    - Type any message to talk to the student
+    - Type '/feedback' when you want to get teaching feedback on your conversation
     - Type 'generate scenario' to create a new scenario
     - Type 'select profile' to choose a different student profile
-    - Type '/feedback' to get teaching feedback
     - Type 'q' to quit
     """ + Style.RESET_ALL)
 
@@ -886,9 +891,37 @@ if __name__ == "__main__":
         # Create a simple state with a test message
         print("Creating initial state with a test message...")
         state = create_multi_agent_state(
-            messages=[HumanMessage(content="Hello, I'm a new teacher. Can you help me with classroom management?")],
-            scenario=None,
-            student_profile=None
+            messages=[HumanMessage(content="Hi Alex! Tell me what you like to do in class.")],
+            scenario={
+                'title': 'Elementary Mathematics Behavioral Challenge', 
+                'description': """**Classroom Management Scenario: Grade 3 Mathematics**\n\n**Context Overview:**\nIn Ms. Thompson\'s third-grade classroom, there are 20 students, and it is a sunny morning. The class has just transitioned from a reading session to a mathematics lesson that will last for 45 minutes. The desks are arranged in traditional rows, and Ms. Thompson has a whiteboard at the front for instruction and a few computers at the back for interactive math games. The classroom atmosphere is generally positive, but today, one particular student, Jason, is displaying some challenging behaviors.\n\n**Student Background:**\nJason is 8 years old and has a visual learning style, which means he benefits from visual aids, diagrams, and hands-on activities. He does not have any special needs or language barriers but comes from a culturally diverse background. Recently, Jason has been having difficulty focusing during math lessons, which is unusual for him. \n\n**Specific Situation:**\nAs Ms. Thompson begins the lesson on addition and subtraction, she notices that Jason is fidgeting in his seat, tapping his pencil loudly against the desk, and whispering to a classmate. The lesson involves a visual presentation on the whiteboard, where Ms. Thompson demonstrates how to solve word problems using pictures and diagrams. Despite the engaging content, Jason seems disengaged and is not following along.\n\n**Relevant Behaviors and Interactions:**\n1. **Disruption:** Jason\'s tapping is distracting not only to himself but also to the students nearby. A couple of students glance over at him, visibly irritated.\n2. **Off-Task Behavior:** Instead of focusing on the lesson, Jason is leaning over to his neighbor, Emily, and whispering about a video game, causing her to lose focus as well.\n3. **Non-Verbal Cues:** Ms. Thompson notices that when she makes eye contact with Jason, he does not respond and instead looks down at his desk, indicating that he may be feeling overwhelmed or disengaged.\n4. **Peer Influence:** A few other students are starting to mimic Jason\'s behavior, which is creating a ripple effect of distraction in the classroom.\n\n**Classroom Dynamics:**\nThe rest of the class is generally attentive and engaged with the material, especially those who are visual learners like Jason. They seem to enjoy the interactive elements of the lesson, such as the use of visual aids. Ms. Thompson has established a positive rapport with her students, making it essential for her to address Jason\'s behavior promptly without disrupting the flow of the lesson.\n\n**Evidence-Based Teaching Practices:**\n1. **Visual Supports:** Ms. Thompson decides to incorporate more visual supports into the lesson, such as a colorful chart that outlines the steps for solving word problems and encourages students to refer to it.\n2. **Positive Reinforcement:** She acknowledges the students who are following along and quietly praises them, which may motivate Jason to return to the task at hand.\n3. **Classroom Management Techniques:** Ms. Thompson uses a calm voice to address Jason directly, saying, "Jason, I'd love for you to join us at the board. Can you come up and help me solve this problem using the chart?"\n4. **Engagement Strategies:** By inviting Jason to participate actively, Ms. Thompson not only redirects his attention but also engages him in a way that leverages his visual learning style. \n\n**Addressing the Challenge:**\nAs Jason stands up and approaches the whiteboard, Ms. Thompson provides him with a marker and asks him to illustrate the problem visually. This approach not only captures his interest but also helps him re-engage with the lesson. The other students watch attentively, and soon, Jason is leading the class in solving the problem, which boosts his confidence and refocuses his energy positively.\n\nAfter the lesson, Ms. Thompson takes a moment to check in with Jason individually. She expresses her appreciation for his help and asks if there is anything specific that would help him stay focused during math lessons. This open line of communication allows her to understand his needs better and provides an opportunity for Jason to express himself, ensuring that he feels supported moving forward.\n\nBy implementing these strategies, Ms. Thompson effectively manages the behavioral challenges while maintaining a positive learning environment for all students.""",
+                'grade_level': 'elementary',
+                'subject': 'mathematics',
+                'challenge_type': 'behavioral',
+            },
+            student_profile={
+                'name': 'Alex', 
+                'grade_level': 2, 
+                'personality_traits': ['energetic', 'enthusiastic', 'talkative', 'curious'], 
+                'typical_moods': ['excited', 'distracted', 'happy'], 
+                'behavioral_patterns': {
+                    'morning': 'High energy, needs movement breaks', 
+                    'afternoon': 'May become restless', 
+                    'during_group_work': 'Takes leadership role', 
+                    'during_independent_work': 'Struggles to stay seated', 
+                    'transitions': 'Often rushes through transitions'
+                }, 
+                'learning_style': 'kinesthetic', 
+                'interests': ['science', 'sports'], 
+                'academic_strengths': ['math', 'science'], 
+                'academic_challenges': ['reading', 'writing'], 
+                'support_strategies': ['visual aids', 'frequent breaks'], 
+                'social_dynamics': {
+                    'peer_interactions': 'Popular, but can be overwhelming', 
+                    'group_work': 'Natural leader but may dominate', 
+                    'teacher_interaction': 'Seeks frequent attention and validation'
+                }
+            }
         )
         
         # Create and invoke the agent
