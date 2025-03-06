@@ -10,7 +10,10 @@
 	},
 	"features": {
 		"ghcr.io/devcontainers/features/git:1": {}
-	}
+	}, 
+	// Set up proper workspace folder
+	"workspaceFolder": "/workspace",
+	"workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind"
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
