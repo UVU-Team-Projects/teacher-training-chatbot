@@ -381,6 +381,7 @@ class RAG:
         workflow.add_node('profile_node', profile_handler)
         workflow.add_node('student_retrieve_node', student_simulator.retrieve_context)
         workflow.add_node('student_respond_node', student_simulator.generate_response)
+        #TODO: Add user node for human-in-the-loop
         workflow.add_node('feedback_node', feedback_generator.generate_feedback)
 
         # Configure graph flow
@@ -407,8 +408,9 @@ class RAG:
         # All components return to router after completion
         workflow.add_edge('scenario_node', 'router_node')
         workflow.add_edge('profile_node', 'router_node')
-        workflow.add_edge('student_respond_node', 'router_node')
-        workflow.add_edge('feedback_node', 'router_node')
+        workflow.add_edge('student_respond_node', 'user_node')
+        workflow.add_edge('user_node', 'router_node')
+        workflow.add_edge('feedback_node', END)
 
         # Compile with memory persistence
         return workflow.compile()
