@@ -50,6 +50,19 @@ class StudentProfile:
         self.academic_challenges = academic_challenges
         self.social_dynamics = social_dynamics
         self.support_strategies = support_strategies
+        
+    def __getitem__(self, key):
+        """Allow dictionary-like access with square brackets."""
+        if hasattr(self, key):
+            return getattr(self, key)
+        raise KeyError(f"'{key}' not found in StudentProfile")
+        
+    def get(self, key, default=None):
+        """Mimic dictionary get() method with default value support."""
+        try:
+            return self[key]
+        except KeyError:
+            return default
 
 
 # Pre-defined student profile templates

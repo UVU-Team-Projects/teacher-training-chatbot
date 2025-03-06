@@ -1,10 +1,15 @@
-# Project files
+# ============================================================
+# IMPORTS AND SETUP
+# ============================================================
+# Project files - handles both direct and relative imports
 try:
+    # Direct imports (when running the file directly)
     from student_profiles import create_student_profile, Interest, STUDENT_TEMPLATES, StudentProfile
     from embedding import EmbeddingGenerator
     from profile_builder import StudentProfileBuilder
     from scenario_generator import ScenarioGenerator, generate_random_scenario, StudentBackground, ClassroomContext
 except ImportError:
+    # Relative imports (when imported as a module)
     from .student_profiles import create_student_profile, Interest, STUDENT_TEMPLATES, StudentProfile
     from .embedding import EmbeddingGenerator
     from .profile_builder import StudentProfileBuilder
@@ -12,16 +17,14 @@ except ImportError:
 
 # External imports
 from dotenv import load_dotenv
-from colorama import Fore, Style
+from colorama import Fore, Style  # For terminal color output
 import time
 from typing import Literal, Optional, List, TypedDict, Dict, Any, Union
-from langchain_ollama import ChatOllama
-from langchain_openai import ChatOpenAI
+from langchain_openai import ChatOpenAI  # OpenAI API integration
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.tools import BaseTool
-from langchain_core.prompts import ChatPromptTemplate
 
-# Langgraph imports
+# Langgraph imports - for building the multi-agent system
 from langgraph.prebuilt import ToolNode
 from langgraph.graph import END, START, StateGraph, MessagesState
 from langgraph.graph.state import CompiledStateGraph
@@ -32,6 +35,9 @@ import os
 import pprint
 import json
 
+# ============================================================
+# PATH CONFIGURATION
+# ============================================================
 # Get the absolute path of the project root
 root_dir = os.path.dirname(os.path.abspath(__file__))
 # Construct the path to the src directory
@@ -39,58 +45,70 @@ src_dir = os.path.join(root_dir, 'src')
 # Add the src to sys.path
 sys.path.append(src_dir)
 
-# Load environment variables
+# ============================================================
+# ENVIRONMENT SETUP
+# ============================================================
+# Load environment variables from .env file
 load_dotenv()
 # Check for OpenAI API key
 if not os.getenv("OPENAI_API_KEY"):
     raise ValueError("OPENAI_API_KEY environment variable is not set")
 
-# Define state types using TypedDict
+# ============================================================
+# TYPE DEFINITIONS
+# ============================================================
+# Define state types using TypedDict for type checking and documentation
 
-
+# Basic message state type
 class MessageStateType(TypedDict, total=False):
-    messages: List[Any]
-    context: str
+    messages: List[Any]  # List of message objects
+    context: str         # Additional context for the conversation
 
-# Define the multi-agent state type
-
-
+# Scenario type definition - represents a classroom scenario
 class ScenarioType(TypedDict, total=False):
-    title: str
-    description: str
-    grade_level: str
-    subject: str
-    challenge_type: str
+    title: str           # Title of the scenario
+    description: str     # Detailed description of the scenario
+    grade_level: str     # Grade level (e.g., "ELEMENTARY", "MIDDLE_SCHOOL")
+    subject: str         # Subject matter (e.g., "MATH", "SCIENCE")
+    challenge_type: str  # Type of challenge (e.g., "BEHAVIORAL", "ACADEMIC")
 
-
+# Student profile type definition - represents a student's characteristics
 class StudentProfileType(TypedDict, total=False):
-    name: str
-    grade_level: str
-    personality_traits: List[str]
-    typical_moods: List[str]
-    behavioral_patterns: str
-    learning_style: str
-    interests: List[str]
-    academic_strengths: str
-    academic_challenges: str
-    support_strategies: str
-    social_dynamics: str
+    name: str                    # Student's name
+    grade_level: str             # Student's grade level
+    personality_traits: List[str] # List of personality traits
+    typical_moods: List[str]     # List of typical moods
+    behavioral_patterns: str     # Description of behavioral patterns
+    learning_style: str          # Learning style (e.g., "visual", "auditory")
+    interests: List[str]         # List of interests
+    academic_strengths: str      # Description of academic strengths
+    academic_challenges: str     # Description of academic challenges
+    support_strategies: str      # Strategies that help the student
+    social_dynamics: str         # Description of social interactions
 
-
+# Main state type for the multi-agent system
 class MultiAgentStateType(TypedDict, total=False):
-    messages: List[Any]  # Compatible with MessagesState
-    context: str
-    scenario: Optional[ScenarioType]
-    student_profile: Optional[StudentProfileType]
-    teacher_actions: Optional[List[str]]
-    feedback: Optional[str]
-    _flags: List[str]  # Internal flags for controlling flow
+    messages: List[Any]                  # List of message objects (compatible with MessagesState)
+    decision: str                         # Decision from the router
+    context: str                         # Additional context for the conversation
+    scenario: Optional[ScenarioType]     # The classroom scenario
+    student_profile: Optional[StudentProfileType]  # The student profile
+    teacher_actions: Optional[List[str]] # List of teacher actions
+    feedback: Optional[str]              # Feedback on teacher performance
+    notification: Optional[str]          # Notification message for Streamlit UI
+    _flags: List[str]                    # Internal flags for controlling flow
 
-# Helper functions to convert between types
-
+# ============================================================
+# HELPER FUNCTIONS
+# ============================================================
+# Convert between object types and dictionaries
 
 def scenario_to_dict(scenario) -> ScenarioType:
-    """Convert Scenario object to ScenarioType dictionary."""
+    """Convert Scenario object to ScenarioType dictionary.
+    
+    This function handles both dictionary inputs and Scenario class objects,
+    ensuring the output conforms to the ScenarioType structure.
+    """
     if not scenario:
         return None
 
@@ -117,7 +135,11 @@ def scenario_to_dict(scenario) -> ScenarioType:
 
 
 def student_profile_to_dict(profile) -> StudentProfileType:
-    """Convert StudentProfile object to StudentProfileType dictionary."""
+    """Convert StudentProfile object to StudentProfileType dictionary.
+    
+    This function transforms a StudentProfile class object into a dictionary
+    that conforms to the StudentProfileType structure.
+    """
     if not profile:
         return None
     return {
@@ -134,8 +156,9 @@ def student_profile_to_dict(profile) -> StudentProfileType:
         "social_dynamics": profile.social_dynamics
     }
 
-# Function to create a new MultiAgentState
-
+# ============================================================
+# STATE MANAGEMENT
+# ============================================================
 
 def create_multi_agent_state(
     messages=None,
@@ -144,9 +167,12 @@ def create_multi_agent_state(
     student_profile=None,
     teacher_actions=None,
     feedback=None,
-    generate_missing=False
+    notification=None
 ) -> MultiAgentStateType:
     """Create a new MultiAgentState dictionary with default values.
+    
+    This function initializes the state object used throughout the multi-agent system.
+    It handles conversion between object types and dictionaries.
 
     Args:
         messages: List of message objects
@@ -155,10 +181,10 @@ def create_multi_agent_state(
         student_profile: StudentProfileType dictionary or StudentProfile object
         teacher_actions: List of teacher action strings
         feedback: Feedback string
-        generate_missing: If True, sets flags to generate missing components
+        notification: Notification message for Streamlit UI
 
     Returns:
-        MultiAgentStateType dictionary
+        MultiAgentStateType dictionary with all components initialized
     """
     # Convert scenario and student_profile to dictionaries if they're objects
     try:
@@ -175,14 +201,6 @@ def create_multi_agent_state(
         if student_profile and not isinstance(student_profile, dict):
             student_profile = {}
 
-    # Initialize flags for explicit generation when components are missing
-    flags = []
-    if generate_missing:
-        if scenario is None:
-            flags.append("_generate_scenario")
-        if student_profile is None:
-            flags.append("_generate_profile")
-
     return {
         "messages": messages or [],
         "context": context,
@@ -190,7 +208,8 @@ def create_multi_agent_state(
         "student_profile": student_profile,
         "teacher_actions": teacher_actions,
         "feedback": feedback,
-        "_flags": flags  # Internal flags for controlling flow
+        "notification": notification,
+        "_flags": []  # Empty flags list - no longer used for generation control
     }
 
 
@@ -198,6 +217,7 @@ class RAG:
     """
     Retrieval Augmented Generation (RAG) pipeline using LangGraph.
     Combines document retrieval with LLM generation for enhanced responses.
+    This is the main orchestrator for the multi-agent system.
     """
 
     def __init__(self, llm=None, model_name="gpt-4o-mini", tools: list[BaseTool] = [], embedding_generator: EmbeddingGenerator = None):
@@ -218,89 +238,63 @@ class RAG:
             max_tokens=2000
         ).bind_tools(self.tools)
 
-        # self.model = ChatOllama(model="llama3.2:3b").bind_tools(self.tools)
-        # "deepseek-r1:14b"
-
         self.embedding_generator = embedding_generator or EmbeddingGenerator()
 
-        # self.PROMPT_TEMPLATE = """
-        #     You are a 2nd grader with the following profile:
+    def llm_call_router(self, state: MultiAgentStateType):
+        """Route the input to the correct node"""
 
-        #     Name: {name}
-        #     Grade Level: {grade_level}
-        #     Personality: {personality_traits}
-        #     Typical Moods: {moods}
-        #     Behavioral Patterns: {behavior}
-        #     Current Interests: {interests}
+        decision = self.llm.invoke([
+            SystemMessage(content="Route the input to the correct node, scenario, profile, student, or feedback based on the state of the conversation."),
+            HumanMessage(content=state["messages"][-1].content)
+        ])
+        return {"decision": decision.content}
 
-        #     Learning Style: {learning_style}
-        #     Academic Strengths: {academic_strengths}
-        #     Academic Challenges: {academic_challenges}
-        #     Support Strategies: {support_strategies}
-        #     Social Dynamics: {social_dynamics}
-
-        #     Match your words, language, and behavior to match this profile.
-        #     The provided context can help you understand how to act and respond. If the context
-        #     doesn't contain relevant information, please decide how to best respond while
-        #     staying in character.
-
-        #     The user is your teacher. Respond as if you are this specific 2nd grader talking to your teacher.
-
-        #     Context: {context}
-
-        #     ---
-
-        #     Answer the teacher's question concisely based on the above context: {question}
-        # """
-
-    # def should_continue(self, state: Dict[str, Any]) -> Literal["tools", "end"]:
-    #     """Determine whether to continue processing or return response."""
-    #     if state['messages'][-1].tool_calls:
-    #         return "tools"
-    #     return END
 
     def router(self, state: MultiAgentStateType) -> Literal["scenario", "profile", "student", "feedback", "end"]:
         """Determine the next node in the multi-agent graph.
 
-        This router respects existing data in the state and only generates
-        missing components when absolutely necessary.
+        This router checks if components are missing and routes accordingly.
         """
         try:
             # Extract message and the last message content
             messages = state.get("messages", [])
 
-            # Check if we EXPLICITLY need to generate a scenario or profile
-            # This respects existing data from Streamlit session state
-
-            # ONLY route to scenario generation if scenario is None (not empty dict)
-            # This ensures we don't override existing scenarios from Streamlit
-            if state.get("scenario") is None and "_generate_scenario" in state.get("_flags", []):
-                print(
-                    "Routing to scenario generation because scenario is missing and flag is set")
-                return "scenario"
-
-            # ONLY route to profile generation if profile is None (not empty dict)
-            # This ensures we don't override existing profiles from Streamlit
-            if state.get("student_profile") is None and "_generate_profile" in state.get("_flags", []):
-                print(
-                    "Routing to profile generation because profile is missing and flag is set")
+            # Check if we need to generate a student profile
+            # This is the highest priority - we need a profile to do anything
+            if state.get("student_profile") is None:
+                print("Routing to profile generation because profile is missing")
+                # Add notification to state
+                state["notification"] = "Generating a student profile since none was provided..."
                 return "profile"
 
-            # Generate student response if we have a profile
-            # (scenario is optional but preferred)
-            if state.get("student_profile") is not None:
-                # Check if we need to generate feedback
-                last_message = messages[-1] if messages else None
+            # Check if we need to generate a scenario
+            # This is the second priority - we need a scenario for context
+            if state.get("scenario") is None:
+                print(Fore.GREEN + "ROUTER: Create Scenario" + Style.RESET_ALL)
+                print("Routing to scenario generation because scenario is missing")
+                # Add notification to state
+                state["notification"] = "Generating a classroom scenario since none was provided..."
+                return "scenario"
 
-                # If last message was from human, generate student response
-                if last_message and isinstance(last_message, HumanMessage):
-                    return "student"
+            # Generate student response if we have a profile and scenario
+            # Check if we need to generate feedback
+            last_message = messages[-1] if messages else None
 
-                # If we've already generated student response, generate feedback
+            # If we've already generated student response, generate feedback
+            if last_message and last_message.content == "/feedback":
+                print(Fore.GREEN + "ROUTER: Generate Feedback" + Style.RESET_ALL)
                 return "feedback"
 
-            # Default to end if nothing else matches
-            return "end"
+            # If last message was from human, generate student response
+            if last_message and isinstance(last_message, HumanMessage):
+                print(Fore.GREEN + "ROUTER: Generate Student Response" + Style.RESET_ALL)
+                return "student"
+
+            # If we've already generated feedback, end the conversation
+            if state.get("feedback"):
+                print(Fore.GREEN + "ROUTER: End Conversation" + Style.RESET_ALL)
+                return "end"
+
         except Exception as e:
             print(f"Error in router function: {e}")
             # Default to end in case of any error
@@ -330,27 +324,6 @@ class RAG:
         response = self.model.invoke(user_message)
         return {**state, "messages": state["messages"] + [response]}
 
-    # def create_agent(self) -> CompiledStateGraph:
-    #     """Create and compile the agent workflow."""
-    #     # Define workflow graph with a factory function to create a dict
-    #     workflow = StateGraph(lambda: {"messages": [], "context": ""})
-
-    #     # Add nodes
-    #     workflow.add_node('retrieve', self.retrieve)
-    #     workflow.add_node('generate', self.generate_response)
-    #     # workflow.add_node('tools', self.tool_node)
-
-    #     # Configure graph flow
-    #     workflow.set_entry_point("retrieve")
-    #     # workflow.set_entry_point("generate")
-    #     workflow.add_edge('retrieve', 'generate')
-    #     # workflow.add_conditional_edges("generate", self.should_continue)
-    #     # workflow.add_edge("tools", 'generate')
-    #     workflow.add_edge('generate', END)
-
-    #     # Compile with memory persistence
-    #     self.agent = workflow.compile(checkpointer=MemorySaver())
-    #     return self.agent
 
     def create_multi_agent(self) -> CompiledStateGraph:
         """Create and compile the multi-agent workflow."""
@@ -360,67 +333,63 @@ class RAG:
         student_simulator = StudentSimulator()
         feedback_generator = TeacherFeedbackGenerator()
 
-        # Define scenario handler function to ensure we only generate a scenario when needed
+        # Define scenario handler function
         def generate_scenario_handler(state: Dict[str, Any]) -> Dict[str, Any]:
-            # Only generate if scenario is explicitly None (not an empty dict)
-            # This respects existing scenarios from Streamlit
-            if state.get("scenario") is None:
-                scenario = scenario_generator.generate_random_scenario()
-                new_state = {
-                    **state,
-                    "scenario": {
-                        "title": scenario.title,
-                        "description": scenario.description,
-                        "grade_level": str(scenario.grade_level.value),
-                        "subject": str(scenario.subject.value),
-                        "challenge_type": str(scenario.challenge_type.value)
-                    }
+            # Generate a random scenario
+            scenario = generate_random_scenario()
+            
+            # Convert scenario to dictionary format
+            new_state = {
+                **state,
+                "scenario": {
+                    "title": scenario.title,
+                    "description": scenario.description,
+                    "grade_level": str(scenario.grade_level.value),
+                    "subject": str(scenario.subject.value),
+                    "challenge_type": str(scenario.challenge_type.value)
                 }
-                # Remove the generate flag since we've handled it
-                if "_flags" in new_state and "_generate_scenario" in new_state["_flags"]:
-                    new_state["_flags"].remove("_generate_scenario")
-                return new_state
-            # If scenario already exists, just return the state unchanged
-            return state
+            }
+            
+            # Keep the notification in the state for Streamlit to display
+            if "notification" in new_state:
+                new_state["notification"] = f"Generated scenario: {scenario.title}"
+            
+            return new_state
 
-        # Define profile handler that respects existing profiles
+        # Define profile handler
         def profile_handler(state: Dict[str, Any]) -> Dict[str, Any]:
-            # Only generate if profile is explicitly None (not an empty dict)
-            # This respects existing profiles from Streamlit
-            if state.get("student_profile") is None:
-                new_state = profile_selector.select_profile(state)
-                # Remove the generate flag since we've handled it
-                if "_flags" in new_state and "_generate_profile" in new_state["_flags"]:
-                    new_state["_flags"].remove("_generate_profile")
-                return new_state
-            # If profile already exists, just return the state unchanged
-            return state
+            # Generate a student profile
+            new_state = profile_selector.select_profile(state)
+            
+            # Keep the notification in the state for Streamlit to display
+            if "notification" in new_state and new_state.get("student_profile"):
+                profile_name = new_state["student_profile"].get("name", "Student")
+                new_state["notification"] = f"Generated profile for {profile_name}"
+            
+            return new_state
 
         # Define workflow graph using factory function to create default state
         workflow = StateGraph(MultiAgentStateType)
 
         # Add all nodes
-        workflow.add_node('router_node', self.router)
+        workflow.add_node('router_node', self.llm_call_router)
 
         # Add components as nodes
         workflow.add_node('scenario_node', generate_scenario_handler)
         workflow.add_node('profile_node', profile_handler)
-        workflow.add_node('student_retrieve_node',
-                          student_simulator.retrieve_context)
-        workflow.add_node('student_respond_node',
-                          student_simulator.generate_response)
-        workflow.add_node(
-            'feedback_node', feedback_generator.generate_feedback)
+        workflow.add_node('student_retrieve_node', student_simulator.retrieve_context)
+        workflow.add_node('student_respond_node', student_simulator.generate_response)
+        workflow.add_node('feedback_node', feedback_generator.generate_feedback)
 
         # Configure graph flow
+        print("start entry point")
         workflow.set_entry_point("router_node")
 
         # Define conditional edges from router
         workflow.add_conditional_edges(
             "router_node",
-            # The router function needs to be wrapped to ensure it's called correctly
-            # This passes the state object to the router
-            lambda x: self.router(x),
+            # Router method directly handles state routing
+            self.router,
             {
                 "scenario": "scenario_node",
                 "profile": "profile_node",
@@ -441,11 +410,6 @@ class RAG:
 
         # Compile with memory persistence
         return workflow.compile()
-
-
-def create_pipeline(tools: list[BaseTool] = None) -> CompiledStateGraph:
-    """Create and return a compiled RAG pipeline with specified student profile."""
-    return RAG(tools=tools or []).create_agent()
 
 
 def create_multi_agent_pipeline(tools: list[BaseTool] = None) -> CompiledStateGraph:
@@ -500,24 +464,16 @@ class StudentProfileSelector:
         scenario = state.get("scenario", {})
 
         if not scenario:
-            # If no scenario, create a default profile
-            from src.ai.student_profiles import STUDENT_TEMPLATES
-
             # Use active_learner as default template
-            template = STUDENT_TEMPLATES["active_learner"]
-            student_profile = {
-                "name": "Alex",
-                "grade_level": 2,
-                "personality_traits": template["personality_traits"],
-                "learning_style": template["learning_style"],
-                "interests": [interest.value for interest in template["interests"]],
-                "typical_moods": [mood.value for mood in template["typical_moods"]],
-                "behavioral_patterns": template["behavioral_patterns"],
-                "academic_strengths": template["academic_strengths"],
-                "academic_challenges": template["academic_challenges"],
-                "social_dynamics": template["social_dynamics"],
-                "support_strategies": template["support_strategies"]
-            }
+            student_profile = create_student_profile(
+                template_name="active_learner",
+                name="Alex",
+                grade_level=2,
+                interests=[Interest.MATH, Interest.SCIENCE, Interest.READING],
+                academic_strengths=['Speaking in front of the class', 'Math', 'History'],
+                academic_challenges=['Writing long passages', 'Science experiments', 'paying attention in class', 'ADHD'],
+                support_strategies=['Positive reinforcement', 'Small group work', 'Breakout rooms']
+            )
         else:
             # If there's a scenario, generate an appropriate profile
             system_prompt = f"""
@@ -583,7 +539,6 @@ class StudentProfileSelector:
                                                                  "academic_challenges", "support_strategies"] else {}
             except:
                 # Fallback to default profile
-                from src.ai.student_profiles import STUDENT_TEMPLATES
                 template = STUDENT_TEMPLATES["active_learner"]
                 student_profile = {
                     "name": "Jamie",
@@ -620,6 +575,7 @@ class StudentSimulator:
 
     def retrieve_context(self, state: Dict[str, Any]) -> Dict[str, Any]:
         """Retrieve relevant context for the current query."""
+        print(f"RETRIEVE CONTEXT!")
         # Similar to the retrieve method in RAG
         query = state['messages'][-1].content if isinstance(
             state['messages'][-1], HumanMessage) else state['messages']
@@ -633,10 +589,17 @@ class StudentSimulator:
 
     def generate_response(self, state: Dict[str, Any]) -> Dict[str, Any]:
         """Generate a response based on the student profile and context."""
+        print(f"GENERATE RESPONSE!")
         try:
             student_profile = state.get("student_profile", {})
             context = state.get("context", "")
             scenario = state.get("scenario", {})
+
+            print(f"STUDENT PROFILE: {student_profile}")
+            print(f"SCENARIO: {scenario}")
+
+            print(f"Scenario type: {type(scenario)}")
+            print(f"Student profile type: {type(student_profile)}")
 
             # Scenario-specific information to include if available
             scenario_info = ""
@@ -827,9 +790,8 @@ class TeacherFeedbackGenerator:
             return {**state, "feedback": "Unable to generate specific feedback. Please review the interaction and consider how your approach matched the student's needs and the scenario requirements."}
 
 
-def main_multi_agent() -> None:
+def main() -> None:
     """Run the multi-agent pipeline in interactive mode."""
-
     # Check for OpenAI API key
     if not os.getenv("OPENAI_API_KEY"):
         raise ValueError("OPENAI_API_KEY environment variable is not set")
@@ -910,184 +872,66 @@ def main_multi_agent() -> None:
                       f"Student: {last_msg.content}" + Style.RESET_ALL)
 
 
-# def main() -> None:
-#     """Run the RAG pipeline in interactive mode."""
-#     # Create a student profile
-#     print("Creating student profile...")
-#     builder = StudentProfileBuilder()
-#     description = """
-#     Sarah is a bright but sometimes anxious 2nd grader who loves science experiments
-#     and reading about nature. She's usually focused in the morning but gets tired
-#     and distracted in the afternoon. She works well in small groups but can be
-#     hesitant to speak up in larger class discussions. Sarah excels at math but
-#     struggles with writing long passages. She benefits from visual aids and
-#     frequent positive reinforcement.
-#     """
-#     student = builder.build_profile_from_text(description)
-#     print(f"Student profile created: {student}")
-#     agent = create_pipeline()
-#     print(Fore.GREEN + f"Student {student.name} is ready! ")
-
-#     while True:
-#         print(Fore.RED + 'Enter "q" to quit.')
-#         query = input(Fore.GREEN + "Your input: " + Style.RESET_ALL)
-
-#         if query.lower() == 'q':
-#             break
-
-#         # Initialize state with both messages and student profile
-#         initial_state = {
-#             "messages": [HumanMessage(content=query)],
-#             "context": "",
-#             "student_profile": {
-#                 "name": student.name,
-#                 "grade_level": student.grade_level,
-#                 "personality_traits": student.personality_traits,
-#                 "typical_moods": student.typical_moods,
-#                 "behavioral_patterns": student.behavioral_patterns,
-#                 "learning_style": student.learning_style,
-#                 "interests": student.interests,
-#                 "academic_strengths": student.academic_strengths,
-#                 "academic_challenges": student.academic_challenges,
-#                 "support_strategies": student.support_strategies,
-#                 "social_dynamics": student.social_dynamics
-#             }
-#         }
-
-#         response = agent.invoke(
-#             initial_state,
-#             config={"configurable": {"thread_id": 42}}
-#         )
-
-#         print(Fore.LIGHTBLUE_EX, end=" ")
-#         # typing_effect(response["messages"][-1].content)
-#         print(response["messages"][-1].content)
-#         print(Style.RESET_ALL)
-
-
+# Add a main function to demonstrate usage when run directly
 if __name__ == "__main__":
-    # main()  # Run the original RAG pipeline
-    main_multi_agent()  # Run the multi-agent system
-
-# Functions to help Streamlit integration
-
-
-def create_profile_for_streamlit(
-    profile_type: str,
-    **kwargs
-) -> StudentProfileType:
-    """
-    Create a student profile for use in Streamlit.
-
-    Args:
-        profile_type: One of "template", "custom", or "from_description"
-        **kwargs: Parameters specific to the profile type
-
-    Returns:
-        StudentProfileType dictionary ready for Streamlit state
-    """
-    student_profile = None
-
-    if profile_type == "template":
-        # Create from template
-        student_profile = create_student_profile(
-            template_name=kwargs.get("template_name", "active_learner"),
-            name=kwargs.get("name", "Student"),
-            grade_level=kwargs.get("grade_level", 5),
-            interests=kwargs.get("interests", []),
-            academic_strengths=kwargs.get("academic_strengths", []),
-            academic_challenges=kwargs.get("academic_challenges", []),
-            support_strategies=kwargs.get("support_strategies", [])
+    print(Fore.RESET)
+    print("Initializing Multi-Agent Teacher Training System...")
+    
+    # Create a simple test function to demonstrate the pipeline
+    def test_pipeline():
+        import time
+        
+        print("\n=== Testing Multi-Agent Pipeline ===\n")
+        
+        # Create a simple state with a test message
+        print("Creating initial state with a test message...")
+        state = create_multi_agent_state(
+            messages=[HumanMessage(content="Hello, I'm a new teacher. Can you help me with classroom management?")],
+            scenario=None,
+            student_profile=None
         )
-
-    elif profile_type == "custom":
-        # Create custom profile
-        template = STUDENT_TEMPLATES.get(
-            kwargs.get("template_base", "active_learner"))
-        student_profile = StudentProfile(
-            name=kwargs.get("name", "Student"),
-            grade_level=kwargs.get("grade_level", 5),
-            personality_traits=kwargs.get("personality_traits", []),
-            learning_style=kwargs.get("learning_style", "visual"),
-            interests=kwargs.get("interests", []),
-            typical_moods=kwargs.get("typical_moods", []),
-            behavioral_patterns=kwargs.get(
-                "behavioral_patterns", template["behavioral_patterns"]) if template else {},
-            academic_strengths=kwargs.get("academic_strengths", []),
-            academic_challenges=kwargs.get("academic_challenges", []),
-            social_dynamics=kwargs.get(
-                "social_dynamics", template["social_dynamics"]) if template else {},
-            support_strategies=kwargs.get("support_strategies", [])
-        )
-
-    elif profile_type == "from_description":
-        # Use profile builder
-        description = kwargs.get("description", "")
-        if description:
-            builder = StudentProfileBuilder()
-            student_profile = builder.build_profile_from_text(description)
-
-    # Convert to dictionary format
-    if student_profile:
-        return student_profile_to_dict(student_profile)
-    return None
-
-
-def create_scenario_for_streamlit(
-    scenario_type: str,
-    **kwargs
-) -> ScenarioType:
-    """
-    Create a scenario for use in Streamlit.
-
-    Args:
-        scenario_type: Either "random" or "custom"
-        **kwargs: Parameters specific to the scenario type
-
-    Returns:
-        ScenarioType dictionary ready for Streamlit state
-    """
-    scenario = None
-
-    if scenario_type == "random":
-        # Generate a random scenario
-        scenario = generate_random_scenario()
-
-    elif scenario_type == "custom":
-        # Create a custom scenario
-        student_background = StudentBackground(
-            age=kwargs.get("age", 8),
-            grade=kwargs.get("grade", 3),
-            learning_style=kwargs.get("learning_style", "visual"),
-        )
-
-        classroom_context = ClassroomContext(
-            class_size=kwargs.get("class_size", 20),
-            time_of_day=kwargs.get("time_of_day", "Morning"),
-            class_duration=kwargs.get("class_duration", 45),
-            previous_activities=kwargs.get(
-                "previous_activities", ["reading", "math"]),
-            classroom_setup=kwargs.get("classroom_setup", "traditional desks"),
-            available_resources=kwargs.get("available_resources", [
-                                           "whiteboard", "computers"])
-        )
-
-        # Initialize scenario generator
-        grade_level = kwargs.get("grade_level")
-        subject = kwargs.get("subject")
-        challenge_type = kwargs.get("challenge_type")
-
-        if grade_level and subject and challenge_type:
-            scenario_gen = ScenarioGenerator()
-            scenario = scenario_gen.generate_scenario(
-                grade_level=grade_level,
-                subject=subject,
-                challenge_type=challenge_type,
-                student_background=student_background,
-                classroom_context=classroom_context
+        
+        # Create and invoke the agent
+        print("Creating and invoking the multi-agent pipeline...")
+        agent = create_multi_agent_pipeline()
+        
+        # Set a timeout for the agent invocation
+        start_time = time.time()
+        
+        try:
+            result = agent.invoke(
+                state,
+                config={"configurable": {"thread_id": 1}}
             )
-
-    # Convert to dictionary format
-    if scenario:
-        return scenario_to_dict(scenario)
-    return None
+            
+            # Print the result
+            print("\n=== Pipeline Results ===\n")
+            
+            if result.get("notification"):
+                print(f"Notification: {result['notification']}")
+                
+            if result.get("scenario"):
+                print(f"\nGenerated Scenario: {result['scenario']['title']}")
+                print(f"Description: {result['scenario']['description'][:200]}...\n")
+                
+            if result.get("student_profile"):
+                print(f"\nGenerated Profile: {result['student_profile']['name']}")
+                print(f"Grade Level: {result['student_profile']['grade_level']}")
+                print(f"Learning Style: {result['student_profile']['learning_style']}")
+                print(f"Interests: {', '.join(result['student_profile']['interests'])}\n")
+                
+            if result["messages"] and len(result["messages"]) > 0:
+                print(f"\nResponse: {result['messages'][-1].content[:300]}...\n")
+                
+            print(f"\nExecution time: {time.time() - start_time:.2f} seconds")
+            
+        except Exception as e:
+            print(f"\nError occurred: {e}")
+            print(f"Execution time before error: {time.time() - start_time:.2f} seconds")
+        
+        print("\n=== Test Complete ===\n")
+    
+    # Run the test
+    test_pipeline()
+    
+    print("Pipeline test completed.")

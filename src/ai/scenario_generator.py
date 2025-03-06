@@ -3,7 +3,12 @@ from dataclasses import dataclass
 from enum import Enum
 import random
 from langchain_openai import ChatOpenAI
-from .embedding import EmbeddingGenerator
+try:
+    # Direct imports (when running the file directly)
+    from embedding import EmbeddingGenerator
+except ImportError:
+    # Relative imports (when imported as a module)
+    from .embedding import EmbeddingGenerator
 from langchain_core.messages import SystemMessage, HumanMessage
 from dotenv import load_dotenv
 import os
@@ -294,5 +299,9 @@ def generate_random_scenario() -> Scenario:
     )
 
 
-scenario = generate_random_scenario()
-print(scenario)
+# Move the scenario generation code into a main block
+if __name__ == "__main__":
+    # This code will only run when scenario_generator.py is executed directly
+    scenario = generate_random_scenario()
+    print(scenario)
+

@@ -11,10 +11,6 @@ from ai.scenario_generator import GradeLevel, SubjectMatter, ChallengeType, Stud
 from ai.MultiAgent_pipeline import (
     create_multi_agent_pipeline,
     create_multi_agent_state,
-    student_profile_to_dict,
-    scenario_to_dict,
-    create_profile_for_streamlit,
-    create_scenario_for_streamlit
 )
 
 # Add the project root directory to the path so we can import modules correctly
@@ -60,9 +56,12 @@ choose a classroom scenario, and practice your teaching and classroom management
 """)
 
 
-# Student Profile Configuration
+# ============================================================
+# SIDEBAR: STUDENT PROFILE CONFIGURATION
+# ============================================================
 st.sidebar.header("Student Profile")
 
+# Choose how to create the student profile
 profile_creation_method = st.sidebar.radio(
     "Student Profile Method",
     ["Select Predefined", "Create Simple Profile", "Build from Description"],
@@ -71,6 +70,7 @@ profile_creation_method = st.sidebar.radio(
 
 student_profile = None
 
+# OPTION 1: Select from predefined student profile templates
 if profile_creation_method == "Select Predefined":
     # Allow user to select from predefined profiles
     template_options = list(STUDENT_TEMPLATES.keys())
@@ -87,9 +87,8 @@ if profile_creation_method == "Select Predefined":
 
     # Create a profile from the template with minimal custom fields
     if st.sidebar.button("Use This Profile"):
-        # Use the new helper function from MultiAgent_pipeline.py
-        student_profile = create_profile_for_streamlit(
-            profile_type="template",
+        # Use the create_student_profile function directly from student_profiles.py
+        student_profile = create_student_profile(
             template_name=selected_template,
             name=student_name,
             grade_level=grade_level,
@@ -101,6 +100,7 @@ if profile_creation_method == "Select Predefined":
         st.sidebar.success(
             f"Using {student_name}, a {selected_template} profile")
 
+# OPTION 2: Create a custom student profile with direct inputs
 elif profile_creation_method == "Create Simple Profile":
     # Allow user to create a simple profile with direct inputs
     student_name = st.sidebar.text_input("Student Name", value="Jamie")
@@ -151,22 +151,24 @@ elif profile_creation_method == "Create Simple Profile":
 
     # Create custom profile
     if st.sidebar.button("Create Profile"):
-        # Use the new helper function from MultiAgent_pipeline.py
-        student_profile = create_profile_for_streamlit(
-            profile_type="custom",
-            template_base="active_learner",
+        # Create a custom StudentProfile directly
+        template = STUDENT_TEMPLATES.get("active_learner")
+        student_profile = StudentProfile(
             name=student_name,
             grade_level=grade_level,
             personality_traits=personality_traits,
             learning_style=learning_style,
             interests=interests,
             typical_moods=[Mood.HAPPY, Mood.EXCITED],  # Default moods
+            behavioral_patterns=template["behavioral_patterns"] if template else {},
             academic_strengths=academic_strengths,
             academic_challenges=academic_challenges,
+            social_dynamics=template["social_dynamics"] if template else {},
             support_strategies=support_strategies
         )
         st.sidebar.success(f"Custom profile for {student_name} created!")
 
+# OPTION 3: Build a student profile from a text description
 elif profile_creation_method == "Build from Description":
     # Use the existing profile builder from description
     prompt = st.sidebar.text_area(
@@ -178,12 +180,15 @@ Sarah excels at math but struggles with writing long passages.
 She benefits from visual aids and frequent positive reinforcement."""
     )
     if st.sidebar.button("Build Profile"):
+        # Use AI to generate a student profile from the text description
         builder = StudentProfileBuilder()
         student_profile = builder.build_profile_from_text(prompt)
         st.sidebar.success(
             f"Built profile for {student_profile.name} from description")
 
-# Scenario configuration
+# ============================================================
+# SIDEBAR: SCENARIO CONFIGURATION
+# ============================================================
 st.sidebar.header("Scenario")
 
 scenario_method = st.sidebar.radio(
@@ -194,31 +199,40 @@ scenario_method = st.sidebar.radio(
 
 scenario = None
 
+# OPTION 1: Generate a random classroom scenario
 if scenario_method == "Generate Random":
     if st.sidebar.button("Generate Random Scenario"):
+        # Use the scenario generator to create a random scenario
         scenario = generate_random_scenario()
         st.sidebar.success(f"Generated scenario: {scenario.title}")
         st.sidebar.markdown(
             f"**Description:** {scenario.description[:100]}...")
 
+# OPTION 2: Create a custom classroom scenario
 else:  # Create Custom
-    grade_level = st.sidebar.selectbox(
+    grade_level_options = {level.name: level for level in GradeLevel}
+    selected_grade = st.sidebar.selectbox(
         "Grade Level",
-        [level.value for level in GradeLevel],
+        list(grade_level_options.keys()),
         index=0
     )
+    grade_level = grade_level_options[selected_grade]
 
-    subject = st.sidebar.selectbox(
+    subject_options = {subj.name: subj for subj in SubjectMatter}
+    selected_subject = st.sidebar.selectbox(
         "Subject",
-        [subj.value for subj in SubjectMatter],
+        list(subject_options.keys()),
         index=0
     )
+    subject = subject_options[selected_subject]
 
-    challenge_type = st.sidebar.selectbox(
+    challenge_options = {chall.name: chall for chall in ChallengeType}
+    selected_challenge = st.sidebar.selectbox(
         "Challenge Type",
-        [chall.value for chall in ChallengeType],
+        list(challenge_options.keys()),
         index=0
     )
+    challenge_type = challenge_options[selected_challenge]
 
     # Simplified student background and classroom context
     age = st.sidebar.slider("Student Age", min_value=5, max_value=18, value=8)
@@ -251,20 +265,21 @@ else:  # Create Custom
         scenario_gen = ScenarioGenerator()
 
         # Generate scenario with chosen parameters
-        if st.sidebar.button("Generate Scenario"):
-            with st.sidebar:
-                # Use the new helper function from MultiAgent_pipeline.py
-                scenario = create_scenario_for_streamlit(
-                    scenario_type="custom",
-                    grade=grade_level,
-                    subject=subject,
-                    challenge_type=challenge_type,
-                    student_background=student_background,
-                    classroom_context=classroom_context
-                )
-                st.session_state.scenario = scenario
-                st.success("Scenario created successfully!")
+        scenario = scenario_gen.generate_scenario(
+            grade_level=grade_level,
+            subject=subject,
+            challenge_type=challenge_type,
+            student_background=student_background,
+            classroom_context=classroom_context
+        )
+        st.session_state.scenario = scenario
+        st.sidebar.success("Scenario created successfully!")
+        st.sidebar.markdown(
+            f"**Title:** {scenario.title}\n\n**Description:** {scenario.description[:100]}...")
 
+# ============================================================
+# CHAT HISTORY MANAGEMENT
+# ============================================================
 # Initialize session state for chat history
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -274,11 +289,16 @@ if st.sidebar.button("Clear Chat History"):
     st.session_state.messages = []
     st.experimental_rerun()
 
-# Sidebar configuration
+# ============================================================
+# SIDEBAR: ADDITIONAL CONFIGURATION
+# ============================================================
 st.sidebar.header("Configuration")
 # Checkbox to show retrieved documents context
 show_context = st.sidebar.checkbox("Show Retrieved Documents", value=False)
 
+# ============================================================
+# SESSION STATE MANAGEMENT
+# ============================================================
 # Custom session state for tracking conversations
 if "student_profile" not in st.session_state:
     st.session_state.student_profile = None
@@ -290,6 +310,119 @@ if "scenario" not in st.session_state:
 if student_profile:
     st.session_state.student_profile = student_profile
 
+if scenario:
+    st.session_state.scenario = scenario
+
+# ============================================================
+# DISPLAY CURRENT PROFILE AND SCENARIO
+# ============================================================
+# Create two columns for displaying current profile and scenario
+col1, col2 = st.columns(2)
+
+# Display current student profile information
+with col1:
+    st.subheader("Current Student Profile")
+    if st.session_state.student_profile:
+        profile = st.session_state.student_profile
+        
+        # Handle both dictionary and object types
+        if hasattr(profile, 'get'):  # It's a dictionary
+            profile_name = profile.get('name', 'Unknown')
+            grade_level = profile.get('grade_level', 'Unknown')
+            learning_style = profile.get('learning_style', 'Unknown')
+            personality_traits = profile.get('personality_traits', [])
+            interests = profile.get('interests', [])
+            academic_strengths = profile.get('academic_strengths', 'Unknown')
+            academic_challenges = profile.get('academic_challenges', 'Unknown')
+        else:  # It's an object
+            profile_name = getattr(profile, 'name', 'Unknown')
+            grade_level = getattr(profile, 'grade_level', 'Unknown')
+            learning_style = getattr(profile, 'learning_style', 'Unknown')
+            personality_traits = getattr(profile, 'personality_traits', [])
+            interests = getattr(profile, 'interests', [])
+            academic_strengths = getattr(profile, 'academic_strengths', 'Unknown')
+            academic_challenges = getattr(profile, 'academic_challenges', 'Unknown')
+        
+        st.success(f"Active Profile: {profile_name}")
+        
+        with st.expander("Profile Details", expanded=True):
+            st.markdown(f"**Name:** {profile_name}")
+            st.markdown(f"**Grade Level:** {grade_level}")
+            st.markdown(f"**Learning Style:** {learning_style}")
+            
+            # Display personality traits if available
+            if personality_traits:
+                traits = ", ".join(personality_traits) if isinstance(personality_traits, list) else personality_traits
+                st.markdown(f"**Personality:** {traits}")
+            
+            # Display interests if available
+            if interests:
+                # Handle both string and Interest enum types
+                interest_values = []
+                for interest in interests:
+                    if hasattr(interest, 'value'):  # It's an enum
+                        interest_values.append(interest.value)
+                    else:
+                        interest_values.append(str(interest))
+                
+                interests_str = ", ".join(interest_values)
+                st.markdown(f"**Interests:** {interests_str}")
+            
+            # Display academic information
+            st.markdown(f"**Academic Strengths:** {academic_strengths}")
+            st.markdown(f"**Academic Challenges:** {academic_challenges}")
+    else:
+        st.warning("No student profile selected. Please create or select a profile.")
+
+# Display current scenario information
+with col2:
+    st.subheader("Current Scenario")
+    if st.session_state.scenario:
+        scenario = st.session_state.scenario
+        
+        # Handle both dictionary and object types
+        if hasattr(scenario, 'get'):  # It's a dictionary
+            title = scenario.get('title', 'Unknown')
+            description = scenario.get('description', 'No description available')
+            grade_level = scenario.get('grade_level', 'Unknown')
+            subject = scenario.get('subject', 'Unknown')
+            challenge_type = scenario.get('challenge_type', 'Unknown')
+        else:  # It's an object
+            title = getattr(scenario, 'title', 'Unknown')
+            description = getattr(scenario, 'description', 'No description available')
+            
+            # Handle enum values
+            grade_level_obj = getattr(scenario, 'grade_level', None)
+            grade_level = getattr(grade_level_obj, 'value', str(grade_level_obj)) if grade_level_obj else 'Unknown'
+            
+            subject_obj = getattr(scenario, 'subject', None)
+            subject = getattr(subject_obj, 'value', str(subject_obj)) if subject_obj else 'Unknown'
+            
+            challenge_obj = getattr(scenario, 'challenge_type', None)
+            challenge_type = getattr(challenge_obj, 'value', str(challenge_obj)) if challenge_obj else 'Unknown'
+        
+        st.success(f"Active Scenario: {title}")
+        
+        with st.expander("Scenario Details", expanded=True):
+            st.markdown(f"**Title:** {title}")
+            
+            # Display description with a character limit
+            if len(description) > 150:
+                st.markdown(f"**Description:** {description[:150]}...")
+
+            else:
+                st.markdown(f"**Description:** {description}")
+            
+            # Display other scenario details
+            st.markdown(f"**Grade Level:** {grade_level}")
+            st.markdown(f"**Subject:** {subject}")
+            st.markdown(f"**Challenge Type:** {challenge_type}")
+    else:
+        st.warning("No scenario selected. Please create or select a scenario.")
+
+# ============================================================
+# CHAT INTERFACE
+# ============================================================
 # Display chat history
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
@@ -311,52 +444,44 @@ if prompt := st.chat_input("Your message"):
 
         # Use the multi-agent system with student profile and scenario
         if st.session_state.student_profile is None:
+            # Prompt user to create a profile if none exists
             message_placeholder.markdown(
                 "Please create or select a student profile before starting the conversation.")
         else:
-            # Create initial state with profile and scenario
-            # Only set generate_missing=True if you want to auto-generate missing components
-            state = create_multi_agent_state(
-                messages=[HumanMessage(content=prompt)],
-                student_profile=st.session_state.student_profile,
-                scenario=st.session_state.scenario,
-                generate_missing=False  # Don't auto-generate - respect Streamlit state
-            )
-
             # Display warning if no scenario is selected
             if st.session_state.scenario is None:
                 st.warning(
-                    "No scenario selected. The student responses won't be scenario-specific. Please select or generate a scenario for a better experience.")
+                    "No scenario selected. A random scenario will be generated automatically.")
 
-                # Add a button to generate a scenario now
-                if st.button("Generate a scenario now"):
-                    # Use our helper function to generate a random scenario
-                    profile = st.session_state.student_profile
-                    grade = profile.get("grade_level", "MIDDLE_SCHOOL")
-
-                    scenario = create_scenario_for_streamlit(
-                        scenario_type="random",
-                        grade=grade
-                    )
-
-                    # Update the session state with the generated scenario
-                    st.session_state.scenario = scenario
-                    st.success(
-                        f"Generated scenario: {scenario.get('title', 'New scenario')}")
-                    st.experimental_rerun()  # Rerun to update the UI
-
-            # Ensure the state is properly structured
-            # Log for debugging
-            print("State:", state)
-            print("Scenario type:", type(state.get("scenario")))
-            print("Student profile type:", type(state.get("student_profile")))
-
+            # Create initial state with profile and scenario
+            state = create_multi_agent_state(
+                messages=[HumanMessage(content=prompt)],
+                student_profile=st.session_state.student_profile,
+                scenario=st.session_state.scenario
+            )
+            
             # Process through multi-agent system
             agent = create_multi_agent_pipeline()
             result = agent.invoke(
                 state,
                 config={"configurable": {"thread_id": 43}}
             )
+
+            # Check for notifications from the agent
+            if result.get("notification"):
+                st.info(result["notification"])
+                
+                # If a scenario was generated, update the session state
+                if result.get("scenario") and st.session_state.scenario is None:
+                    st.session_state.scenario = result["scenario"]
+                    # Force a rerun to update the UI with the new scenario
+                    st.experimental_rerun()
+                    
+                # If a profile was generated, update the session state
+                if result.get("student_profile") and st.session_state.student_profile is None:
+                    st.session_state.student_profile = result["student_profile"]
+                    # Force a rerun to update the UI with the new profile
+                    st.experimental_rerun()
 
             # Extract the response
             if result["messages"] and len(result["messages"]) > 0:
@@ -376,11 +501,14 @@ if prompt := st.chat_input("Your message"):
             st.session_state.messages.append(
                 {"role": "assistant", "content": response_content})
 
+# ============================================================
+# DISPLAY RETRIEVED DOCUMENTS (OPTIONAL)
+# ============================================================
 # Add expander with retrieved documents (if checkbox is selected)
 if show_context and st.session_state.messages and len(st.session_state.messages) > 0:
     with st.expander("Retrieved Documents"):
         if prompt:
-            # Get the context documents
+            # Get the context documents using the embedding generator
             db = EmbeddingGenerator().return_chroma()
             results = db.similarity_search_with_score(prompt, k=5)
 
