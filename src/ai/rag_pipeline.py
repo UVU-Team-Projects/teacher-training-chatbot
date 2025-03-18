@@ -1,7 +1,7 @@
 # Project files
-from .student_profiles import create_student_profile, Interest, STUDENT_TEMPLATES, StudentProfile
-from .embedding import EmbeddingGenerator
-from .profile_builder import StudentProfileBuilder
+from student_profiles import create_student_profile, Interest, STUDENT_TEMPLATES, StudentProfile
+from embedding import EmbeddingGenerator
+from profile_builder import StudentProfileBuilder
 
 # External imports
 from dotenv import load_dotenv
@@ -166,9 +166,9 @@ class RAG:
         # workflow.add_node('tools', self.tool_node)
 
         # Configure graph flow
-        workflow.set_entry_point("retrieve")
-        # workflow.set_entry_point("generate")
-        workflow.add_edge('retrieve', 'generate')
+        # workflow.set_entry_point("retrieve")
+        # workflow.add_edge('retrieve', 'generate')
+        workflow.set_entry_point("generate")
         # workflow.add_conditional_edges("generate", self.should_continue)
         # workflow.add_edge("tools", 'generate')
         workflow.add_edge('generate', END)
@@ -192,47 +192,47 @@ def typing_effect(text: str, delay: float = 0.01) -> None:
     print()
 
 
-def create_student_profile():
-    # Create a student profile
-    student = create_student_profile(
-        template_name="struggling_student",  # or choose another template
-        name="Alex",
-        grade_level=2,
-        interests=[Interest.SPORTS, Interest.SCIENCE],
-        academic_strengths=["mental math", "science experiments"],
-        academic_challenges=["reading comprehension", "sitting still"],
-        support_strategies=["movement breaks",
-                            "hands-on learning", "visual aids"]
-    )
-    return student
+# def create_student_profile():
+#     # Create a student profile
+#     student = create_student_profile(
+#         template_name="struggling_student",  # or choose another template
+#         name="Alex",
+#         grade_level=2,
+#         interests=[Interest.SPORTS, Interest.SCIENCE],
+#         academic_strengths=["mental math", "science experiments"],
+#         academic_challenges=["reading comprehension", "sitting still"],
+#         support_strategies=["movement breaks",
+#                             "hands-on learning", "visual aids"]
+#     )
+#     return student
 
 
-def chat_with_student(agent: CompiledStateGraph, student: StudentProfile, query: str) -> str:
-    """Chat with a student profile."""
-    # Initialize state with both messages and student profile
-    initial_state = {
-        "messages": [HumanMessage(content=query)],
-        "context": "",
-        "student_profile": {
-            "name": student.name,
-            "grade_level": student.grade_level,
-            "personality_traits": student.personality_traits,
-            "typical_moods": student.typical_moods,
-            "behavioral_patterns": student.behavioral_patterns,
-            "learning_style": student.learning_style,
-            "interests": student.interests,
-            "academic_strengths": student.academic_strengths,
-            "academic_challenges": student.academic_challenges,
-            "support_strategies": student.support_strategies,
-            "social_dynamics": student.social_dynamics
-        }
-    }
+# def chat_with_student(agent: CompiledStateGraph, student: StudentProfile, query: str) -> str:
+#     """Chat with a student profile."""
+#     # Initialize state with both messages and student profile
+#     initial_state = {
+#         "messages": [HumanMessage(content=query)],
+#         "context": "",
+#         "student_profile": {
+#             "name": student.name,
+#             "grade_level": student.grade_level,
+#             "personality_traits": student.personality_traits,
+#             "typical_moods": student.typical_moods,
+#             "behavioral_patterns": student.behavioral_patterns,
+#             "learning_style": student.learning_style,
+#             "interests": student.interests,
+#             "academic_strengths": student.academic_strengths,
+#             "academic_challenges": student.academic_challenges,
+#             "support_strategies": student.support_strategies,
+#             "social_dynamics": student.social_dynamics
+#         }
+#     }
 
-    response = agent.invoke(
-        initial_state,
-        config={"configurable": {"thread_id": 42}}
-    )
-    return response["messages"][-1].content
+#     response = agent.invoke(
+#         initial_state,
+#         config={"configurable": {"thread_id": 42}}
+#     )
+#     return response["messages"][-1].content
 
 
 def main() -> None:

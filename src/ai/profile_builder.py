@@ -1,5 +1,5 @@
 from typing import Dict, List, Optional
-from .student_profiles import StudentProfile, Interest, Mood
+from student_profiles import StudentProfile, Interest, Mood
 from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 import json

@@ -57,7 +57,7 @@ class SimpleRAG:
 
         # Create messages with context
         messages = [
-            {"role": "system", "content": "You are a helpful assistant that can help the user understand your knowledge base. Please provide many details."},
+            {"role": "system", "content": "You are a helpful assistant to help the teacher. When given a question, use the context to provide a concise answer. No more than three answers."},
             {"role": "user", "content": f"Context: {context}\n\nQuestion: {query}"}
         ]
 
