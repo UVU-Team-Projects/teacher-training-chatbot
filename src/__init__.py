@@ -3,9 +3,6 @@ Teacher Training Chatbot
 A system for simulating student interactions for teacher training.
 """
 
-<<<<<<< Updated upstream
-__version__ = "0.1.0" 
-=======
 __version__ = "0.1.0"
 
 # Core components
@@ -15,14 +12,14 @@ try:
     from .ai.student_profiles import create_student_profile, Interest, STUDENT_TEMPLATES, StudentProfile
     from .ai.profile_builder import StudentProfileBuilder
     from .ai.simple_rag import LlamaRAG
-    from .app2 import load_css
+    # from .app2 import load_css
 except ImportError:
     from src.ai.embedding import EmbeddingGenerator
     from src.ai.MultiAgent_pipeline import RAG, create_pipeline, chat_with_student
     from src.ai.student_profiles import create_student_profile, Interest, STUDENT_TEMPLATES, StudentProfile
     from src.ai.profile_builder import StudentProfileBuilder
     from src.ai.simple_rag import LlamaRAG
-    from src.app2 import load_css
+    # from src.app2 import load_css
 
 # Version information
 __all__ = [
@@ -38,4 +35,3 @@ __all__ = [
     'load_css',
     'StudentProfileBuilder',
 ]
->>>>>>> Stashed changes
