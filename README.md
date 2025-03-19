@@ -15,7 +15,7 @@ A specialized LLM-powered educational chatbot designed for training elementary s
 - [Development Workflow](#-development-workflow)
 - [Documentation](#-documentation)
 - [Maintenance](#-maintenance)
-
+- [Deployment](#-deployment)
 ## 🎯 Project Overview
 
 UTAH-TTA Second Grade Edition provides:
@@ -481,4 +481,64 @@ cd utah-tta
 2. [Log Rotation](docs/technical/maintenance/log_rotation.md)
 3. [Performance Monitoring](docs/technical/maintenance/monitoring.md)
 4. [Security Updates](docs/technical/maintenance/security_updates.md)
+
+## 🚀 Deployment
+
+### Prerequisites
+
+- Python 3.8+
+- PostgreSQL or SQLite database
+- Virtual environment (recommended)
+- Flask (for API backend)
+- React (for frontend UI)
+
+### Steps to Deploy
+
+1. ***Clone***** the Repository**
+
+   
+bash
+   git clone https://github.com/your-org/utah-tta.git
+   cd utah-tta
+
+
+2. **Set Up Virtual Environment**
+
+   
+bash
+   python3 -m venv venv
+   source venv/bin/activate  # On Windows use `venv\Scripts\activate`
+
+
+3. **Install Dependencies**
+
+   
+bash
+   pip install -r requirements.txt
+
+
+4. **Set Up Database**
+
+   
+bash
+   python manage.py migrate
+   python manage.py seed_data  # Optional: Populate with sample data
+
+
+5. **Run the Backend**
+
+   
+bash
+   flask run --host=0.0.0.0 --port=5000
+
+
+6. **Start the Frontend**
+
+   
+bash
+   cd frontend
+   npm install
+   npm start
+
+
  
