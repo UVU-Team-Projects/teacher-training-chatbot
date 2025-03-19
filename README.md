@@ -512,32 +512,36 @@ bash
 3. **Install Dependencies**
 
    
-bash
+```
    pip install -r requirements.txt
+```
 
 
 4. **Set Up Database**
 
    
-bash
+```
    python manage.py migrate
    python manage.py seed_data  # Optional: Populate with sample data
+```
 
 
 5. **Run the Backend**
 
    
-bash
+```
    flask run --host=0.0.0.0 --port=5000
+```
 
 
 6. **Start the Frontend**
 
    
-bash
+```
    cd frontend
    npm install
    npm start
+```
 
 
  
