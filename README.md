@@ -494,13 +494,12 @@ cd utah-tta
 
 ### Steps to Deploy
 
-1. ***Clone***** the Repository**
+1. ***Clone*** the Repository
 
-   
-bash
+   ```
    git clone https://github.com/your-org/utah-tta.git
    cd utah-tta
-
+   ```
 
 2. **Set Up Virtual Environment**
 
