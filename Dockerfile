@@ -1,12 +1,11 @@
 FROM python:3.12-slim
 
-WORKDIR /app
+# Install git and other dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# RUN apt-get update && apt-get install -y git
+# Don't use the CMD that runs the app - we want an interactive shell for development
+WORKDIR /workspace
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-COPY . .
-
-CMD ["python", "src/ai/app.py"]
+# We'll install requirements in postCreateCommand instead
