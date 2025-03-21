@@ -75,6 +75,7 @@ class TeacherProfile(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, index=True)
+    grade_level = Column(Integer)
     teaching_philosophy = Column(Text)
     preferred_teaching_methods = Column(ARRAY(String), nullable=True)
     behavior_management_philosophy = Column(Text, nullable=True)
