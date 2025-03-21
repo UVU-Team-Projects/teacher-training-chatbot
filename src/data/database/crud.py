@@ -1,4 +1,4 @@
-from database import StudentProfile, get_db, Scenario, Dialogue, ActiveFile, InactiveFile
+from database import StudentProfile, get_db, Scenario, Dialogue, ActiveFile, InactiveFile, TeacherProfile
 from sqlalchemy.exc import IntegrityError
 from typing import List, Union
 import os
@@ -16,6 +16,91 @@ import os
     # support_strategies = Column(ARRAY(String), nullable=True)
     # social_dynamics = Column(String, nullable=True)
 
+def print_student_profiles():
+    """
+    Prints the contents of the student_profiles table.
+    """
+    db = next(get_db())
+    students = db.query(StudentProfile).all()
+    print("\nstudent_profiles table contents:")
+    for student in students:
+        print(f"  ID: {student.id}")
+        print(f"  Name: {student.name}")
+        print(f"  Grade Level: {student.grade_level}")
+        print(f"  Personality Traits: {', '.join(student.personality_traits) if student.personality_traits else 'None'}")
+        print(f"  Typical Moods: {', '.join(student.typical_moods) if student.typical_moods else 'None'}")
+        print(f"  Behavioral Patterns: {student.behavioral_patterns}")
+        print(f"  Learning Style: {student.learning_style}")
+        print(f"  Interests: {', '.join(student.interests) if student.interests else 'None'}")
+        print(f"  Academic Strengths: {', '.join(student.academic_strengths) if student.academic_strengths else 'None'}")
+        print(f"  Academic Challenges: {', '.join(student.academic_challenges) if student.academic_challenges else 'None'}")
+        print(f"  Support Strategies: {', '.join(student.support_strategies) if student.support_strategies else 'None'}")
+        print(f"  Social Dynamics: {student.social_dynamics}")
+        print("-" * 20)  # Separator between students
+
+def print_teacher_profiles():
+    """
+    Prints the contents of the teacher_profiles table.
+    """
+    db = next(get_db())
+    teachers = db.query(TeacherProfile).all()
+    print("\nteacher_profiles table contents:")
+    for teacher in teachers:
+        print(f"  ID: {teacher.id}")
+        print(f"  Name: {teacher.name}")
+        print(f"  Teaching Philosophy: {teacher.teaching_philosophy}")
+        print(f"  Preferred Teaching Methods: {', '.join(teacher.preferred_teaching_methods) if teacher.preferred_teaching_methods else 'None'}")
+        print(f"  Behavior Management Philosophy: {teacher.behavior_management_philosophy}")
+        print(f"  Areas for Growth: {', '.join(teacher.areas_for_growth) if teacher.areas_for_growth else 'None'}")
+        print("-" * 20)  # Separator between teachers
+
+def print_scenarios():
+    """
+    Prints the contents of the scenarios table.
+    """
+    db = next(get_db())
+    scenarios = db.query(Scenario).all()
+    print("\nscenarios table contents:")
+    for scenario in scenarios:
+        print(f"  ID: {scenario.id}")
+        print(f"  Title: {scenario.title}")
+        print(f"  Description: {scenario.description}")
+        print("-" * 20)  # Separator between scenarios
+
+def print_dialogues():
+    """
+    Prints the contents of the dialogues table.
+    """
+    db = next(get_db())
+    dialogues = db.query(Dialogue).all()
+    print("\ndialogues table contents:")
+    for dialogue in dialogues:
+        print(f"  ID: {dialogue.id}")
+        print(f"  Scenario ID: {dialogue.scenario_id}")
+        print(f"  Student Name: {dialogue.student_name}")
+        print(f"  Utterance: {dialogue.utterance}")
+        print("-" * 20)  # Separator between dialogues
+
+def print_active_files():
+    """
+    Prints the contents of the active_files table.
+    """
+    db = next(get_db())
+    active_files = db.query(ActiveFile).all()
+    print("\nactive_files table contents:")
+    for file in active_files:
+        print(f"ID: {file.id}, Name: {file.name}")  # Print only ID and name
+
+def print_inactive_files():
+    """
+    Prints the contents of the inactive_files table.
+    """
+    db = next(get_db())
+    inactive_files = db.query(InactiveFile).all()
+    print("\ninactive_files table contents:")
+    for file in inactive_files:
+        print(f"ID: {file.id}, Name: {file.name}")  # Print only ID and name
+
 def print_table_contents(table_name: str):
     """
     Prints the contents of the specified table.
@@ -23,52 +108,18 @@ def print_table_contents(table_name: str):
     Args:
         table_name (str): The name of the table to print.
     """
-    db = next(get_db())
-
     if table_name == "student_profiles":
-        students = db.query(StudentProfile).all()
-        print("\nstudent_profiles table contents:")
-        for student in students:
-            print(f"  ID: {student.id}")
-            print(f"  Name: {student.name}")
-            print(f"  Grade Level: {student.grade_level}")
-            print(f"  Personality Traits: {', '.join(student.personality_traits) if student.personality_traits else 'None'}")
-            print(f"  Typical Moods: {', '.join(student.typical_moods) if student.typical_moods else 'None'}")
-            print(f"  Behavioral Patterns: {student.behavioral_patterns}")
-            print(f"  Learning Style: {student.learning_style}")
-            print(f"  Interests: {', '.join(student.interests) if student.interests else 'None'}")
-            print(f"  Academic Strengths: {', '.join(student.academic_strengths) if student.academic_strengths else 'None'}")
-            print(f"  Academic Challenges: {', '.join(student.academic_challenges) if student.academic_challenges else 'None'}")
-            print(f"  Support Strategies: {', '.join(student.support_strategies) if student.support_strategies else 'None'}")
-            print(f"  Social Dynamics: {student.social_dynamics}")
-            print("-" * 20)  # Separator between students
+        print_student_profiles()
+    elif table_name == "teacher_profiles":
+        print_teacher_profiles()
     elif table_name == "scenarios":
-        scenarios = db.query(Scenario).all()
-        print("\nscenarios table contents:")
-        for scenario in scenarios:
-            print(f"  ID: {scenario.id}")
-            print(f"  Title: {scenario.title}")
-            print(f"  Description: {scenario.description}")
-            print("-" * 20)  # Separator between scenarios
+        print_scenarios()
     elif table_name == "dialogues":
-        dialogues = db.query(Dialogue).all()
-        print("\ndialogues table contents:")
-        for dialogue in dialogues:
-            print(f"  ID: {dialogue.id}")
-            print(f"  Scenario ID: {dialogue.scenario_id}")
-            print(f"  Student Name: {dialogue.student_name}")
-            print(f"  Utterance: {dialogue.utterance}")
-            print("-" * 20)  # Separator between dialogues
+        print_dialogues()
     elif table_name == "active_files":
-        active_files = db.query(ActiveFile).all()
-        print("\nactive_files table contents:")
-        for file in active_files:
-            print(f"ID: {file.id}, Name: {file.name}")  # Print only ID and name
+        print_active_files()
     elif table_name == "inactive_files":
-        inactive_files = db.query(InactiveFile).all()
-        print("\ninactive_files table contents:")
-        for file in inactive_files:
-            print(f"ID: {file.id}, Name: {file.name}")  # Print only ID and name
+        print_inactive_files()
     else:
         print(f"\nInvalid table name: {table_name}")
 
@@ -225,6 +276,23 @@ def delete_student_by_name(student_name: str) -> bool:
         return True
     return False
 
+def clear_student_profiles() -> bool:
+    """
+    Clears all records from the student_profiles table.
+
+    Returns:
+        bool: True if the operation was successful, False otherwise.
+    """
+    db = next(get_db())
+    try:
+        db.query(StudentProfile).delete()
+        db.commit()
+        return True
+    except Exception as e:
+        db.rollback()
+        print(f"Error clearing student profiles: {e}")
+        return False
+
 # Scenario CRUD Functions
 
 def get_scenario_by_title(title: str) -> Scenario:
@@ -316,6 +384,23 @@ def delete_scenario(scenario_id: int) -> bool:
     except Exception as e:
         db.rollback()
         print(f"Error deleting scenario: {e}")
+        return False
+
+def clear_scenarios() -> bool:
+    """
+    Clears all records from the scenarios table.
+
+    Returns:
+        bool: True if the operation was successful, False otherwise.
+    """
+    db = next(get_db())
+    try:
+        db.query(Scenario).delete()
+        db.commit()
+        return True
+    except Exception as e:
+        db.rollback()
+        print(f"Error clearing scenarios: {e}")
         return False
 
 # Dialogue CRUD functions
@@ -432,6 +517,23 @@ def get_dialogues_by_student_and_scenario(student_name: str, scenario_title: str
         Scenario.title == scenario_title
     ).all()
     return dialogues
+
+def clear_dialogues() -> bool:
+    """
+    Clears all records from the dialogues table.
+
+    Returns:
+        bool: True if the operation was successful, False otherwise.
+    """
+    db = next(get_db())
+    try:
+        db.query(Dialogue).delete()
+        db.commit()
+        return True
+    except Exception as e:
+        db.rollback()
+        print(f"Error clearing dialogues: {e}")
+        return False
 
 # Active and Inactive Tables CRUD functions
 
@@ -680,5 +782,286 @@ def move_file_to_active_by_name(name: str) -> bool:
     except Exception as e:
         db.rollback()
         print(f"Error moving file to active: {e}")
+        return False
+
+def clear_active_files() -> bool:
+    """
+    Clears all records from the active_files table.
+
+    Returns:
+        bool: True if the operation was successful, False otherwise.
+    """
+    db = next(get_db())
+    try:
+        db.query(ActiveFile).delete()
+        db.commit()
+        return True
+    except Exception as e:
+        db.rollback()
+        print(f"Error clearing active files: {e}")
+        return False
+
+def clear_inactive_files() -> bool:
+    """
+    Clears all records from the inactive_files table.
+
+    Returns:
+        bool: True if the operation was successful, False otherwise.
+    """
+    db = next(get_db())
+    try:
+        db.query(InactiveFile).delete()
+        db.commit()
+        return True
+    except Exception as e:
+        db.rollback()
+        print(f"Error clearing inactive files: {e}")
+        return False
+
+# Teacher CRUD Functions
+
+def get_teacher_by_id(teacher_id: int) -> TeacherProfile:
+    """
+    Retrieves a teacher profile from the database by their id.
+
+    Args:
+        teacher_id (int): Id of the teacher to retrieve.
+
+    Returns:
+        TeacherProfile: The TeacherProfile object if found, None otherwise.
+    """
+    db = next(get_db())
+    try:
+        teacher = db.query(TeacherProfile).filter(TeacherProfile.id == teacher_id).first()
+        return teacher
+    except Exception as e:
+        print(f"Error retrieving teacher by ID: {e}")
+        return None
+
+def get_teacher_by_name(name: str) -> TeacherProfile:
+    """
+    Retrieves a teacher profile from the database by their name.
+
+    Args:
+        name (str): The name of the teacher to retrieve.
+
+    Returns:
+        TeacherProfile: The TeacherProfile object if found, None otherwise.
+    """
+    db = next(get_db())
+    try:
+        teacher = db.query(TeacherProfile).filter(TeacherProfile.name == name).first()
+        return teacher
+    except Exception as e:
+        print(f"Error retrieving teacher by name: {e}")
+        return None
+
+def get_all_teachers() -> List[TeacherProfile]:
+    """
+    Retrieves all teacher profiles from the database.
+
+    Returns:
+        list: A list of TeacherProfile objects.
+    """
+    db = next(get_db())
+    try:
+        teachers = db.query(TeacherProfile).all()
+        return teachers
+    except Exception as e:
+        print(f"Error retrieving all teachers: {e}")
+        return []
+
+def create_teacher(
+    name: str,
+    teaching_philosophy: str,
+    preferred_teaching_methods: list = None,
+    behavior_management_philosophy: str = None,
+    areas_for_growth: list = None
+) -> TeacherProfile:
+    """
+    Creates a new teacher profile in the database.
+
+    Args:
+        name (str): The name of the teacher.
+        teaching_philosophy (str): The teacher's teaching philosophy.
+        preferred_teaching_methods (list, optional): List of preferred teaching methods. Defaults to None.
+        behavior_management_philosophy (str, optional): The teacher's behavior management philosophy. Defaults to None.
+        areas_for_growth (list, optional): List of areas for growth. Defaults to None.
+
+    Returns:
+        TeacherProfile: The created TeacherProfile object, or None if creation failed.
+    """
+    db = next(get_db())
+    try:
+        teacher = TeacherProfile(
+            name=name,
+            teaching_philosophy=teaching_philosophy,
+            preferred_teaching_methods=preferred_teaching_methods,
+            behavior_management_philosophy=behavior_management_philosophy,
+            areas_for_growth=areas_for_growth
+        )
+        db.add(teacher)
+        db.commit()
+        db.refresh(teacher)
+        return teacher
+    except IntegrityError as e:
+        db.rollback()
+        print(f"Error creating teacher: {e}")
+        return None
+    except Exception as e:
+        db.rollback()
+        print(f"Unexpected error creating teacher: {e}")
+        return None
+
+def update_teacher(teacher_id: int, **kwargs) -> TeacherProfile:
+    """
+    Updates an existing teacher profile in the database.
+
+    Args:
+        teacher_id (int): The ID of the teacher to update.
+        **kwargs: Keyword arguments representing the fields to update and their new values.
+
+    Returns:
+        TeacherProfile: The updated TeacherProfile object, or None if the update failed.
+    """
+    db = next(get_db())
+    try:
+        teacher = db.query(TeacherProfile).filter(TeacherProfile.id == teacher_id).first()
+        if teacher:
+            for key, value in kwargs.items():
+                setattr(teacher, key, value)
+            db.commit()
+            db.refresh(teacher)
+            return teacher
+        return None
+    except IntegrityError as e:
+        db.rollback()
+        print(f"Error updating teacher: {e}")
+        return None
+    except Exception as e:
+        db.rollback()
+        print(f"Unexpected error updating teacher: {e}")
+        return None
+
+def delete_teacher_by_id(teacher_id: int) -> bool:
+    """
+    Deletes a teacher profile from the database by ID.
+
+    Args:
+        teacher_id (int): The ID of the teacher to delete.
+
+    Returns:
+        bool: True if the deletion was successful, False otherwise.
+    """
+    db = next(get_db())
+    try:
+        teacher = db.query(TeacherProfile).filter(TeacherProfile.id == teacher_id).first()
+        if teacher:
+            db.delete(teacher)
+            db.commit()
+            return True
+        return False
+    except Exception as e:
+        db.rollback()
+        print(f"Error deleting teacher by ID: {e}")
+        return False
+
+def delete_teacher_by_name(name: str) -> bool:
+    """
+    Deletes a teacher profile from the database by name.
+
+    Args:
+        name (str): The name of the teacher to delete.
+
+    Returns:
+        bool: True if the deletion was successful, False otherwise.
+    """
+    db = next(get_db())
+    try:
+        teacher = db.query(TeacherProfile).filter(TeacherProfile.name == name).first()
+        if teacher:
+            db.delete(teacher)
+            db.commit()
+            return True
+        return False
+    except Exception as e:
+        db.rollback()
+        print(f"Error deleting teacher by name: {e}")
+        return False
+
+def get_teachers_by_teaching_method(method: str) -> List[TeacherProfile]:
+    """
+    Retrieves all teachers who use a specific teaching method.
+
+    Args:
+        method (str): The teaching method to search for.
+
+    Returns:
+        list: A list of TeacherProfile objects that use the specified teaching method.
+    """
+    db = next(get_db())
+    try:
+        teachers = db.query(TeacherProfile).filter(TeacherProfile.preferred_teaching_methods.contains([method])).all()
+        return teachers
+    except Exception as e:
+        print(f"Error retrieving teachers by teaching method: {e}")
+        return []
+
+def get_teachers_by_area_for_growth(area: str) -> List[TeacherProfile]:
+    """
+    Retrieves all teachers who have a specific area for growth.
+
+    Args:
+        area (str): The area for growth to search for.
+
+    Returns:
+        list: A list of TeacherProfile objects that have the specified area for growth.
+    """
+    db = next(get_db())
+    try:
+        teachers = db.query(TeacherProfile).filter(TeacherProfile.areas_for_growth.contains([area])).all()
+        return teachers
+    except Exception as e:
+        print(f"Error retrieving teachers by area for growth: {e}")
+        return []
+
+def clear_teacher_profiles() -> bool:
+    """
+    Clears all records from the teacher_profiles table.
+
+    Returns:
+        bool: True if the operation was successful, False otherwise.
+    """
+    db = next(get_db())
+    try:
+        db.query(TeacherProfile).delete()
+        db.commit()
+        return True
+    except Exception as e:
+        db.rollback()
+        print(f"Error clearing teacher profiles: {e}")
+        return False
+
+# Table Management Functions
+
+def clear_all_tables() -> bool:
+    """
+    Clears all records from all tables in the database.
+    Tables are cleared in a specific order to handle foreign key constraints.
+
+    Returns:
+        bool: True if all tables were cleared successfully, False otherwise.
+    """
+    try:
+        # Clear tables in order of dependencies
+        clear_dialogues()  # Clear first due to foreign key constraints
+        clear_scenarios()
+        clear_student_profiles()
+        clear_teacher_profiles()
+        clear_active_files()
+        clear_inactive_files()
+        return True
+    except Exception as e:
+        print(f"Error clearing all tables: {e}")
         return False
 

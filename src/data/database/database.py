@@ -70,6 +70,16 @@ class StudentProfile(Base):
     support_strategies = Column(ARRAY(String), nullable=True)
     social_dynamics = Column(JSON, nullable=True)
 
+class TeacherProfile(Base):
+    __tablename__ = "teacher_profiles"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, index=True)
+    teaching_philosophy = Column(Text)
+    preferred_teaching_methods = Column(ARRAY(String), nullable=True)
+    behavior_management_philosophy = Column(Text, nullable=True)
+    areas_for_growth = Column(ARRAY(String), nullable=True)
+
 class Scenario(Base):
     __tablename__ = "scenarios"
     __table_args__ = (UniqueConstraint('title'),)
@@ -107,34 +117,40 @@ class InactiveFile(Base):
     name = Column(String, nullable=False)
     file_content = Column(LargeBinary, nullable=False)  # Store the file content as binary data
 
-# Check if the table exists and if its schema matches the model
-inspector = inspect(engine)
-for table_name in ["student_profiles", "scenarios", "dialogues", "active_files", "inactive_files"]:
-    table_exists = inspector.has_table(table_name)
-    if table_exists:
-        table_columns = [c["name"] for c in inspector.get_columns(table_name)]
-        model_columns = [c.name for c in Base.metadata.tables[table_name].columns]
+def generate_tables():
+    """
+    Generates or updates all database tables based on the SQLAlchemy models.
+    This function checks if tables exist and creates/updates them as needed.
+    """
+    inspector = inspect(engine)
+    tables_to_check = ["student_profiles", "teacher_profiles", "scenarios", "dialogues", "active_files", "inactive_files"]
+    
+    for table_name in tables_to_check:
+        table_exists = inspector.has_table(table_name)
+        if table_exists:
+            table_columns = [c["name"] for c in inspector.get_columns(table_name)]
+            model_columns = [c.name for c in Base.metadata.tables[table_name].columns]
 
-        # Sort the lists before comparing
-        table_columns.sort()
-        model_columns.sort()
+            # Sort the lists before comparing
+            table_columns.sort()
+            model_columns.sort()
 
-        if table_columns != model_columns:
-            # Drop the table using a raw SQL statement
-            try:
-                with engine.connect() as conn:
-                    conn.execute(text(f"DROP TABLE {table_name} CASCADE;"))
-                print(f"{table_name} table dropped due to schema changes.")
+            if table_columns != model_columns:
+                # Drop the table using a raw SQL statement
+                try:
+                    with engine.connect() as conn:
+                        conn.execute(text(f"DROP TABLE {table_name} CASCADE;"))
+                    print(f"{table_name} table dropped due to schema changes.")
 
-                # Recreate the table with the new schema
-                metadata.create_all(bind=engine, tables=[Base.metadata.tables[table_name]])
-                print(f"{table_name} table created.")
-            except OperationalError:
-                print(f"Error dropping or creating {table_name} table.")
-    else:
-        # Create the table if it doesn't exist
-        metadata.create_all(bind=engine, tables=[Base.metadata.tables[table_name]])
-        print(f"{table_name} table created.")
+                    # Recreate the table with the new schema
+                    metadata.create_all(bind=engine, tables=[Base.metadata.tables[table_name]])
+                    print(f"{table_name} table created.")
+                except OperationalError:
+                    print(f"Error dropping or creating {table_name} table.")
+        else:
+            # Create the table if it doesn't exist
+            metadata.create_all(bind=engine, tables=[Base.metadata.tables[table_name]])
+            print(f"{table_name} table created.")
 
 # Create a Session
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -145,5 +161,9 @@ def get_db():
         yield db
     finally:
         db.close()
+
+if __name__ == "__main__":
+    # Only run table generation if this file is run directly
+    generate_tables()
 
 
