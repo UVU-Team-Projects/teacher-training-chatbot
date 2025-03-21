@@ -1,0 +1,48 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/ubuntu
+{
+	"name": "Python Development",
+	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+	"build": {
+		"dockerfile": "Dockerfile",
+		"context": ".."
+	},
+	// Features to add to the dev container. More info: https://containers.dev/features.
+	"features": {
+		"ghcr.io/devcontainers/features/git:1": {}
+	},
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	// Add Ollama API port
+	"forwardPorts": [
+		8501,
+		11434
+	],
+	// Set up proper workspace folder
+	"workspaceFolder": "/workspace",
+	"workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",
+	// Install any project dependencies when container is created
+	"postCreateCommand": "pip install -r requirements.txt || echo 'No requirements.txt found - skipping pip install'",
+	// Add post-start command to start Ollama server
+	"postStartCommand": "ollama serve &",
+	// Configure VS Code settings
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-python.python",
+				"ms-python.vscode-pylance",
+				"eamodio.gitlens",
+				"ms-vscode-remote.remote-containers"
+			],
+			"settings": {
+				"python.defaultInterpreterPath": "/usr/local/bin/python",
+				"python.linting.enabled": true
+			}
+		}
+	},
+	// Add volume to persist Ollama models between container rebuilds
+	"mounts": [
+		"source=ollama-models,target=/root/.ollama,type=volume"
+	]
+	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+	// "remoteUser": "root"
+}
