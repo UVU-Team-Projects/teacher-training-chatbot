@@ -13,3 +13,4 @@ pypdf2==3.0.1
 # PyMuPDF>=1.18.14
 streamlit==1.39.0
 jq>=1.8.0
+unstructured==0.11.1

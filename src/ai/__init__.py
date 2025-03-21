@@ -1,1 +1,4 @@
-from . import chatbot, embedding, profile_builder, rag_pipeline, student_profiles
+from .chatbot import TeacherTrainingChatbot
+from .embedding import EmbeddingGenerator
+
+__all__ = ['TeacherTrainingChatbot', 'EmbeddingGenerator']

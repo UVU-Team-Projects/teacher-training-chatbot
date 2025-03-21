@@ -289,5 +289,5 @@ class EmbeddingGenerator:
 
 if __name__ == "__main__":
     embedder = EmbeddingGenerator()
-    # embedder.construct_chroma()
-    embedder.clear_chroma()
+    embedder.construct_chroma()
+    # embedder.clear_chroma()
