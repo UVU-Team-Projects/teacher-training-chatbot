@@ -129,29 +129,44 @@ def generate_tables():
     for table_name in tables_to_check:
         table_exists = inspector.has_table(table_name)
         if table_exists:
+            # Get the actual table columns from the database
             table_columns = [c["name"] for c in inspector.get_columns(table_name)]
+            # Get the model columns from our SQLAlchemy model
             model_columns = [c.name for c in Base.metadata.tables[table_name].columns]
 
             # Sort the lists before comparing
             table_columns.sort()
             model_columns.sort()
 
+            # Only drop and recreate if there's an actual difference in columns
             if table_columns != model_columns:
+                print(f"Schema mismatch detected for {table_name}:")
+                print(f"  Database columns: {table_columns}")
+                print(f"  Model columns: {model_columns}")
+                
                 # Drop the table using a raw SQL statement
                 try:
-                    with engine.connect() as conn:
-                        conn.execute(text(f"DROP TABLE {table_name} CASCADE;"))
+                    with engine.begin() as conn:  # This automatically handles transaction commit
+                        # First, drop any foreign key constraints
+                        conn.execute(text(f"ALTER TABLE IF EXISTS {table_name} DROP CONSTRAINT IF EXISTS {table_name}_pkey CASCADE;"))
+                        # Then drop the table
+                        conn.execute(text(f"DROP TABLE IF EXISTS {table_name} CASCADE;"))
                     print(f"{table_name} table dropped due to schema changes.")
 
                     # Recreate the table with the new schema
-                    metadata.create_all(bind=engine, tables=[Base.metadata.tables[table_name]])
-                    print(f"{table_name} table created.")
-                except OperationalError:
-                    print(f"Error dropping or creating {table_name} table.")
+                    Base.metadata.create_all(bind=engine, tables=[Base.metadata.tables[table_name]])
+                    print(f"{table_name} table created with new schema.")
+                except OperationalError as e:
+                    print(f"Error dropping or creating {table_name} table: {str(e)}")
+            else:
+                print(f"{table_name} table exists with correct schema.")
         else:
             # Create the table if it doesn't exist
-            metadata.create_all(bind=engine, tables=[Base.metadata.tables[table_name]])
-            print(f"{table_name} table created.")
+            try:
+                Base.metadata.create_all(bind=engine, tables=[Base.metadata.tables[table_name]])
+                print(f"{table_name} table created.")
+            except OperationalError as e:
+                print(f"Error creating {table_name} table: {str(e)}")
 
 # Create a Session
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

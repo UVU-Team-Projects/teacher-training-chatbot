@@ -1,7 +1,8 @@
 from database import StudentProfile, get_db, Scenario, Dialogue, ActiveFile, InactiveFile, TeacherProfile
 from sqlalchemy.exc import IntegrityError
-from typing import List, Union
+from typing import List, Union, Optional
 import os
+import json
 
     # id = Column(Integer, primary_key=True, index=True)
     # name = Column(String, index=True)
@@ -29,30 +30,72 @@ def print_student_profiles():
         print(f"  Grade Level: {student.grade_level}")
         print(f"  Personality Traits: {', '.join(student.personality_traits) if student.personality_traits else 'None'}")
         print(f"  Typical Moods: {', '.join(student.typical_moods) if student.typical_moods else 'None'}")
-        print(f"  Behavioral Patterns: {student.behavioral_patterns}")
+        # Format behavioral patterns as a clean JSON string
+        if student.behavioral_patterns:
+            if isinstance(student.behavioral_patterns, str):
+                print(f"  Behavioral Patterns: {student.behavioral_patterns}")
+            else:
+                print(f"  Behavioral Patterns: {json.dumps(student.behavioral_patterns)}")
+        else:
+            print("  Behavioral Patterns: None")
         print(f"  Learning Style: {student.learning_style}")
         print(f"  Interests: {', '.join(student.interests) if student.interests else 'None'}")
         print(f"  Academic Strengths: {', '.join(student.academic_strengths) if student.academic_strengths else 'None'}")
         print(f"  Academic Challenges: {', '.join(student.academic_challenges) if student.academic_challenges else 'None'}")
         print(f"  Support Strategies: {', '.join(student.support_strategies) if student.support_strategies else 'None'}")
-        print(f"  Social Dynamics: {student.social_dynamics}")
+        # Format social dynamics as a clean JSON string
+        if student.social_dynamics:
+            if isinstance(student.social_dynamics, str):
+                print(f"  Social Dynamics: {student.social_dynamics}")
+            else:
+                print(f"  Social Dynamics: {json.dumps(student.social_dynamics)}")
+        else:
+            print("  Social Dynamics: None")
         print("-" * 20)  # Separator between students
 
 def print_teacher_profiles():
     """
-    Prints the contents of the teacher_profiles table.
+    Prints all teacher profiles in a formatted table.
     """
     db = next(get_db())
-    teachers = db.query(TeacherProfile).all()
-    print("\nteacher_profiles table contents:")
-    for teacher in teachers:
-        print(f"  ID: {teacher.id}")
-        print(f"  Name: {teacher.name}")
-        print(f"  Teaching Philosophy: {teacher.teaching_philosophy}")
-        print(f"  Preferred Teaching Methods: {', '.join(teacher.preferred_teaching_methods) if teacher.preferred_teaching_methods else 'None'}")
-        print(f"  Behavior Management Philosophy: {teacher.behavior_management_philosophy}")
-        print(f"  Areas for Growth: {', '.join(teacher.areas_for_growth) if teacher.areas_for_growth else 'None'}")
-        print("-" * 20)  # Separator between teachers
+    try:
+        teachers = db.query(TeacherProfile).all()
+        if not teachers:
+            print("\nNo teacher profiles found.")
+            return
+
+        print("\n=== Teacher Profiles ===")
+        print("-" * 80)
+        print(f"{'ID':<5} {'Name':<20} {'Grade Level':<12} {'Teaching Philosophy':<40}")
+        print("-" * 80)
+
+        for teacher in teachers:
+            # Truncate teaching philosophy if too long
+            philosophy = teacher.teaching_philosophy[:37] + "..." if len(teacher.teaching_philosophy) > 40 else teacher.teaching_philosophy
+            print(f"{teacher.id:<5} {teacher.name:<20} {teacher.grade_level:<12} {philosophy:<40}")
+
+        print("-" * 80)
+        print(f"Total Teachers: {len(teachers)}")
+        print("-" * 80)
+
+        # Print detailed information for each teacher
+        print("\nDetailed Teacher Information:")
+        print("=" * 80)
+        for teacher in teachers:
+            print(f"\nTeacher: {teacher.name} (ID: {teacher.id})")
+            print(f"Grade Level: {teacher.grade_level}")
+            print(f"Teaching Philosophy: {teacher.teaching_philosophy}")
+            if teacher.preferred_teaching_methods:
+                print(f"Preferred Teaching Methods: {', '.join(teacher.preferred_teaching_methods)}")
+            if teacher.behavior_management_philosophy:
+                print(f"Behavior Management Philosophy: {teacher.behavior_management_philosophy}")
+            if teacher.areas_for_growth:
+                print(f"Areas for Growth: {', '.join(teacher.areas_for_growth)}")
+            print("-" * 40)
+
+    except Exception as e:
+        print(f"Error printing teacher profiles: {e}")
+        return
 
 def print_scenarios():
     """
@@ -873,28 +916,31 @@ def get_all_teachers() -> List[TeacherProfile]:
 
 def create_teacher(
     name: str,
+    grade_level: int,
     teaching_philosophy: str,
-    preferred_teaching_methods: list = None,
+    preferred_teaching_methods: List[str] = None,
     behavior_management_philosophy: str = None,
-    areas_for_growth: list = None
-) -> TeacherProfile:
+    areas_for_growth: List[str] = None
+) -> Optional[TeacherProfile]:
     """
     Creates a new teacher profile in the database.
 
     Args:
-        name (str): The name of the teacher.
-        teaching_philosophy (str): The teacher's teaching philosophy.
-        preferred_teaching_methods (list, optional): List of preferred teaching methods. Defaults to None.
-        behavior_management_philosophy (str, optional): The teacher's behavior management philosophy. Defaults to None.
-        areas_for_growth (list, optional): List of areas for growth. Defaults to None.
+        name (str): The name of the teacher
+        grade_level (int): The grade level the teacher teaches
+        teaching_philosophy (str): The teacher's teaching philosophy
+        preferred_teaching_methods (List[str], optional): List of preferred teaching methods
+        behavior_management_philosophy (str, optional): The teacher's behavior management philosophy
+        areas_for_growth (List[str], optional): List of areas for growth
 
     Returns:
-        TeacherProfile: The created TeacherProfile object, or None if creation failed.
+        Optional[TeacherProfile]: The created teacher profile or None if creation fails
     """
     db = next(get_db())
     try:
         teacher = TeacherProfile(
             name=name,
+            grade_level=grade_level,
             teaching_philosophy=teaching_philosophy,
             preferred_teaching_methods=preferred_teaching_methods,
             behavior_management_philosophy=behavior_management_philosophy,
@@ -913,35 +959,37 @@ def create_teacher(
         print(f"Unexpected error creating teacher: {e}")
         return None
 
-def update_teacher(teacher_id: int, **kwargs) -> TeacherProfile:
+def update_teacher(teacher_id: int, **kwargs) -> bool:
     """
-    Updates an existing teacher profile in the database.
+    Updates a teacher's profile in the database.
 
     Args:
-        teacher_id (int): The ID of the teacher to update.
-        **kwargs: Keyword arguments representing the fields to update and their new values.
+        teacher_id (int): The ID of the teacher to update
+        **kwargs: Fields to update (name, grade_level, teaching_philosophy, etc.)
 
     Returns:
-        TeacherProfile: The updated TeacherProfile object, or None if the update failed.
+        bool: True if update was successful, False otherwise
     """
     db = next(get_db())
     try:
-        teacher = db.query(TeacherProfile).filter(TeacherProfile.id == teacher_id).first()
-        if teacher:
-            for key, value in kwargs.items():
+        teacher = db.query(TeacherProfile).filter_by(id=teacher_id).first()
+        if not teacher:
+            print(f"Teacher with ID {teacher_id} not found")
+            return False
+
+        for key, value in kwargs.items():
+            if hasattr(teacher, key):
                 setattr(teacher, key, value)
-            db.commit()
-            db.refresh(teacher)
-            return teacher
-        return None
-    except IntegrityError as e:
-        db.rollback()
-        print(f"Error updating teacher: {e}")
-        return None
+            else:
+                print(f"Invalid field: {key}")
+                return False
+
+        db.commit()
+        return True
     except Exception as e:
         db.rollback()
-        print(f"Unexpected error updating teacher: {e}")
-        return None
+        print(f"Error updating teacher: {e}")
+        return False
 
 def delete_teacher_by_id(teacher_id: int) -> bool:
     """
@@ -1023,6 +1071,24 @@ def get_teachers_by_area_for_growth(area: str) -> List[TeacherProfile]:
         return teachers
     except Exception as e:
         print(f"Error retrieving teachers by area for growth: {e}")
+        return []
+
+def get_teachers_by_grade_level(grade_level: int) -> List[TeacherProfile]:
+    """
+    Retrieves all teachers teaching at a specific grade level.
+
+    Args:
+        grade_level (int): The grade level to filter by
+
+    Returns:
+        List[TeacherProfile]: List of teachers at the specified grade level
+    """
+    db = next(get_db())
+    try:
+        teachers = db.query(TeacherProfile).filter_by(grade_level=grade_level).all()
+        return teachers
+    except Exception as e:
+        print(f"Error retrieving teachers by grade level: {e}")
         return []
 
 def clear_teacher_profiles() -> bool:
