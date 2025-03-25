@@ -108,6 +108,7 @@ def print_scenarios():
         print(f"  ID: {scenario.id}")
         print(f"  Title: {scenario.title}")
         print(f"  Description: {scenario.description}")
+        print(f"  Instruction: {scenario.instruction}")
         print("-" * 20)  # Separator between scenarios
 
 def print_dialogues():
@@ -363,20 +364,21 @@ def get_all_scenarios() -> List[Scenario]:
     scenarios = db.query(Scenario).all()
     return scenarios
 
-def create_scenario(title: str, description: str) -> Scenario:
+def create_scenario(title: str, description: str, instruction: str = None) -> Scenario:
     """
     Creates a new scenario in the database.
 
     Args:
         title (str): The title of the scenario.
         description (str): The description of the scenario.
+        instruction (str, optional): The AI instruction/prompt for role-playing the scenario.
 
     Returns:
         Scenario: The created Scenario object, or None if creation failed.
     """
     db = next(get_db())
     try:
-        scenario = Scenario(title=title, description=description)
+        scenario = Scenario(title=title, description=description, instruction=instruction)
         db.add(scenario)
         db.commit()
         db.refresh(scenario)
@@ -393,6 +395,7 @@ def update_scenario(scenario_id: int, **kwargs) -> Scenario:
     Args:
         scenario_id (int): The ID of the scenario to update.
         **kwargs: Keyword arguments representing the fields to update and their new values.
+                 Can include: title, description, instruction.
 
     Returns:
         Scenario: The updated Scenario object, or None if the update failed.
@@ -400,8 +403,12 @@ def update_scenario(scenario_id: int, **kwargs) -> Scenario:
     db = next(get_db())
     scenario = db.query(Scenario).filter(Scenario.id == scenario_id).first()
     if scenario:
+        valid_fields = {'title', 'description', 'instruction'}
         for key, value in kwargs.items():
-            setattr(scenario, key, value)
+            if key in valid_fields:
+                setattr(scenario, key, value)
+            else:
+                print(f"Warning: Invalid field '{key}' for scenario update")
         db.commit()
         return scenario
     return None

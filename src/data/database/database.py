@@ -88,6 +88,13 @@ class Scenario(Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String)
     description = Column(Text)
+    instruction = Column(Text, nullable=True)  # AI instruction/prompt for role-playing the scenario
+    # The instruction field will contain structured guidance for the AI, including:
+    # - Role-playing context
+    # - Emotional state and background
+    # - Key points to emphasize
+    # - How to respond to teacher interactions
+    # - Any specific triggers or sensitive topics to handle carefully
 
     dialogues = relationship("Dialogue", back_populates="scenario")
 
