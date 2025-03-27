@@ -1019,6 +1019,7 @@ def populate_all_tables():
     success &= populate_student_profiles()
     success &= populate_scenarios()
     success &= populate_active_files()
+    success &= populate_teacher_profiles()
     
     if success:
         print("All tables populated successfully.")
@@ -1039,6 +1040,31 @@ def populate_all_tables():
     # academic_challenges = Column(ARRAY(String), nullable=True)
     # support_strategies = Column(ARRAY(String), nullable=True)
     # social_dynamics = Column(String, nullable=True)
+def populate_teacher_profiles():
+    db = next(get_db())
+    try:
+        teacher1 = create_teacher(
+        name="Jane Doe",
+        grade_level=3,
+        teaching_philosophy="Hands-on learning with focus on real-world applications",
+        preferred_teaching_methods=["experiential", "cooperative learning"],
+        behavior_management_philosophy="Building relationships and setting clear boundaries",
+        areas_for_growth=["assessment strategies", "parent communication"]
+    )
+        db.add(teacher1)
+
+        db.commit()
+        print("Teacher profiles populated successfully.")
+        return True
+    except IntegrityError:
+        db.rollback()
+        print("Some teacher profiles already exist in the database.")
+        return False
+    except Exception as e:
+        db.rollback()
+        print(f"Error populating teacher profiles: {e}")
+        return False
+
 
 def print_student_profiles():
     """
