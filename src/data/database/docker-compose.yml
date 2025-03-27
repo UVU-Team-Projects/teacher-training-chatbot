@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/workspace
+    environment:
+      - DATABASE_URL=postgresql://teacher_chatbot_user:team4ai@postgres:5432/teacher_chatbot_database
+    depends_on:
+      - postgres
+    networks:
+      - utah_tta_network
+
+  postgres:
+    image: postgres:latest
+    restart: always
+    environment:
+      - POSTGRES_USER=teacher_chatbot_user
+      - POSTGRES_PASSWORD=team4ai
+      - POSTGRES_DB=teacher_chatbot_database
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - utah_tta_network
+
+volumes:
+  postgres-data:
+
+networks:
+  utah_tta_network:
+    driver: bridge 
