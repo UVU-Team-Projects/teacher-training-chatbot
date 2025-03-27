@@ -1,29 +1,41 @@
 version: '3.8'
 
+# This docker-compose file is used to set up the development environment
+# with PostgreSQL database support. It's required for the data branch
+# as we need persistent database storage for student profiles and scenarios.
+
 services:
-  data_collector:
+  app:
     build:
       context: .
-      dockerfile: data/collection/Dockerfile
+      dockerfile: Dockerfile
     volumes:
-      - ./data:/data
-      - ./config:/app/config
+      - .:/workspace:cached
+    command: >
+      bash -c "pip install -r /workspace/requirements.txt && tail -f /dev/null"
     environment:
-      - ENVIRONMENT=development
-      - LOG_LEVEL=INFO
+      - DATABASE_URL=postgresql://teacher_chatbot_user:team4ai@postgres:5432/teacher_chatbot_database
+    depends_on:
+      - postgres
     networks:
       - utah_tta_network
 
-  data_processor:
-    build:
-      context: .
-      dockerfile: data/processing/Dockerfile
+  postgres:
+    image: postgres:latest
+    restart: always
+    environment:
+      - POSTGRES_USER=teacher_chatbot_user
+      - POSTGRES_PASSWORD=team4ai
+      - POSTGRES_DB=teacher_chatbot_database
+    ports:
+      - "5432:5432"
     volumes:
-      - ./data:/data
-    depends_on:
-      - data_collector
+      - postgres-data:/var/lib/postgresql/data
     networks:
       - utah_tta_network
+
+volumes:
+  postgres-data:
 
 networks:
   utah_tta_network:
