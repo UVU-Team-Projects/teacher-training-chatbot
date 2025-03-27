@@ -77,9 +77,6 @@ def load_students():
             # Join all parts with line breaks
             about = "\n".join(about_parts) if about_parts else "No additional information available."
             
-            # Debug the generated about text
-            print(f"About text for {name}: {about}")
-            
             # Create Student instance and add to session state
             student = Student(name=name, about=about, id=getattr(profile, 'id', Student.next_id))
             st.session_state.students.append(student)

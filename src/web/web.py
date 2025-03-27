@@ -1,16 +1,62 @@
 import streamlit as st
+import warnings
+import os
+
+# Suppress warnings
+warnings.filterwarnings('ignore')
+os.environ['TRANSFORMERS_VERBOSITY'] = 'error'
+
+# Initialize all session state variables
+def init_session_state():
+    """Initialize all session state variables used throughout the application"""
+    
+    # --- Routing variables ---
+    if "page" not in st.session_state:
+        st.session_state.page = "home"
+    if "create_chat_page" not in st.session_state:
+        st.session_state.create_chat_page = "student"
+    
+    # --- Student and scenario selection ---
+    if "selected_student" not in st.session_state:
+        st.session_state.selected_student = None
+    if "selected_scenario" not in st.session_state:
+        st.session_state.selected_scenario = None
+    if "students" not in st.session_state:
+        st.session_state.students = []
+    if "scenarios" not in st.session_state:
+        st.session_state.scenarios = []
+    
+    # --- Chatbot variables ---
+    # Regular chatbot
+    if "chatbot" not in st.session_state:
+        st.session_state.chatbot = None
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+    
+    # AI chatbot
+    if "ai_chatbot" not in st.session_state:
+        st.session_state.ai_chatbot = None
+    if "ai_messages" not in st.session_state:
+        st.session_state.ai_messages = []
+    
+    # --- Teacher profile ---
+    if "teacher_profile" not in st.session_state:
+        st.session_state.teacher_profile = {}
+    
+    # --- Form submission flags ---
+    if "form_submitted" not in st.session_state:
+        st.session_state.form_submitted = False
+
+# Call the initialization function
+init_session_state()
+
+# Import views after session state initialization to avoid issues
 import views.home as home
 import views.chat as chat
 import views.create_chat as create_chat
 import views.teaching_assistant as teaching_assistant
 import views.teacher_profile as teacher_profile
 import views.scenarios as scenarios
-
-# Routing - only initialize if not already set
-if "page" not in st.session_state:
-    st.session_state.page = "home"
-if "create_chat_page" not in st.session_state:
-    st.session_state.create_chat_page = "student"
 
 # Use the current page value from session state
 match st.session_state.page:
