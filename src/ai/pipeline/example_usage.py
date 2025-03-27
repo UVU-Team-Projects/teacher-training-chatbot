@@ -1,4 +1,7 @@
 
+from src.logging import AgentLogger, LogLevel
+from src.ai.student_profiles import Interest, create_student_profile
+from src.ai.pipeline.supervisor import Supervisor
 import os
 import sys
 import argparse
@@ -13,9 +16,7 @@ root_dir = os.path.dirname(src_dir)
 sys.path.append(root_dir)
 
 # Now we can import our modules
-from src.ai.pipeline.supervisor import Supervisor
-from src.ai.student_profiles import Interest, create_student_profile
-from src.logging import AgentLogger, LogLevel
+
 
 def example_use_case(log_level: LogLevel = LogLevel.INFO, show_openai_logs: bool = False):
     """
