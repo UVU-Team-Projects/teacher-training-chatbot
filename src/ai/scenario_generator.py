@@ -2,8 +2,23 @@ from typing import List, Dict, Optional
 from dataclasses import dataclass
 from enum import Enum
 import random
-from .simple_rag import LlamaRAG
-from .embedding import EmbeddingGenerator
+from langchain_openai import ChatOpenAI
+try:
+    # Direct imports (when running the file directly)
+    from embedding import EmbeddingGenerator
+except ImportError:
+    # Relative imports (when imported as a module)
+    from .embedding import EmbeddingGenerator
+from langchain_core.messages import SystemMessage, HumanMessage
+from dotenv import load_dotenv
+import os
+
+# Load environment variables
+load_dotenv()
+
+# Check for OpenAI API key
+if not os.getenv("OPENAI_API_KEY"):
+    raise ValueError("OPENAI_API_KEY environment variable is not set")
 
 
 class GradeLevel(Enum):
@@ -68,8 +83,12 @@ class Scenario:
 
 
 class ScenarioGenerator:
-    def __init__(self, llama_rag: Optional[LlamaRAG] = None):
-        self.llama_rag = llama_rag or LlamaRAG(model_name='deepseek-r1:14b')
+    def __init__(self, llm=None, model_name="gpt-4o-mini"):
+        self.llm = llm or ChatOpenAI(
+            model_name=model_name,
+            temperature=0.7,
+            max_tokens=2000
+        )
         self.embedding_generator = EmbeddingGenerator()
 
     def generate_scenario(
@@ -86,8 +105,10 @@ class ScenarioGenerator:
         """
         # Retrieve relevant knowledge chunks for the scenario
         context_query = f"classroom management {challenge_type.value} {grade_level.value} {subject.value}"
-        response = self.llama_rag.generate_response(context_query)
-        knowledge_chunks = response.content
+        response = self.embedding_generator.return_chroma().similarity_search_with_score(
+            context_query, k=5)
+        knowledge_chunks = "\n\n---\n\n".join(
+            [doc.page_content for doc, _score in response])
 
         # Generate scenario components using the knowledge chunks
         title = self._generate_title(grade_level, subject, challenge_type)
@@ -157,7 +178,10 @@ class ScenarioGenerator:
         """
 
         # Use the LlamaRAG to generate the description
-        response = self.llama_rag.generate_response(prompt)
+        response = self.llm.invoke([
+            SystemMessage(content=prompt),
+            HumanMessage(content=knowledge_chunks)
+        ])
         return response.content
 
     def _extract_strategies(self, knowledge_chunks: str) -> List[str]:
@@ -170,8 +194,10 @@ class ScenarioGenerator:
         2. Include specific implementation details
         3. Note the expected outcomes
         """
-
-        response = self.llama_rag.generate_response(prompt)
+        response = self.llm.invoke([
+            SystemMessage(content=prompt),
+            HumanMessage(content=knowledge_chunks)
+        ])
         # Parse the response to extract individual strategies
         strategies = [s.strip()
                       for s in response.content.split('\n') if s.strip()]
@@ -189,7 +215,10 @@ class ScenarioGenerator:
         4. Note the relevance to the scenario
         """
 
-        response = self.llama_rag.generate_response(prompt)
+        response = self.llm.invoke([
+            SystemMessage(content=prompt),
+            HumanMessage(content=knowledge_chunks)
+        ])
         # Parse the response to extract individual sources
         sources = [s.strip()
                    for s in response.content.split('\n') if s.strip()]
@@ -215,7 +244,10 @@ class ScenarioGenerator:
         5. Evidence-based best practices
         """
 
-        response = self.llama_rag.generate_response(prompt)
+        response = self.llm.invoke([
+            SystemMessage(content=prompt),
+            HumanMessage(content=knowledge_chunks)
+        ])
         # Parse the response to extract individual considerations
         considerations = [c.strip()
                           for c in response.content.split('\n') if c.strip()]
@@ -233,8 +265,8 @@ def generate_random_scenario() -> Scenario:
 
     # Create random student background
     student_background = StudentBackground(
-        age=random.randint(6, 18),
-        grade=random.randint(1, 12),
+        age=random.randint(7,8),
+        grade=2,
         learning_style=random.choice(
             ["visual", "auditory", "kinesthetic", "reading/writing"]),
         special_needs=random.choice(
@@ -267,5 +299,9 @@ def generate_random_scenario() -> Scenario:
     )
 
 
-scenario = generate_random_scenario()
-print(scenario)
+# Move the scenario generation code into a main block
+if __name__ == "__main__":
+    # This code will only run when scenario_generator.py is executed directly
+    scenario = generate_random_scenario()
+    print(scenario)
+

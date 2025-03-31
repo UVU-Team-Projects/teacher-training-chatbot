@@ -1,6 +1,11 @@
 from typing import Dict, List, Optional
-from .student_profiles import StudentProfile, Interest, Mood
-from langchain_ollama import ChatOllama
+try:
+    # Direct imports (when running the file directly)
+    from student_profiles import StudentProfile, Interest, Mood
+except ImportError:
+    # Relative imports (when imported as a module)
+    from .student_profiles import StudentProfile, Interest, Mood
+from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 import json
 
@@ -10,8 +15,15 @@ class StudentProfileBuilder:
     Builds detailed student profiles from text descriptions using LLM.
     """
 
-    def __init__(self):
-        self.model = ChatOllama(model="deepseek-r1:14b")
+    def __init__(self, llm=None, model_name="gpt-4o-mini"):
+        # Initialize language model
+        if llm:
+            self.llm = llm
+        else:
+            self.llm = ChatOpenAI(
+                model=model_name,
+                temperature=0.7
+            )
 
         self.PROFILE_PROMPT: str = '''As an educational expert, analyze the following student description and create a detailed student profile.
 Extract key characteristics and format them according to the specified structure.
