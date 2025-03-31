@@ -1,25 +1,27 @@
 from typing import List, Dict, Any, Optional, Literal, TypedDict
 from langgraph.graph import StateGraph, MessagesState, START, END
 from langgraph.graph.state import CompiledStateGraph
-from langgraph.types import Command
+from langgraph.types import Command, interrupt
 from langchain_openai import ChatOpenAI
-from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 from src.ai.pipeline.agent_state import AgentState
-from src.ai.pipeline.student_bot import StudentBot, Evaluation
+from src.ai.pipeline.student_bot import StudentBot
+from src.ai.pipeline.evaluation import Evaluation
 from src.ai.student_profiles import StudentProfile
-from src.ai.pipeline.agentTools import set_student_profile_in_state, set_scenario_in_state
+from src.ai.pipeline.agentTools import set_student_profile_in_state, set_scenario_in_state, get_classroom_management_insights
 from src.logging import AgentLogger, LogLevel
 from langgraph.checkpoint.memory import MemorySaver
+from colorama import Fore, Style
 
 # List of available agent members
-members = ["student", "evaluation"]
+members = ["student", "evaluation", "kb_retrieval"]
 # Options including completion state
 options = members + ["FINISH"]
 
 
 class Router(TypedDict):
     """Worker to route to next. If no workers needed, route to FINISH."""
-    next: Literal["student", "evaluation", "FINISH"]
+    next: Literal["student", "evaluation", "kb_retrieval", "FINISH"]
 
 
 class Supervisor:
@@ -38,6 +40,7 @@ class Supervisor:
             "You are a supervisor tasked with managing a conversation between a teacher and student."
             " Your job is to decide who should act next based on the conversation context."
             " When the teacher indicates they want to end the conversation, route to evaluation."
+            " When the teacher requests classroom management help, route to kb_retrieval."
         )
         self.logger.debug(f"Supervisor prompt: {self.supervisor_prompt}")
 
@@ -90,7 +93,7 @@ class Supervisor:
 
         return state
 
-    def supervisor(self, state: AgentState) -> Command[Literal["student", "evaluation", "humanInput", END]]:
+    def supervisor(self, state: AgentState) -> Command[Literal["student", "evaluation", "kb_retrieval", "humanInput", END]]:
         """
         Core routing logic that decides which node to go to next.
 
@@ -107,7 +110,21 @@ class Supervisor:
 
         # Get the last node that was processed
         previous_node = state.get("current_node", None)
-
+        
+        # Track conversation turns
+        current_turns = state.get("conversation_turns", 0)
+        max_turns = state.get("max_turns_without_reset", 15)
+        
+        # Increment the turn counter
+        current_turns += 1
+        self.logger.debug(f"Conversation turn #{current_turns}")
+        
+        # Check if we need to reset the turn counter to prevent hitting recursion limits
+        # We only reset during normal teacher-student exchange patterns
+        if previous_node == "student" and current_turns > max_turns / 2:
+            self.logger.info(f"Resetting conversation turn counter (was at {current_turns})")
+            current_turns = 1
+        
         # Check if conversation is marked as done
         if state.get("conversation_done", False):
             return Command(goto=END, update={'current_node': 'FINISH'})
@@ -115,7 +132,10 @@ class Supervisor:
         # Route based on context
         if is_first_turn:
             # If we're just starting, go to human input first
-            return Command(goto="humanInput", update={'current_node': 'humanInput'})
+            return Command(goto="humanInput", update={
+                'current_node': 'humanInput',
+                'conversation_turns': 1  # Reset at the beginning
+            })
 
         elif previous_node == "humanInput":
             # Check for exit phrases in the last message
@@ -127,13 +147,24 @@ class Supervisor:
                     # User wants to end conversation, go to evaluation
                     return Command(goto="evaluation",
                                    update={'current_node': 'evaluation',
+                                           'conversation_turns': current_turns,
                                            'ui_metadata': {**state.get("ui_metadata", {}),
                                                            "current_speaker": "system",
                                                            "is_evaluating": True}})
+                elif isinstance(last_message, HumanMessage) and any(phrase in last_message.content.lower() for phrase in
+                                                                  ["help me with this", "classroom management", "management advice", "what should I do", "strategies for"]):
+                    # User wants classroom management help
+                    return Command(goto="kb_retrieval",
+                                   update={'current_node': 'kb_retrieval',
+                                           'conversation_turns': current_turns,
+                                           'ui_metadata': {**state.get("ui_metadata", {}),
+                                                           "current_speaker": "system",
+                                                           "is_retrieving": True}})
                 else:
                     # Normal message, send to student
                     return Command(goto="student",
                                    update={'current_node': 'student',
+                                           'conversation_turns': current_turns,
                                            'ui_metadata': {**state.get("ui_metadata", {}),
                                                            "current_speaker": "student",
                                                            "is_thinking": True}})
@@ -142,15 +173,27 @@ class Supervisor:
             # After student responds, go back to human input for teacher's turn
             return Command(goto="humanInput",
                            update={'current_node': 'humanInput',
+                                   'conversation_turns': current_turns,
                                    'ui_metadata': {**state.get("ui_metadata", {}),
                                                    "current_speaker": "teacher",
                                                    "is_thinking": False}})
+        
+        elif previous_node == "kb_retrieval":
+            # After knowledge base retrieval, go back to human input
+            return Command(goto="humanInput",
+                           update={'current_node': 'humanInput',
+                                   'conversation_turns': current_turns,
+                                   'ui_metadata': {**state.get("ui_metadata", {}),
+                                                   "current_speaker": "teacher",
+                                                   "is_thinking": False,
+                                                   "is_retrieving": False}})
 
         elif previous_node == "evaluation":
             # After evaluation is done, end the graph
             return Command(goto=END,
                            update={'current_node': 'FINISH',
                                    'conversation_done': True,
+                                   'conversation_turns': 1, # Reset for any future use
                                    'ui_metadata': {**state.get("ui_metadata", {}),
                                                    "is_complete": True}})
 
@@ -158,6 +201,7 @@ class Supervisor:
             # Default fallback - go to human input
             return Command(goto="humanInput",
                            update={'current_node': 'humanInput',
+                                   'conversation_turns': current_turns,
                                    'ui_metadata': {**state.get("ui_metadata", {}),
                                                    "current_speaker": "teacher"}})
 
@@ -178,10 +222,37 @@ class Supervisor:
         # It's just a placeholder node that the langgraph interrupt mechanism will pause at
         # The actual input will be injected via update_state from the UI
 
+        # Suggest classroom management support for new teachers
+        student_response = None
+        messages = state.get("messages", [])
+        
+        # Check if the last message was from the student
+        if messages and len(messages) > 0:
+            last_message = messages[-1]
+            if hasattr(last_message, 'name') and last_message.name != "teacher" and last_message.name != "classroom_insights":
+                student_response = last_message.content if hasattr(last_message, 'content') else str(last_message)
+        
+        # If we have a student response, check if it might need classroom management help
+        if student_response:
+            try:
+                # Use a lightweight check to see if classroom management help might be useful
+                challenging_indicators = [
+                    "don't want to", "won't", "can't make me", "not fair", "whatever", 
+                    "stupid", "hate", "boring", "don't care", "why should I",
+                    "no way", "not doing", "shut up", "leave me alone"
+                ]
+                
+                if any(indicator in student_response.lower() for indicator in challenging_indicators):
+                    # This seems like a situation where classroom management help might be useful
+                    print(f"\n{Fore.YELLOW}Tip: This may be a challenging classroom situation. Ask for classroom management help by including 'classroom management' or 'what should I do' in your response.{Style.RESET_ALL}")
+            except Exception as e:
+                self.logger.error(f"Error suggesting classroom management help: {str(e)}")
+
         # In CLI mode, we'll collect input here for testing
         if state.get("ui_metadata", {}).get("cli_mode", True):
             self.logger.info("CLI mode: Waiting for human input...")
-            user_input = input("Teacher: ")
+            # Get user input
+            user_input = input(f"{Fore.GREEN}Teacher: {Style.RESET_ALL}")
             self.logger.info(f"Human input: {user_input}")
 
             # Add message to state
@@ -203,44 +274,95 @@ class Supervisor:
             goto='supervisor'
         )
 
+    def kb_retrieval(self, state: AgentState) -> Command[Literal['supervisor']]:
+        """
+        Node for retrieving classroom management knowledge.
+        
+        Args:
+            state: Current agent state
+            
+        Returns:
+            Command with classroom management insights
+        """
+        self.logger.info("Knowledge base retrieval node called")
+        
+        # Extract any specific query from the last message
+        messages = state.get("messages", [])
+        query = None
+        if messages:
+            last_message = messages[-1]
+            if isinstance(last_message, HumanMessage):
+                content = last_message.content.lower()
+                # Check if there's a specific query after trigger phrases
+                triggers = ["classroom management", "help me with", "what should i do about", "strategies for"]
+                for trigger in triggers:
+                    if trigger in content:
+                        # Extract the query that follows the trigger
+                        query = content.split(trigger, 1)[1].strip()
+                        if query:
+                            self.logger.info(f"Extracted specific query: {query}")
+                            break
+        
+        # Retrieve classroom management insights
+        updated_state = get_classroom_management_insights.func(state, query)
+        kb_insights = updated_state.get("kb_insights", {})
+        
+        # Format insights as a message
+        if isinstance(kb_insights, str):
+            insights_message = kb_insights
+        else:
+            insights_message = kb_insights.get("summary", "No relevant insights found.")
+        
+        # Add message to state
+        messages = state.get("messages", [])
+        updated_messages = messages + [AIMessage(content=insights_message, name="classroom_insights")]
+        
+        # Update UI metadata
+        ui_metadata = state.get("ui_metadata", {})
+        ui_metadata.update({
+            "current_speaker": "system",
+            "is_retrieving": False,
+            "last_kb_query": query or "Generated from conversation",
+            "has_kb_insights": True
+        })
+        
+        return Command(
+            update={
+                'messages': updated_messages,
+                'kb_insights': kb_insights,
+                'current_node': 'kb_retrieval',
+                'ui_metadata': ui_metadata
+            },
+            goto='supervisor'
+        )
+
     def create_supervisor_graph(self) -> CompiledStateGraph:
-        """Create the supervisor graph with connected components and checkpointing."""
+        """
+        Create the workflow graph for the supervisor.
+
+        Returns:
+            Compiled workflow graph
+        """
         self.logger.info("Creating supervisor graph")
 
-        # Create the graph
+        # Initialize the graph
         workflow = StateGraph(AgentState)
 
-        # Nodes
-        self.logger.debug("Adding supervisor node")
+        # Add nodes for each agent
         workflow.add_node("supervisor", self.supervisor)
+        workflow.add_node("student", self.student_bot.converse)
+        workflow.add_node("evaluation", self.evaluation.evaluate)
+        workflow.add_node("humanInput", self.get_human_input)
+        workflow.add_node("kb_retrieval", self.kb_retrieval)
 
-        self.logger.debug("Adding student node")
-        workflow.add_node('student', self.student_bot.converse)
-
-        self.logger.debug("Adding evaluation node")
-        workflow.add_node('evaluation', self.evaluation.evaluate)
-
-        self.logger.debug("Adding human input node")
-        workflow.add_node('humanInput', self.get_human_input)
-
-        # Add connections between nodes
+        # Set the entry point
         workflow.set_entry_point("supervisor")
-        # workflow.add_edge('supervisor', 'student')
-        # workflow.add_edge('supervisor', 'humanInput')
-        # workflow.add_edge('supervisor', 'evaluation')
-        # workflow.add_edge('supervisor', END)
-        # workflow.add_edge('student', 'supervisor')
-        # workflow.add_edge('humanInput', 'supervisor')
-        # workflow.add_edge('evaluation', 'supervisor')
 
-        self.logger.info("Graph compilation complete")
-
-        # Compile graph with checkpointing and interruption for human-in-the-loop
-        return workflow.compile(
-            checkpointer=self.checkpointer,
-            # Interrupt before humanInput node to allow UI integration
-            # interrupt_before=["humanInput"]
-        )
+        # Compile the graph with an increased recursion limit
+        # This allows for longer conversations while preventing infinite loops
+        checkpointer = MemorySaver()
+        self.logger.info("Compiling supervisor graph")
+        return workflow.compile(checkpointer=checkpointer)
 
     def update_from_streamlit(self, state_id: str, user_input: str) -> Dict[str, Any]:
         """

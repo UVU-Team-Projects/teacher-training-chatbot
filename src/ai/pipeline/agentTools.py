@@ -1,8 +1,11 @@
-from langchain_core.tools import tool
+from langchain_core.tools import tool, BaseTool, Tool as LangchainTool
 from src.ai.student_profiles import StudentProfile
 from src.ai.pipeline.agent_state import AgentState
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from src.logging import AgentLogger
+from src.ai.embedding import EmbeddingGenerator
+from langchain_openai import ChatOpenAI
+from colorama import Fore, Style
 
 # Initialize logger
 logger = AgentLogger.get_logger("AgentTools")
@@ -194,3 +197,120 @@ def set_scenario_in_state(state: AgentState, scenario) -> AgentState:
     formatted_scenario = format_scenario(scenario)
     state["scenario"] = formatted_scenario
     return state
+
+
+def retrieve_classroom_management_insights(state, query=None):
+    """
+    Retrieve relevant classroom management insights from the knowledge base.
+    
+    Args:
+        state: Current agent state
+        query: Optional specific query. If not provided, will use recent conversation.
+    
+    Returns:
+        Updated state with classroom management insights
+    """
+    logger = AgentLogger.get_logger("KnowledgeBaseRetrieval")
+    logger.info("Retrieving classroom management insights")
+    
+    # Initialize the embedding generator
+    embedding_generator = EmbeddingGenerator()
+    
+    # If no specific query is provided, generate it from recent messages
+    if not query:
+        messages = state.get("messages", [])
+        if len(messages) < 2:
+            logger.warning("Not enough context to generate insights")
+            return {**state, "kb_insights": "Not enough conversation context for insights."}
+        
+        # Use last 3 messages or all available if fewer
+        recent_messages = messages[-min(3, len(messages)):]
+        conversation_context = "\n".join([
+            f"{msg.name if hasattr(msg, 'name') else 'Unknown'}: {msg.content if hasattr(msg, 'content') else str(msg)}"
+            for msg in recent_messages
+        ])
+        
+        # Create search query from context
+        llm = ChatOpenAI(model="gpt-4o-mini")
+        query_prompt = f"""
+        Based on this recent conversation between a teacher and student, identify 
+        the main classroom management topic or challenge.
+        Return a concise search query (5-10 words) that would help find relevant 
+        classroom management strategies.
+        
+        CONVERSATION:
+        {conversation_context}
+        """
+        
+        query_result = llm.invoke(query_prompt)
+        query = query_result.content if hasattr(query_result, 'content') else str(query_result)
+        logger.info(f"Generated search query: {query}")
+    
+    # Retrieve relevant documents
+    try:
+        chroma_client = embedding_generator.return_chroma()
+        search_results = chroma_client.similarity_search_with_score(
+            query=query, 
+            k=3  # Get top 3 results
+        )
+        
+        if not search_results:
+            logger.warning("No relevant insights found")
+            return {**state, "kb_insights": "No relevant classroom management insights found."}
+        
+        # Format the insights
+        insights = []
+        for doc, score in search_results:
+            source = doc.metadata.get('source', 'Unknown source')
+            insights.append({
+                "content": doc.page_content,
+                "source": source,
+                "relevance": score
+            })
+        
+        # Generate a summary of the insights
+        documents_text = "\n\n".join([insight["content"] for insight in insights])
+        llm = ChatOpenAI(model="gpt-4o-mini")
+        
+        summary_prompt = f"""
+        Summarize these classroom management insights into practical advice 
+        for a teacher dealing with this situation:
+        
+        {documents_text}
+        
+        FORMAT YOUR RESPONSE AS:
+        1. Key insight: [concise statement]
+        2. Practical strategy: [brief actionable tip]
+        3. Implementation: [how to apply this in the classroom]
+        """
+        
+        summary_result = llm.invoke(summary_prompt)
+        summary = summary_result.content if hasattr(summary_result, 'content') else str(summary_result)
+        
+        logger.info(f"Generated knowledge base insights: {summary[:100]}...")
+        
+        # Add insights to state
+        kb_data = {
+            "summary": summary,
+            "detailed_insights": insights,
+            "query": query
+        }
+        
+        # Print the insights for reference
+        print(f"\n{Fore.GREEN}CLASSROOM MANAGEMENT INSIGHTS:{Style.RESET_ALL}")
+        print(f"Query: {query}")
+        print(f"{summary}")
+        print("="*50)
+        
+        return {**state, "kb_insights": kb_data}
+        
+    except Exception as e:
+        logger.error(f"Error retrieving classroom management insights: {str(e)}")
+        return {**state, "kb_insights": f"Error retrieving insights: {str(e)}"}
+
+# Add the new tool to the tools list
+get_classroom_management_insights = LangchainTool.from_function(
+    func=retrieve_classroom_management_insights,
+    name="get_classroom_management_insights",
+    description="Retrieve relevant classroom management insights from the knowledge base to help respond to the current situation",
+)

@@ -51,7 +51,11 @@ class EmbeddingGenerator(Embeddings):
     def __init__(self):
         # Set cache directory explicitly
         os.environ['SENTENCE_TRANSFORMERS_HOME'] = os.path.join(os.path.expanduser("~"), ".cache", "sentence_transformers")
-        
+        self.CHROMA_PATH = "data/vectorstore/chroma_db"
+        self.embedding_model = "all-MiniLM-L6-v2"
+        self.dimension = 384  # Default dimension for the specified model
+
+        self.embeddings = self.get_embedding_function()
         try:
             self.model = SentenceTransformer('all-MiniLM-L6-v2')
         except Exception as e:
@@ -89,7 +93,12 @@ class EmbeddingGenerator(Embeddings):
                 collection = client.get_collection("teacher_training")
             except:
                 collection = client.create_collection("teacher_training")
-            return collection
+            # return collection
+            return Chroma(
+            collection_name="rag_db",
+            persist_directory=self.CHROMA_PATH,
+            embedding_function=self.embeddings
+        )
         except Exception as e:
             logging.error(f"Failed to create Chroma collection: {e}")
             # Return a mock collection to prevent crashes
@@ -301,19 +310,99 @@ class EmbeddingGenerator(Embeddings):
         db.delete_collection()
         # db.persist()
 
+    def load_classroom_management_data(self, force_reload=False) -> list:
+        """
+        Load documents from classroom management sources using Langchain document loaders.
+        
+        Args:
+            force_reload: Whether to force rebuild the vector database even if it exists
+            
+        Returns:
+            List of loaded documents
+        """
+        from langchain_community.document_loaders import (
+            UnstructuredMarkdownLoader, PyPDFLoader, DirectoryLoader
+        )
+        
+        documents = []
+        data_dir = "data/books"
+        
+        # Load classroom management books and resources
+        print("Loading classroom management books...")
+        book_files = [
+            "classroom_management_that_works_research_based_strategies_for_every_teacher.pdf",
+            "effective_classroom_management_a_teacher_s_guide.pdf",
+            "a_teachers_guide_to_successful_classroom_management_and_differentiated_instruction.pdf",
+            "classroom_teacher_s_behavior_management_toolbox_the_roger_pierangelo_george_giuliani.pdf"
+        ]
+        
+        for book in book_files:
+            book_path = f"{data_dir}/{book}"
+            if os.path.exists(book_path):
+                print(f"Loading {book}...")
+                try:
+                    loader = PyPDFLoader(book_path)
+                    book_docs = loader.load()
+                    # Add source information to metadata
+                    for doc in book_docs:
+                        doc.metadata["source"] = book
+                    documents.extend(book_docs)
+                    print(f"Loaded {len(book_docs)} pages from {book}")
+                except Exception as e:
+                    print(f"Error loading {book}: {e}")
+        
+        # Load any additional classroom management markdown files
+        markdown_dir = "data/collection/markdown_files"
+        if os.path.exists(markdown_dir):
+            md_loader = DirectoryLoader(
+                markdown_dir,
+                glob="**/*classroom*.md",  # Only load files with "classroom" in the name
+                loader_cls=UnstructuredMarkdownLoader
+            )
+            markdown_docs = md_loader.load()
+            print(f"Loaded {len(markdown_docs)} markdown files about classroom management")
+            documents.extend(markdown_docs)
+        
+        # Normalize and split the documents
+        print(f"Splitting {len(documents)} documents into chunks...")
+        chunks = self.split_documents(documents)
+        print(f"Created {len(chunks)} chunks for indexing")
+        
+        # Add to Chroma vector store if requested
+        if force_reload:
+            print("Adding classroom management content to vector store...")
+            self.add_to_chroma(chunks)
+            print("Classroom management content added to vector store")
+        
+        return chunks
+        
+    def construct_classroom_management_db(self):
+        """
+        Construct a dedicated vector database for classroom management content.
+        """
+        print("Building classroom management knowledge base...")
+        chunks = self.load_classroom_management_data(force_reload=True)
+        print(f"Loaded and processed {len(chunks)} chunks")
+        print("Classroom management knowledge base is ready for use")
+        
     def construct_chroma(self):
         """
         Construct the Chroma vector store.
         """
-        documents = embedder.load_data_sources()
+        documents = self.load_data_sources()
         print(f"Loaded {len(documents)} documents")
         # print(documents[0])
-        chunks = embedder.split_documents(documents)
+        chunks = self.split_documents(documents)
         print(f"Split into {len(chunks)} chunks")
         # print(chunks[0])
-        embedder.add_to_chroma(chunks)
+        self.add_to_chroma(chunks)
+        
+        # Also load classroom management content
+        self.load_classroom_management_data()
 
 if __name__ == "__main__":
     embedder = EmbeddingGenerator()
-    embedder.construct_chroma()
+    # Choose what to build
+    # embedder.construct_chroma()  # Build general knowledge base
+    embedder.construct_classroom_management_db()  # Build classroom management knowledge base
     # embedder.clear_chroma()
