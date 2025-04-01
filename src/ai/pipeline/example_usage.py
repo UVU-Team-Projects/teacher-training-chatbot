@@ -16,12 +16,11 @@ sys.path.append(root_dir)
 from src.logging import AgentLogger, LogLevel
 from src.ai.student_profiles import Interest, create_student_profile
 from src.ai.pipeline.supervisor import Supervisor
-from src.ai.pipeline.standalone_student import StandaloneStudentBot
 
 def example_use_case(log_level: LogLevel = LogLevel.INFO, show_openai_logs: bool = False,
                      use_cli: bool = True):
     """
-    Example showing the two-phase approach: first chat with student, then evaluate.
+    Example showing how to create and use a student profile and scenario with the LangGraph agent.
 
     Args:
         log_level: The logging level to use (DEBUG, INFO, WARNING, ERROR, CRITICAL)
@@ -67,14 +66,30 @@ def example_use_case(log_level: LogLevel = LogLevel.INFO, show_openai_logs: bool
     }
     logger.debug(f"Created scenario: {scenario['title']}")
 
+    logger.info("Creating and running the LangGraph agent...")
+    # Create the supervisor agent with the specified log level
+    supervisor = Supervisor(log_level=log_level)
+
     # Create a unique session ID for this conversation
     session_id = str(uuid.uuid4())
     logger.debug(f"Generated session ID: {session_id}")
 
-    # PHASE 1: Interactive conversation with the student bot
-    logger.info("Starting interactive conversation with student bot...")
-    student_bot = StandaloneStudentBot()
-    student_bot.initialize(profile, scenario)
+    logger.debug("Creating supervisor graph")
+    graph = supervisor.create_supervisor_graph()
+
+    logger.info("Initializing agent state...")
+    # Initialize the agent state with both the profile and scenario
+    state = supervisor.initialize_agent_state(
+        profile=profile,
+        scenario=scenario,
+        session_id=session_id
+    )
+
+    # Set up CLI mode if requested
+    if use_cli:
+        state["ui_metadata"]["cli_mode"] = True
+    else:
+        state["ui_metadata"]["cli_mode"] = False
 
     # Print the start of the conversation
     print(f"\n{Fore.GREEN}Teacher-Student Conversation{Style.RESET_ALL}")
@@ -82,91 +97,43 @@ def example_use_case(log_level: LogLevel = LogLevel.INFO, show_openai_logs: bool
     print(f"{Fore.YELLOW}Scenario: {scenario['title']}{Style.RESET_ALL}")
     print(f"{Fore.YELLOW}Type 'exit', 'done', or 'evaluate' to end the conversation{Style.RESET_ALL}\n")
 
-    # Interactive conversation loop
-    if use_cli:
-        while True:
-            # Get teacher input
-            teacher_message = input(f"{Fore.GREEN}Teacher: {Style.RESET_ALL}")
-            
-            # Check for exit commands
-            if teacher_message.lower() in ["exit", "quit", "bye", "goodbye", "done", "end", "evaluate"]:
-                print(f"{Fore.YELLOW}Ending conversation and starting evaluation...{Style.RESET_ALL}")
-                break
-            
-            # Get student response
-            student_bot.get_response(teacher_message)
-        
-        # End conversation and get metadata
-        conversation_metadata = student_bot.end_conversation()
-        conversation_messages = student_bot.get_conversation_history()
-        
-        # PHASE 2: Evaluation
-        logger.info("Creating evaluation supervisor...")
-        supervisor = Supervisor(log_level=log_level)
-        
-        logger.debug("Creating supervisor graph")
-        graph = supervisor.create_supervisor_graph()
-        
-        logger.info("Initializing agent state with conversation history...")
-        # Initialize the agent state with profile, scenario, and conversation history
-        state = supervisor.initialize_agent_state(
-            profile=profile,
-            scenario=scenario,
-            session_id=session_id,
-            conversation_messages=conversation_messages
-        )
-        
-        # Execute the evaluation graph
-        logger.info("Running evaluation...")
-        
-        # Use get_thread to get consistent thread management
-        result = graph.invoke(state, config={"configurable": {"thread_id": session_id}})
-        
-        # The result will contain the evaluation
-        if result.get("conversation_done", False):
-            logger.info("Evaluation completed successfully")
-            
-            # If the user opted to continue the conversation, handle that
-            if result.get("continue_conversation", False):
-                logger.info("User chose to continue conversation after evaluation")
-                
-                # Enter a new conversation loop
-                while True:
-                    # Get teacher input
-                    teacher_message = input(f"{Fore.GREEN}Teacher: {Style.RESET_ALL}")
-                    
-                    # Check for exit commands
-                    if teacher_message.lower() in ["exit", "quit", "bye", "goodbye", "done", "end", "evaluate"]:
-                        print(f"{Fore.YELLOW}Ending continued conversation...{Style.RESET_ALL}")
-                        break
-                    
-                    # Create a teacher message
-                    teacher_msg = HumanMessage(content=teacher_message, name="teacher")
-                    
-                    # Update state with the message and resume the thread
-                    thread.update_state({"messages": [teacher_msg]})
-                    result = thread.resume()
-                    
-                    # Check if we should end the conversation
-                    if result.get("conversation_done", True) and not result.get("continue_conversation", False):
-                        break
+    # Execute the graph with our state
+    logger.info(f"Invoking the agent...")
+    try:
+        # In CLI mode, we run the graph and let it handle the human-in-the-loop pattern
+        if use_cli:
+            # Execute the graph with initial state
+            result = graph.invoke(state, config={"configurable": {"thread_id": session_id}})
+
+            # The result will contain all the conversation history and evaluation
+            if result.get("conversation_done", False):
+                logger.info(
+                    "Conversation completed successfully with evaluation")
+            else:
+                logger.info(
+                    "Conversation was interrupted or ended without evaluation")
+
+            # Return the final state for potential further use
+            return result
+
+        # In non-CLI mode (e.g., for Streamlit), we return the graph and session ID
         else:
-            logger.warning("Evaluation was interrupted or ended without completion")
-        
-        # Return the final state for potential further use
-        return result
-    
-    # Non-CLI mode for UI integration
-    else:
-        logger.info("Prepared resources for UI integration")
-        # Return what we need for UI integration
-        return {
-            "student_bot": student_bot,
-            "supervisor": Supervisor(log_level=log_level),
-            "session_id": session_id,
-            "profile": profile,
-            "scenario": scenario
-        }
+            logger.info("Prepared graph and state for UI integration")
+            # Just return what we need to connect from the UI
+            return {
+                "graph": graph,
+                "supervisor": supervisor,
+                "session_id": session_id,
+                "initial_state": state,
+                "profile": profile,
+                "scenario": scenario
+            }
+
+    except Exception as e:
+        logger.error(f"Error in graph execution: {str(e)}")
+        print(f"\nError occurred: {str(e)}")
+        # Return the last state we had
+        return state
 
 
 def streamlit_integration_example():
@@ -176,7 +143,7 @@ def streamlit_integration_example():
 
     In a real implementation, this would be in a separate file.
     """
-    # Get the resources needed for UI integration
+    # Get the graph, supervisor and session ID
     resources = example_use_case(use_cli=False)
 
     # This is placeholder code showing how it would work in Streamlit
@@ -201,37 +168,35 @@ def streamlit_integration_example():
     st.sidebar.write(st.session_state.resources['scenario']['title'])
     st.sidebar.write(st.session_state.resources['scenario']['description'])
     
-    # Chat interface
+    # Show conversation history
     if 'messages' not in st.session_state:
         st.session_state.messages = []
-        st.session_state.conversation_phase = "student_interaction"
     
-    # Display conversation history
     for message in st.session_state.messages:
         role = message.get('role', 'assistant')
         content = message.get('content', '')
         with st.chat_message(role):
             st.write(content)
     
-    # Phase 1: Student interaction
-    if st.session_state.conversation_phase == "student_interaction":
-        # Get user input
-        if prompt := st.chat_input("What do you want to say to the student?"):
-            # Add user message to chat history
-            st.session_state.messages.append({"role": "user", "content": prompt})
-            
-            # Display user message
-            with st.chat_message("user"):
-                st.write(prompt)
-            
-            # Check for exit command
-            if prompt.lower() in ["exit", "quit", "bye", "goodbye", "done", "end", "evaluate"]:
-                st.session_state.conversation_phase = "evaluation"
-                st.rerun()
-            
-            # Get student response
-            student_bot = st.session_state.resources['student_bot']
-            response = student_bot.get_response(prompt)
+    # Get user input
+    if prompt := st.chat_input("What do you want to say to the student?"):
+        # Add user message to chat history
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        
+        # Display user message
+        with st.chat_message("user"):
+            st.write(prompt)
+        
+        # Process with our supervisor
+        result = st.session_state.resources['supervisor'].update_from_streamlit(
+            st.session_state.resources['session_id'], 
+            prompt
+        )
+        
+        # Get student response
+        if 'state' in result and 'messages' in result['state']:
+            latest_message = result['state']['messages'][-1]
+            response = latest_message.content
             
             # Add to chat history
             st.session_state.messages.append({"role": "assistant", "content": response})
@@ -239,44 +204,22 @@ def streamlit_integration_example():
             # Display response
             with st.chat_message("assistant"):
                 st.write(response)
-    
-    # Phase 2: Evaluation
-    elif st.session_state.conversation_phase == "evaluation":
-        student_bot = st.session_state.resources['student_bot']
-        conversation_messages = student_bot.get_conversation_history()
         
-        supervisor = st.session_state.resources['supervisor']
-        session_id = st.session_state.resources['session_id']
-        profile = st.session_state.resources['profile']
-        scenario = st.session_state.resources['scenario']
-        
-        # Create the graph
-        graph = supervisor.create_supervisor_graph()
-        
-        # Initialize state
-        state = supervisor.initialize_agent_state(
-            profile=profile,
-            scenario=scenario,
-            session_id=session_id,
-            conversation_messages=conversation_messages
-        )
-        
-        # Run evaluation
-        result = graph.invoke(state)
-        
-        # Display evaluation
-        st.header("Conversation Evaluation")
-        if 'evaluation_results' in result:
-            eval_results = result['evaluation_results']
-            st.write(f"Summary: {eval_results.get('summary', 'No summary available')}")
-            st.write(f"Effectiveness: {eval_results.get('effectiveness', 'N/A')}")
-            st.write(f"Authenticity: {eval_results.get('authenticity', 'N/A')}")
+        # Check if conversation is done
+        if result.get('is_done', False):
+            st.success("Conversation complete!")
             
-            st.subheader("Suggestions")
-            for suggestion in eval_results.get('suggestions', ['No suggestions available']):
-                st.write(f"- {suggestion}")
-        else:
-            st.write("No evaluation results available")
+            # Show evaluation results
+            if 'evaluation_results' in result.get('state', {}):
+                eval_results = result['state']['evaluation_results']
+                st.header("Conversation Evaluation")
+                st.write(f"Summary: {eval_results.get('summary', 'No summary available')}")
+                st.write(f"Effectiveness: {eval_results.get('effectiveness', 'N/A')}")
+                st.write(f"Authenticity: {eval_results.get('authenticity', 'N/A')}")
+                
+                st.subheader("Suggestions")
+                for suggestion in eval_results.get('suggestions', ['No suggestions available']):
+                    st.write(f"- {suggestion}")
     """
 
     return resources
