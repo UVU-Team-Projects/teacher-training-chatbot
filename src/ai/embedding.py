@@ -25,84 +25,33 @@ import json
 import glob
 import os
 import torch
-import logging
 
-# Configure logging
-logging.basicConfig(level=logging.ERROR)  # Change to ERROR to reduce output
 
-'''
-ssh d19559
-username:
-password:
-'''
+class EmbeddingGenerator:
+    """
+    A class to generate embeddings for text using SentenceTransformer.
 
-from sentence_transformers import SentenceTransformer
-from langchain.embeddings.base import Embeddings
-import numpy as np
-import os
-import logging
+    This class handles the initialization of the embedding model and provides
+    methods for generating embeddings for both single texts and batches.
 
-# Configure logging
-logging.basicConfig(level=logging.ERROR)
+    Attributes:
+        model (SentenceTransformer): The loaded sentence transformer model
+        dimension (int): The dimension of generated embeddings (default: 384)
+    """
 
-class EmbeddingGenerator(Embeddings):
-    """Custom embedding generator that adapts SentenceTransformer to LangChain interface"""
-    
-    def __init__(self):
-        # Set cache directory explicitly
-        os.environ['SENTENCE_TRANSFORMERS_HOME'] = os.path.join(os.path.expanduser("~"), ".cache", "sentence_transformers")
+    def __init__(self, model_name: str = 'all-MiniLM-L6-v2'):
+        """
+        Initialize the EmbeddingGenerator with a specified model.
+
+        Args:
+            model_name (str): Name of the sentence transformer model to use
+                            Defaults to 'all-MiniLM-L6-v2'
+        """
         self.CHROMA_PATH = "data/vectorstore/chroma_db"
-        self.embedding_model = "all-MiniLM-L6-v2"
+        self.embedding_model = model_name
         self.dimension = 384  # Default dimension for the specified model
 
         self.embeddings = self.get_embedding_function()
-        try:
-            self.model = SentenceTransformer('all-MiniLM-L6-v2')
-        except Exception as e:
-            logging.error(f"Failed to load embedding model: {e}")
-            self.model = None
-    
-    def embed_documents(self, texts):
-        """Embed a list of documents using SentenceTransformer"""
-        if not self.model:
-            return [[0.0] * 384 for _ in texts]  # Return empty embeddings as fallback
-        
-        return self.model.encode(texts).tolist()
-    
-    def embed_query(self, text):
-        """Embed a query text using SentenceTransformer"""
-        if not self.model:
-            return [0.0] * 384  # Return empty embedding as fallback
-        
-        return self.model.encode(text).tolist()
-    
-    # Keep original method for backward compatibility
-    def generate_embedding(self, text):
-        """Legacy method for backwards compatibility"""
-        return self.embed_query(text)
-    
-    # Add method to return a Chroma collection
-    def return_chroma(self):
-        """Return a placeholder Chroma collection"""
-        from chromadb.config import Settings
-        import chromadb
-        try:
-            client = chromadb.Client(Settings(anonymized_telemetry=False))
-            # Get collection if it exists or create a new one
-            try:
-                collection = client.get_collection("teacher_training")
-            except:
-                collection = client.create_collection("teacher_training")
-            # return collection
-            return Chroma(
-            collection_name="rag_db",
-            persist_directory=self.CHROMA_PATH,
-            embedding_function=self.embeddings
-        )
-        except Exception as e:
-            logging.error(f"Failed to create Chroma collection: {e}")
-            # Return a mock collection to prevent crashes
-            return type('MockCollection', (), {'similarity_search_with_score': lambda *args, **kwargs: []})
 
     def normalize_text(self, document: Document) -> Document:
         """
@@ -298,6 +247,16 @@ class EmbeddingGenerator(Embeddings):
         else:
             print("No new chunks to add :)")
 
+    def return_chroma(self):
+        """
+        Return the Chroma vector store.
+        """
+        return Chroma(
+            collection_name="rag_db",
+            persist_directory=self.CHROMA_PATH,
+            embedding_function=self.embeddings
+        )
+
     def clear_chroma(self):
         """
         Clear the Chroma vector store.
@@ -310,99 +269,20 @@ class EmbeddingGenerator(Embeddings):
         db.delete_collection()
         # db.persist()
 
-    def load_classroom_management_data(self, force_reload=False) -> list:
-        """
-        Load documents from classroom management sources using Langchain document loaders.
-        
-        Args:
-            force_reload: Whether to force rebuild the vector database even if it exists
-            
-        Returns:
-            List of loaded documents
-        """
-        from langchain_community.document_loaders import (
-            UnstructuredMarkdownLoader, PyPDFLoader, DirectoryLoader
-        )
-        
-        documents = []
-        data_dir = "data/books"
-        
-        # Load classroom management books and resources
-        print("Loading classroom management books...")
-        book_files = [
-            "classroom_management_that_works_research_based_strategies_for_every_teacher.pdf",
-            "effective_classroom_management_a_teacher_s_guide.pdf",
-            "a_teachers_guide_to_successful_classroom_management_and_differentiated_instruction.pdf",
-            "classroom_teacher_s_behavior_management_toolbox_the_roger_pierangelo_george_giuliani.pdf"
-        ]
-        
-        for book in book_files:
-            book_path = f"{data_dir}/{book}"
-            if os.path.exists(book_path):
-                print(f"Loading {book}...")
-                try:
-                    loader = PyPDFLoader(book_path)
-                    book_docs = loader.load()
-                    # Add source information to metadata
-                    for doc in book_docs:
-                        doc.metadata["source"] = book
-                    documents.extend(book_docs)
-                    print(f"Loaded {len(book_docs)} pages from {book}")
-                except Exception as e:
-                    print(f"Error loading {book}: {e}")
-        
-        # Load any additional classroom management markdown files
-        markdown_dir = "data/collection/markdown_files"
-        if os.path.exists(markdown_dir):
-            md_loader = DirectoryLoader(
-                markdown_dir,
-                glob="**/*classroom*.md",  # Only load files with "classroom" in the name
-                loader_cls=UnstructuredMarkdownLoader
-            )
-            markdown_docs = md_loader.load()
-            print(f"Loaded {len(markdown_docs)} markdown files about classroom management")
-            documents.extend(markdown_docs)
-        
-        # Normalize and split the documents
-        print(f"Splitting {len(documents)} documents into chunks...")
-        chunks = self.split_documents(documents)
-        print(f"Created {len(chunks)} chunks for indexing")
-        
-        # Add to Chroma vector store if requested
-        if force_reload:
-            print("Adding classroom management content to vector store...")
-            self.add_to_chroma(chunks)
-            print("Classroom management content added to vector store")
-        
-        return chunks
-        
-    def construct_classroom_management_db(self):
-        """
-        Construct a dedicated vector database for classroom management content.
-        """
-        print("Building classroom management knowledge base...")
-        chunks = self.load_classroom_management_data(force_reload=True)
-        print(f"Loaded and processed {len(chunks)} chunks")
-        print("Classroom management knowledge base is ready for use")
-        
     def construct_chroma(self):
         """
         Construct the Chroma vector store.
         """
-        documents = self.load_data_sources()
+        documents = embedder.load_data_sources()
         print(f"Loaded {len(documents)} documents")
         # print(documents[0])
-        chunks = self.split_documents(documents)
+        chunks = embedder.split_documents(documents)
         print(f"Split into {len(chunks)} chunks")
         # print(chunks[0])
-        self.add_to_chroma(chunks)
+        embedder.add_to_chroma(chunks)
         
-        # Also load classroom management content
-        self.load_classroom_management_data()
 
 if __name__ == "__main__":
     embedder = EmbeddingGenerator()
-    # Choose what to build
-    # embedder.construct_chroma()  # Build general knowledge base
-    embedder.construct_classroom_management_db()  # Build classroom management knowledge base
+    embedder.construct_chroma()
     # embedder.clear_chroma()
