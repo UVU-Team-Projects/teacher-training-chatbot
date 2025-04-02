@@ -1,0 +1,47 @@
+.container {
+    max-width: 600px;
+    margin: 30px auto;
+    padding: 20px;
+    text-align: center;
+}
+
+.chat-item {
+    position: relative;
+    padding: 10px;
+    margin: 5px 0;
+    border-radius: 5px;
+    cursor: pointer;
+    background: var(--button-bg);
+    transition: background 0.2s;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.chat-item:hover {
+    background: var(--button-hover-bg);
+}
+
+.delete-btn {
+    display: none;
+    padding: 5px 10px;
+    font-size: 14px;
+    border: none;
+    border-radius: 5px;
+    background: red;
+    color: white;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.chat-item:hover .delete-btn {
+    display: inline-block;
+}
+
+.delete-btn:hover {
+    background: darkred;
+}
+
+#newChatBtn {
+    margin: 20px auto;
+}

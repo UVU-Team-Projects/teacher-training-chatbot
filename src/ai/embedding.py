@@ -14,7 +14,7 @@ Example:
 """
 
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.embeddings import HuggingFaceBgeEmbeddings
+from langchain_huggingface.embeddings import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
 
 from sentence_transformers import SentenceTransformer
@@ -32,6 +32,7 @@ username:
 password:
 '''
 
+
 class EmbeddingGenerator:
     """
     A class to generate embeddings for text using SentenceTransformer.
@@ -44,7 +45,7 @@ class EmbeddingGenerator:
         dimension (int): The dimension of generated embeddings (default: 384)
     """
 
-    def __init__(self, model_name: str = 'all-MiniLM-L6-v2'):
+    def __init__(self, model_name: str = 'all-MiniLM-L12-v2'):
         """
         Initialize the EmbeddingGenerator with a specified model.
 
@@ -94,61 +95,88 @@ class EmbeddingGenerator:
             UnstructuredMarkdownLoader, PyPDFLoader
         )
 
+        # data_dir = "data/collection"
+        data_dir = "data/books"
+
+        # Track files that failed to load
+        failed_files = []
+
         json_documents = []
-        data_dir = "data/collection"
+        # # Load JSON data without normalization
+        # print("Loading JSON files...")
+        # json_files = [
+        #     # {
+        #     #     'path': f"{data_dir}/question-responses/second-grade_qa.json",
+        #     #     'jq_schema': '.[] | {question: .question, answer: .answer}'
+        #     # },
+        #     {
+        #         'path': f"{data_dir}/writing_example/examples.json",
+        #         'jq_schema': '.Examples[] | .[] | {text: .text, capabilities: ."writing-capabilities"[]}'
+        #     }
+        # ]
 
-        # Load JSON data without normalization
-        print("Loading JSON files...")
-        json_files = [
-            # {
-            #     'path': f"{data_dir}/question-responses/second-grade_qa.json",
-            #     'jq_schema': '.[] | {question: .question, answer: .answer}'
-            # },
-            {
-                'path': f"{data_dir}/writing_example/examples.json",
-                'jq_schema': '.Examples[] | .[] | {text: .text, capabilities: ."writing-capabilities"[]}'
-            }
-        ]
-
-        for json_file in json_files:
-            if os.path.exists(json_file['path']):
-                json_loader = JSONLoader(
-                    file_path=json_file['path'],
-                    jq_schema=json_file['jq_schema'],
-                    text_content=False
-                )
-                # JSON documents added without normalization
-                json_documents.extend(json_loader.load())
+        # for json_file in json_files:
+        #     if os.path.exists(json_file['path']):
+        #         json_loader = JSONLoader(
+        #             file_path=json_file['path'],
+        #             jq_schema=json_file['jq_schema'],
+        #             text_content=False
+        #         )
+        #         # JSON documents added without normalization
+        #         json_documents.extend(json_loader.load())
 
         # Load and normalize other document types
         documents = []
 
         # Load Markdown files
-        print("Loading Markdown files...")
-        markdown_dir = f"{data_dir}/markdown_files"
-        if os.path.exists(markdown_dir):
-            md_loader = DirectoryLoader(
-                markdown_dir,
-                glob="**/*.md",
-                loader_cls=UnstructuredMarkdownLoader
-            )
-            documents.extend(md_loader.load())
+        # print("Loading Markdown files...")
+        # markdown_dir = f"{data_dir}/markdown_files"
+        # if os.path.exists(markdown_dir):
+        #     md_loader = DirectoryLoader(
+        #         markdown_dir,
+        #         glob="**/*.md",
+        #         loader_cls=UnstructuredMarkdownLoader
+        #     )
+        #     documents.extend(md_loader.load())
 
         # Load PDF files
         print("Loading PDF files...")
-        pdf_dir = f"{data_dir}/pdf_files"
+        # pdf_dir = f"{data_dir}/pdf_files"
+        pdf_dir = data_dir  # Temp for the books
+
         if os.path.exists(pdf_dir):
-            pdf_loader = DirectoryLoader(
-                pdf_dir,
-                glob="**/*.pdf",
-                loader_cls=PyPDFLoader
-            )
-            documents.extend(pdf_loader.load())
+            # Get list of PDF files
+            pdf_files = glob.glob(os.path.join(
+                pdf_dir, "**/*.pdf"), recursive=True)
+            print(f"Found {len(pdf_files)} PDF files")
+
+            for pdf_file in pdf_files:
+                try:
+                    # Load each PDF file individually to isolate errors
+                    loader = PyPDFLoader(pdf_file)
+                    file_docs = loader.load()
+                    documents.extend(file_docs)
+                    print(f"Successfully loaded: {pdf_file}")
+                except Exception as e:
+                    # Record failure and continue
+                    failed_files.append(pdf_file)
+                    print(f"Error loading file {pdf_file}")
+                    print(f"Error details: {str(e)}")
+
+        # If any files failed to load, print a summary
+        if failed_files:
+            print("\nFailed to load the following files:")
+            for failed_file in failed_files:
+                print(f" - {failed_file}")
+            print(f"Total failed files: {len(failed_files)}")
 
         # Only normalize non-JSON documents
         normalized_docs = [self.normalize_text(doc) for doc in documents]
 
-        return json_documents + normalized_docs
+        if json_documents:
+            return json_documents + normalized_docs
+        else:
+            return normalized_docs
 
     def split_documents(self, documents: list[Document]) -> list[Document]:
         """
@@ -210,7 +238,7 @@ class EmbeddingGenerator:
         # Initialize embeddings model with correct device
         device = 'cuda' if torch.cuda.is_available(
         ) else 'mps' if torch.backends.mps.is_available() else 'cpu'
-        embeddings = HuggingFaceBgeEmbeddings(
+        embeddings = HuggingFaceEmbeddings(
             model_name=self.embedding_model,
             model_kwargs={'device': device},
             encode_kwargs={'normalize_embeddings': True}
@@ -233,7 +261,8 @@ class EmbeddingGenerator:
         chunks_with_ids = self.calculate_chunk_ids(chunks)
 
         # Add or Update the documents
-        existing_items = db.get(include=[]) # IDs are always included by default
+        # IDs are always included by default
+        existing_items = db.get(include=[])
         existing_ids = set(existing_items["ids"])
         print(f"Number of existing documents in DB: {len(existing_ids)}")
 
@@ -245,7 +274,8 @@ class EmbeddingGenerator:
 
         # Add new documents to the DB
         if new_chunks:
-            new_chunk_ids = [chunk.metadata["chunk_id"] for chunk in new_chunks]
+            new_chunk_ids = [chunk.metadata["chunk_id"]
+                             for chunk in new_chunks]
             db.add_documents(new_chunks, ids=new_chunk_ids)
             # db.persist()
             print(f"Added {len(new_chunks)} new chunks to the DB")
@@ -285,7 +315,7 @@ class EmbeddingGenerator:
         print(f"Split into {len(chunks)} chunks")
         # print(chunks[0])
         embedder.add_to_chroma(chunks)
-        
+
 
 if __name__ == "__main__":
     embedder = EmbeddingGenerator()

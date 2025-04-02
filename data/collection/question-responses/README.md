@@ -1,1 +1,0 @@
-# This data is entirly generated with Claude 3.5 Sonnet.
