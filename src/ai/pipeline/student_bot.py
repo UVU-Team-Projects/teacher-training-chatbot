@@ -7,6 +7,7 @@ from src.ai.pipeline.agent_state import AgentState
 from src.ai.pipeline.agentTools import get_student_profile, get_scenario
 from src.logging import AgentLogger
 from colorama import Fore, Style
+from langgraph.graph import END
 
 
 class StudentBot:
@@ -111,4 +112,140 @@ class StudentBot:
                     'current_node': 'student',
                     'ui_metadata': ui_metadata},
             goto='supervisor'
+        )
+
+
+class Evaluation:
+    """
+    This class is used to evaluate the conversation between the student and the teacher.
+    Only called when the user ends the conversation.
+    """
+
+    def __init__(self, model_name: str = "gpt-4o-mini"):
+        self.llm = ChatOpenAI(model=model_name)
+        self.logger = AgentLogger.get_logger("Evaluation")
+
+    def evaluate(self, state: AgentState) -> Command[Literal['supervisor']]:
+        """
+        Evaluate the conversation between teacher and student.
+
+        Args:
+            state: Current agent state
+
+        Returns:
+            Command with evaluation results
+        """
+        self.logger.info("Running conversation evaluation")
+
+        messages = state.get("messages", [])
+        student_profile = state.get("studentProfile", "No profile available")
+        scenario = state.get("scenario", "No scenario available")
+
+        # Skip if there aren't enough messages
+        if len(messages) < 3:
+            self.logger.warning("Not enough messages to evaluate")
+            evaluation_results = {
+                "summary": "Conversation was too short to evaluate.",
+                "effectiveness": "N/A",
+                "authenticity": "N/A",
+                "suggestions": ["Have a longer conversation to receive meaningful feedback."]
+            }
+        else:
+            # Create evaluation prompt
+            evaluation_prompt = f"""
+            You are an educational expert evaluating a teacher-student interaction.
+            
+            STUDENT PROFILE:
+            {student_profile}
+            
+            SCENARIO:
+            {scenario}
+            
+            Analyze the following conversation between a teacher and student.
+            Evaluate how well the teacher addressed the student's needs based on their profile.
+            
+            CONVERSATION:
+            {[f"{msg.name if hasattr(msg, 'name') else 'Unknown'}: {msg.content if hasattr(msg, 'content') else str(msg)}"
+             for msg in messages]}
+            
+            Provide the following in your evaluation:
+            1. Summary of the interaction
+            2. Effectiveness score (1-10) with explanation
+            3. Authenticity score (1-10) for how well the student was portrayed
+            4. Specific suggestions for improvement
+            
+            Format your response as JSON with the following keys:
+            summary, effectiveness, authenticity, suggestions
+            """
+
+            # Get evaluation from LLM
+            try:
+                self.logger.debug("Sending evaluation prompt to LLM")
+                result = self.llm.invoke(evaluation_prompt)
+
+                response_content = result.content if hasattr(
+                    result, 'content') else str(result)
+
+                # Try to parse as JSON, fallback to text if not valid JSON
+                try:
+                    import json
+                    import re
+
+                    # Extract JSON if it's wrapped in backticks
+                    json_match = re.search(
+                        r'```json\s*(.*?)\s*```', response_content, re.DOTALL)
+                    if json_match:
+                        json_str = json_match.group(1)
+                    else:
+                        json_str = response_content
+
+                    evaluation_results = json.loads(json_str)
+                    self.logger.debug(
+                        "Successfully parsed evaluation results as JSON")
+                except:
+                    self.logger.warning(
+                        "Could not parse evaluation as JSON, using raw text")
+                    evaluation_results = {
+                        "summary": response_content[:500],
+                        "effectiveness": "See summary",
+                        "authenticity": "See summary",
+                        "suggestions": ["See summary for details"]
+                    }
+            except Exception as e:
+                self.logger.error(f"Error during evaluation: {str(e)}")
+                evaluation_results = {
+                    "summary": f"Error during evaluation: {str(e)}",
+                    "effectiveness": "Error",
+                    "authenticity": "Error",
+                    "suggestions": ["Try again later."]
+                }
+
+        # Print evaluation results
+        print("\n" + "="*50)
+        print(f"{Fore.GREEN}CONVERSATION EVALUATION:{Style.RESET_ALL}")
+        print(
+            f"Summary: {evaluation_results.get('summary', 'No summary available')}")
+        print(
+            f"Effectiveness: {evaluation_results.get('effectiveness', 'N/A')}")
+        print(f"Authenticity: {evaluation_results.get('authenticity', 'N/A')}")
+        print("Suggestions:")
+        for suggestion in evaluation_results.get('suggestions', ['No suggestions available']):
+            print(f"- {suggestion}")
+        print("="*50)
+
+        # Update UI metadata
+        ui_metadata = state.get("ui_metadata", {})
+        ui_metadata.update({
+            "is_evaluating": False,
+            "is_complete": True,
+            "evaluation_complete": True
+        })
+
+        return Command(
+            update={
+                'current_node': 'evaluation',
+                'evaluation_results': evaluation_results,
+                'ui_metadata': ui_metadata
+            },
+            goto=END
         )

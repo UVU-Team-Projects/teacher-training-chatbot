@@ -14,6 +14,5 @@ class AgentState(MessagesState):
     conversation_done: bool = False
     evaluation_results: Dict[str, Any] = None
     
-    # Graph execution tracking
-    conversation_turns: int = 0
-    max_turns_without_reset: int = 15
+    # New flag to determine if we should continue the conversation after evaluation
+    continue_conversation: bool = False

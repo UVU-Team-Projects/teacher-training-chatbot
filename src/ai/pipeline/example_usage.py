@@ -44,7 +44,7 @@ def example_use_case(log_level: LogLevel = LogLevel.INFO, show_openai_logs: bool
     logger.info("Creating a student profile...")
     # Create a student profile using the predefined template
     profile = create_student_profile(
-        template_name="struggling_student",
+        template_name="active_learner",
         name="Alex",
         grade_level=2,
         interests=[Interest.SCIENCE, Interest.SPORTS],
@@ -102,28 +102,8 @@ def example_use_case(log_level: LogLevel = LogLevel.INFO, show_openai_logs: bool
     try:
         # In CLI mode, we run the graph and let it handle the human-in-the-loop pattern
         if use_cli:
-            # Track conversation turns for debugging recursion issues
-            turn_tracker = {"count": 0, "last_node": None}
-            
-            def state_debugger(state):
-                """Track state changes to debug potential recursion issues"""
-                turn_tracker["count"] += 1
-                current_node = state.get("current_node", "unknown")
-                turn_counter = state.get("conversation_turns", 0)
-                if turn_tracker["count"] % 5 == 0 or current_node != turn_tracker["last_node"]:
-                    logger.debug(f"Turn #{turn_tracker['count']} | Node: {current_node} | Internal counter: {turn_counter}")
-                turn_tracker["last_node"] = current_node
-                return state
-            
-            # Execute the graph with initial state and debugging callbacks
-            result = graph.invoke(
-                state, 
-                config={
-                    "configurable": {"thread_id": session_id},
-                    "recursion_limit": 50,  # Set a higher recursion limit
-                    # "callbacks": [state_debugger]
-                }
-            )
+            # Execute the graph with initial state
+            result = graph.invoke(state, config={"configurable": {"thread_id": session_id}})
 
             # The result will contain all the conversation history and evaluation
             if result.get("conversation_done", False):
