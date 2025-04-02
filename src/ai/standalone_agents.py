@@ -19,9 +19,6 @@ class KnowledgeBaseRetriever:
     def __init__(self): # model_name is no longer directly used here but kept for potential future use
         """
         Initialize the knowledge base retriever.
-
-        Args:
-            model_name: The name of the language model (currently unused but kept for consistency).
         """
         self.logger = AgentLogger.get_logger("KnowledgeBaseRetriever")
         self.logger.info(f"Initializing KnowledgeBaseRetriever using ChromaDB.")
@@ -122,7 +119,7 @@ class StandaloneStudentBot:
         
         # Configure the knowledge base retriever
         if knowledge_base is None:
-            self.kb_retriever = KnowledgeBaseRetriever(model_name=model_name)
+            self.kb_retriever = KnowledgeBaseRetriever()
         else:
             self.kb_retriever = knowledge_base
         
@@ -258,7 +255,7 @@ class StandaloneStudentBot:
 class StandaloneEvaluator:
     """Evaluator for teacher-student conversations."""
     
-    def __init__(self, model_name: str = "gpt-4o-mini", knowledge_base: Optional[KnowledgeBaseRetriever] = None):
+    def __init__(self, model_name: str = "gpt-4o-mini"):
         """Initialize the evaluator.
         
         Args:
@@ -268,7 +265,7 @@ class StandaloneEvaluator:
         self.logger = AgentLogger.get_logger("StandaloneEvaluator")
         self.logger.info(f"Initializing StandaloneEvaluator with model {model_name}")
         self.model_name = model_name
-        self.knowledge_base = knowledge_base
+        self.knowledge_base = KnowledgeBaseRetriever()
         self.llm = ChatOpenAI(model=model_name, temperature=0.1)
     
     def evaluate(

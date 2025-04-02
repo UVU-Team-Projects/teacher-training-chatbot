@@ -5,8 +5,15 @@ from src.ai.scenario_generator import Scenario, ScenarioGenerator, GradeLevel, S
 def do_back_button():
     st.session_state.create_chat_page = "student"
 
-def select_scenario(scenario):
-    st.session_state.selected_scenario = scenario
+def select_scenario():
+    st.session_state.selected_scenario = {
+                    "title": "Fractions",
+                    "description": "Bob is having a hard time understanding fractions. He needs help. He can't do\
+                        it on his own. He needs a visual explanation.",
+                    "grade_level": 2,
+                    "subject": 'Math',
+                    "challenge_type": 'Academic'
+                }
     # Change page to chat.
     st.session_state.page = "chat"
 
@@ -139,30 +146,37 @@ def create_scenario_form():
                 strategies_list = [s.strip() for s in evidence_based_strategies.split("\n")] if evidence_based_strategies else []
                 sources_list = [s.strip() for s in research_sources.split("\n")] if research_sources else []
                 
-                success = db.create_scenario(
-                    title=title,
-                    description=description,
-                    grade_level=grade_level,
-                    subject=subject,
-                    challenge_type=challenge_type,
-                    student_age=student_age,
-                    student_grade=student_grade,
-                    learning_style=learning_style,
-                    special_needs=spec_needs_list,
-                    cultural_background=cultural_background,
-                    language_background=language_background,
-                    class_size=class_size,
-                    time_of_day=time_of_day,
-                    class_duration=class_duration,
-                    previous_activities=prev_act_list,
-                    classroom_setup=classroom_setup,
-                    available_resources=avail_res_list,
-                    key_considerations=key_cons_list,
-                    evidence_based_strategies=strategies_list,
-                    research_sources=sources_list
-                )
+                # success = db.create_scenario(
+                #     title=title,
+                #     description=description,
+                #     # grade_level=grade_level,
+                #     subject=subject,
+                #     challenge_type=challenge_type,
+                #     student_age=student_age,
+                #     student_grade=student_grade,
+                #     learning_style=learning_style,
+                #     special_needs=spec_needs_list,
+                #     cultural_background=cultural_background,
+                #     language_background=language_background,
+                #     class_size=class_size,
+                #     time_of_day=time_of_day,
+                #     class_duration=class_duration,
+                #     previous_activities=prev_act_list,
+                #     classroom_setup=classroom_setup,
+                #     available_resources=avail_res_list,
+                #     key_considerations=key_cons_list,
+                #     evidence_based_strategies=strategies_list,
+                #     research_sources=sources_list
+                # )
+                scenario = {
+                    "title": title,
+                    "description": description,
+                    "grade_level": grade_level,
+                    "subject": subject,
+                    "challenge_type": challenge_type
+                }
                 
-                if success:
+                if scenario:
                     st.success(f"Scenario '{title}' created!")
                     st.rerun()
                 else:
@@ -224,6 +238,7 @@ def main():
     ai_gen_col, _ = st.columns([1, 3])
     with ai_gen_col:
         st.button("Generate with AI", on_click=generate_ai_scenario, key='ai-generate', use_container_width=True)
+        st.button("Select Scenario", on_click=select_scenario, key='select-scenario', use_container_width=True)
 
     # Load scenarios
     load_scenarios()

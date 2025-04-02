@@ -1,12 +1,21 @@
 import streamlit as st
 import src.data.database.crud as db
-from src.ai.student_profiles import StudentProfile, create_student_profile  # Import the StudentProfile class
+from src.ai.student_profiles import create_student_profile  # Import the StudentProfile class
 
 def do_home_button():
     st.session_state.page = "home"
 
 def select_student(student):
-    st.session_state.selected_student = student
+    #TODO: Add student selection from database.
+    st.session_state.selected_student = create_student_profile(
+                    template_name='struggling_student',
+                    name="Bob",
+                    grade_level=2,
+                    interests=['Math', 'Computer Science'],
+                    academic_strengths=['problem solving', 'critical thinking'],
+                    academic_challenges=['Fractions', 'Decimals'],
+                    support_strategies=['Hands-on learning', 'Visual aids', 'Group work']
+                )
     # Change page to scenario selection.
     st.session_state.create_chat_page = "scenario"
 
@@ -76,23 +85,23 @@ def create_student_form():
                 # Create student profile object
                 student_profile = create_student_profile(
                     name=new_student_name,
-                    grade_level=grade_level,
-                    interests=interest_list,
+                    grade_level=2,
+                    interests=['Math', 'Computer Science'],
                     academic_strengths=strength_list,
                     academic_challenges=weakness_list,
-                    support_strategies=support_list
+                    support_strategies=['Hands-on learning', 'Visual aids', 'Group work']
                 )
                 # Create student in database
-                success = db.create_student(
-                    name=new_student_name,
-                    traits=trait_list,
-                    strengths=strength_list,
-                    weaknesses=weakness_list,
-                    motivations=motivation_list,
-                    fears=fear_list,
-                    communication_style=comm_style
-                )
-                if success:
+                # success = db.create_student(
+                #     name=new_student_name,
+                #     traits=trait_list,
+                #     strengths=strength_list,
+                #     weaknesses=weakness_list,
+                #     motivations=motivation_list,
+                #     fears=fear_list,
+                #     communication_style=comm_style
+                # )
+                if student_profile:
                     st.success(f"Student '{new_student_name}' created!")
                     st.rerun()
                 else:
@@ -123,7 +132,7 @@ def main():
         else:
             for student in st.session_state.students:
                 with st.expander(student.name):
-                    st.write(student.about)
+                    # st.write(student.about)
                     select_button, edit_button, _, delete_button = st.columns([1,1,3,1])
                     select_button.button("Select", 
                             on_click=select_student, 

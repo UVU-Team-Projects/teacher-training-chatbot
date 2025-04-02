@@ -33,11 +33,15 @@ def init_session_state():
         st.session_state.scenarios = []
     
     # --- Chatbot variables ---
-    # Regular chatbot
-    if "chatbot" not in st.session_state:
-        st.session_state.chatbot = None
-    if "messages" not in st.session_state:
+    # Student chatbot
+    if 'conversation_manager' not in st.session_state:
+        st.session_state.conversation_manager = None
+    if 'conversation_active' not in st.session_state:
+        st.session_state.conversation_active = False
+    if 'messages' not in st.session_state:
         st.session_state.messages = []
+    if 'evaluation_complete' not in st.session_state:
+        st.session_state.evaluation_complete = False
     
     # AI chatbot
     if "ai_chatbot" not in st.session_state:
