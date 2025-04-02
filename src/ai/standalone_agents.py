@@ -5,61 +5,79 @@ from langchain_core.tools import BaseTool
 from src.logging import AgentLogger, LogLevel
 from colorama import Fore, Style
 from src.ai.student_profiles import StudentProfile
+from src.ai.embedding import EmbeddingGenerator
 import json
 import os
 from datetime import datetime
 
 class KnowledgeBaseRetriever:
     """
-    A standalone knowledge base retriever that uses RAG to search for relevant information.
+    A standalone knowledge base retriever that uses RAG to search for relevant information
+    using a Chroma vector store.
     """
-    
-    def __init__(self, model_name: str = 'gpt-4o-mini'):
+
+    def __init__(self): # model_name is no longer directly used here but kept for potential future use
         """
         Initialize the knowledge base retriever.
-        
+
         Args:
-            model_name: The name of the language model to use
+            model_name: The name of the language model (currently unused but kept for consistency).
         """
         self.logger = AgentLogger.get_logger("KnowledgeBaseRetriever")
-        self.logger.info(f"Initializing KnowledgeBaseRetriever with model: {model_name}")
-        
-        # Import here to avoid circular imports
-        from src.ai.simple_rag import SimpleRAG
-        self.rag = SimpleRAG(model_name=model_name)
-        
+        self.logger.info(f"Initializing KnowledgeBaseRetriever using ChromaDB.")
+
+        # Initialize EmbeddingGenerator and ChromaDB
+        self.embedder = EmbeddingGenerator()
+        self.db = self.embedder.return_chroma()
+
+        if self.db is None:
+            self.logger.error("Failed to initialize ChromaDB. Knowledge base retrieval will not work.")
+            self.retriever = None
+        else:
+            # Set up the retriever
+            self.retriever = self.db.as_retriever(search_kwargs={'k': 3}) # Retrieve top 3 results
+            self.logger.info("ChromaDB retriever initialized successfully.")
+
     def query(self, question: str) -> str:
         """
-        Query the knowledge base to find relevant information.
-        
+        Query the ChromaDB knowledge base to find relevant information using RAG.
+
         Args:
             question: The query to search for
-            
+
         Returns:
-            The answer from the knowledge base
+            A string containing the formatted relevant documents, or an error message.
         """
         self.logger.info(f"Querying knowledge base: {question[:50]}...")
-        
+
+        if self.retriever is None:
+            error_msg = "Error: Knowledge base retriever not initialized."
+            self.logger.error(error_msg)
+            return error_msg
+
         try:
-            # Use RAG to get the response
-            response = self.rag.generate_response(question)
-            
-            # Extract the content from the response
-            response_content = response.content if hasattr(response, 'content') else str(response)
-            
-            self.logger.info(f"Knowledge base response: {response_content[:50]}...")
-            
+            # Use the retriever to get relevant documents
+            retrieved_docs = self.retriever.invoke(question)
+
+            # Format the documents into a single string
+            response_content = "\n---\n".join([f"Source: {doc.metadata.get('source', 'Unknown')}\nContent: {doc.page_content}" for doc in retrieved_docs])
+
+            if not response_content:
+                response_content = "No relevant information found in the knowledge base."
+
+            self.logger.info(f"Knowledge base response generated from {len(retrieved_docs)} documents.")
+
             # Format the response for display
             formatted_response = (
-                f"\n{Fore.MAGENTA}Knowledge Base:{Style.RESET_ALL}\n"
-                f"{response_content}\n"
-                f"{'-' * 50}\n"
+                f"\\n{Fore.MAGENTA}Knowledge Base:{Style.RESET_ALL}\\n"
+                f"{response_content}\\n"
+                f"{'-' * 50}\\n"
             )
-            
+
             print(formatted_response)
-            
+
             return response_content
-            
+
         except Exception as e:
             self.logger.error(f"Error querying knowledge base: {str(e)}")
             return f"Error querying knowledge base: {str(e)}"
@@ -251,7 +269,7 @@ class StandaloneEvaluator:
         self.logger.info(f"Initializing StandaloneEvaluator with model {model_name}")
         self.model_name = model_name
         self.knowledge_base = knowledge_base
-        self.llm = ChatOpenAI(model=model_name, temperature=0)
+        self.llm = ChatOpenAI(model=model_name, temperature=0.1)
     
     def evaluate(
         self, 
@@ -403,8 +421,7 @@ class ConversationManager:
         student_profile: Union[Dict[str, Any], StudentProfile],
         scenario: Dict[str, Any],
         model_name: str = "gpt-4o-mini",
-        evaluator_model: str = "gpt-4o-mini",
-        rag_model: str = "gpt-4o-mini"
+        evaluator_model: str = "gpt-4o-mini"
     ):
         """
         Initialize the conversation manager.
@@ -414,10 +431,9 @@ class ConversationManager:
             scenario: The scenario context for the conversation.
             model_name: The name of the language model to use for the student bot.
             evaluator_model: The name of the language model to use for the evaluator.
-            rag_model: The name of the language model to use for RAG.
         """
         self.logger = AgentLogger.get_logger("ConversationManager")
-        self.logger.info(f"Initializing ConversationManager with models: {model_name}, {evaluator_model}, {rag_model}")
+        self.logger.info(f"Initializing ConversationManager with models: {model_name}, {evaluator_model}")
         
         # Initialize components
         self.student_bot = StandaloneStudentBot(
@@ -426,7 +442,7 @@ class ConversationManager:
             model_name=model_name
         )
         self.evaluator = StandaloneEvaluator(model_name=evaluator_model)
-        self.kb_retriever = KnowledgeBaseRetriever(model_name=rag_model)
+        self.kb_retriever = KnowledgeBaseRetriever()
         
         # Store profile and scenario
         self.student_profile = student_profile
@@ -580,7 +596,6 @@ def initialize_conversation_manager(
     scenario: Dict[str, Any],
     model_name: str = "gpt-4o-mini",
     evaluator_model: str = "gpt-4o-mini",
-    rag_model: str = "gpt-4o-mini",
     log_level: LogLevel = LogLevel.INFO
 ) -> ConversationManager:
     """Initialize a conversation manager for Streamlit integration.
@@ -590,7 +605,6 @@ def initialize_conversation_manager(
         scenario: The scenario context.
         model_name: The model for the student bot.
         evaluator_model: The model for the evaluator.
-        rag_model: The model for RAG.
         log_level: The logging level.
         
     Returns:
@@ -598,6 +612,7 @@ def initialize_conversation_manager(
     """
     # Set up logging
     AgentLogger.set_level(log_level)
+    logger = AgentLogger.get_logger("ConversationManager")
     
     # Handle enum values in the profile if it's a StudentProfile
     if hasattr(profile, 'interests') and isinstance(profile.interests, list):
@@ -623,8 +638,7 @@ def initialize_conversation_manager(
             student_profile=profile,
             scenario=scenario_copy,
             model_name=model_name,
-            evaluator_model=evaluator_model,
-            rag_model=rag_model
+            evaluator_model=evaluator_model
         )
         logger.info("ConversationManager initialized successfully")
         return manager

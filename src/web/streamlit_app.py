@@ -66,7 +66,7 @@ with st.sidebar:
     # Model selection
     model_name = st.selectbox(
         "Select AI Model",
-        ["gpt-4o-mini", "gpt-4o", "gpt-3.5-turbo-16k"],
+        ["gpt-4o-mini"],
         index=0
     )
     
