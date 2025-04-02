@@ -1,6 +1,6 @@
 import streamlit as st
 import src.data.database.crud as db
-from src.ai.student_profiles import StudentProfile  # Import the StudentProfile class
+from src.ai.student_profiles import StudentProfile, create_student_profile  # Import the StudentProfile class
 
 def do_home_button():
     st.session_state.page = "home"
@@ -73,6 +73,15 @@ def create_student_form():
                 fear_list = [f.strip() for f in fears.split(",") if f.strip()] if fears else None
                 comm_style = communication_style if communication_style else None
                 
+                # Create student profile object
+                student_profile = create_student_profile(
+                    name=new_student_name,
+                    grade_level=grade_level,
+                    interests=interest_list,
+                    academic_strengths=strength_list,
+                    academic_challenges=weakness_list,
+                    support_strategies=support_list
+                )
                 # Create student in database
                 success = db.create_student(
                     name=new_student_name,
