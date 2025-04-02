@@ -10,9 +10,6 @@ RUN apt-get update && apt-get install -y \
     lsb-release \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Ollama
-RUN curl -fsSL https://ollama.com/install.sh | sh
-
 # Set up a working directory
 WORKDIR /workspace
 
@@ -22,6 +19,3 @@ RUN if [ -f "requirements.txt" ]; then pip install --no-cache-dir -r requirement
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
-
-# Add port for Ollama API
-EXPOSE 11434
