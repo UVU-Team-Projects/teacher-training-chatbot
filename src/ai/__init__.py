@@ -1,4 +1,4 @@
-try:
+'''try:
     from .simple_rag import SimpleRAG
     from .profile_builder import StudentProfileBuilder
     from .rag_pipeline import RAG, create_pipeline, chat_with_student
@@ -20,3 +20,4 @@ __all__ = [
     'STUDENT_TEMPLATES',
     'StudentProfile',
 ]
+'''

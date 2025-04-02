@@ -5,9 +5,28 @@ gevent==24.11.1
 langchain-chroma==0.2.2
 langchain-community==0.3.1
 langchain-huggingface==0.1.0
-langchain-ollama==0.2.0
+langchain-ollama>=0.0.3
 langchain-openai==0.2.0
 langgraph==0.2.28
 pip-chill==1.0.3
 pypdf2==3.0.1
-streamlit==1.39.0
+
+# Web framework
+streamlit>=1.32.0
+
+# Database
+sqlalchemy>=2.0.0
+psycopg2-binary>=2.9.9
+
+# LLM and AI components
+langchain-core>=0.1.0
+langchain>=0.1.0
+
+# Vector database
+chromadb>=0.4.22
+
+# Utilities
+numpy>=1.24.0
+pandas>=2.0.0
+pydantic>=2.0.0
+python-dotenv>=1.0.0

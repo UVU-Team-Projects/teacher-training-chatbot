@@ -29,6 +29,8 @@ def chat():
         if chat_selected_tab == "AI Assistant":
             ai_assistant.main()
         elif chat_selected_tab == "Knowledge Base":
-            documents.main()
+            # Placeholder for Knowledge Base component
+            pass
+            #documents.main()
         elif chat_selected_tab == "Chat Settings":
             chat_settings.main()

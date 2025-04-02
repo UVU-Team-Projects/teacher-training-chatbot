@@ -1,7 +1,7 @@
 # Project files
-from student_profiles import create_student_profile, Interest, STUDENT_TEMPLATES, StudentProfile
-from embedding import EmbeddingGenerator
-from profile_builder import StudentProfileBuilder
+from .student_profiles import create_student_profile, Interest, STUDENT_TEMPLATES, StudentProfile
+from .embedding import EmbeddingGenerator
+from .profile_builder import StudentProfileBuilder
 
 # External imports
 from dotenv import load_dotenv
