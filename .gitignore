@@ -70,4 +70,5 @@ alembic/versions/*.py
 chatbot.db
 chatbot_test.db 
 
+# Data
 data/

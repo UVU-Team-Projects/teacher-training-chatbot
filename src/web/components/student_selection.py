@@ -1,14 +1,6 @@
 import streamlit as st
 import src.data.database.crud as db
-
-class Student:
-    next_id = 1
-    def __init__(self, name, about, id=None):
-        self.name = name
-        self.about = about
-        self.id = id if id is not None else Student.next_id
-        if id is None:
-            Student.next_id += 1
+from src.ai.student_profiles import StudentProfile  # Import the StudentProfile class
 
 def do_home_button():
     st.session_state.page = "home"
@@ -23,9 +15,10 @@ def load_students():
     # Get students from database
     student_profiles = db.get_all_students()
     
-    # Create Student instances from StudentProfile objects
+    # StudentProfile objects are now used directly
     for profile in student_profiles:
         try:
+<<<<<<< HEAD
             # Extract relevant information from StudentProfile objects
             name = getattr(profile, 'name', f"Student {Student.next_id}")
             
@@ -85,10 +78,14 @@ def load_students():
             if not hasattr(profile, 'id'):
                 Student.next_id += 1
             
+=======
+            # We're already using StudentProfile objects, so just add them to the session state
+            st.session_state.students.append(profile)
+>>>>>>> frontend
         except Exception as e:
             print(f"Error processing student profile: {e}")
             import traceback
-            traceback.print_exc()  # Print full stack trace
+            traceback.print_exc()
             continue
 
 def create_student_form():
@@ -153,7 +150,6 @@ def create_student_form():
                     st.rerun()
                 else:
                     st.error(f"Failed to create student '{new_student_name}'.")
-                    
 
 def delete_student(student):
     # Delete the student from the database

@@ -1,11 +1,6 @@
 from typing import Dict, List, Optional
-try:
-    # Direct imports (when running the file directly)
-    from student_profiles import StudentProfile, Interest, Mood
-except ImportError:
-    # Relative imports (when imported as a module)
-    from .student_profiles import StudentProfile, Interest, Mood
-from langchain_openai import ChatOpenAI
+from .student_profiles import StudentProfile, Interest, Mood
+from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 import json
 
