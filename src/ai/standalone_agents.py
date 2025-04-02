@@ -334,10 +334,31 @@ class StandaloneEvaluator:
             profile_query = f"teaching strategies for students with {', '.join(profile_dict.get('academic_challenges', []))}"
             profile_kb_info = self.knowledge_base.query(profile_query)
             kb_info += "\n\n" + profile_kb_info
+
+        # Create a teacher profile with teaching style and classroom management style
+        teacher_profile = {
+            "teaching_style": {
+                "approach": "student-centered",
+                "methods": ["inquiry-based learning", "collaborative activities", "visual aids"],
+                "communication": "supportive and encouraging",
+                "feedback_style": "constructive with specific suggestions for improvement"
+            },
+            "classroom_management": {
+                "discipline_approach": "positive reinforcement",
+                "rules_structure": "clear expectations with consistent enforcement",
+                "engagement_strategies": ["active participation", "varied activities", "real-world connections"],
+                "conflict_resolution": "restorative practices focusing on problem-solving"
+            }
+        }
         
         # Create the evaluation prompt
         evaluation_prompt = f"""
         You are an expert teacher mentor tasked with evaluating a conversation between a teacher and a student.
+
+        # Teacher Profile
+        ```json
+        {json.dumps(teacher_profile, indent=2)}
+        ```
         
         # Student Profile
         ```json
@@ -361,6 +382,7 @@ class StandaloneEvaluator:
         2. Appropriateness of responses to the student's needs
         3. Alignment with teaching best practices
         4. Authenticity of the interaction
+        5. Teacher's teaching style and classroom management style
         
         Provide a structured evaluation in the following JSON format:
         ```json
