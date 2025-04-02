@@ -1,14 +1,6 @@
 import streamlit as st
 import src.data.database.crud as db
-
-class Student:
-    next_id = 1
-    def __init__(self, name, about, id=None):
-        self.name = name
-        self.about = about
-        self.id = id if id is not None else Student.next_id
-        if id is None:
-            Student.next_id += 1
+from src.ai.student_profiles import StudentProfile  # Import the StudentProfile class
 
 def do_home_button():
     st.session_state.page = "home"
@@ -23,73 +15,15 @@ def load_students():
     # Get students from database
     student_profiles = db.get_all_students()
     
-    # Create Student instances from StudentProfile objects
+    # StudentProfile objects are now used directly
     for profile in student_profiles:
         try:
-            # Extract relevant information from StudentProfile objects
-            name = getattr(profile, 'name', f"Student {Student.next_id}")
-            
-            # Build about text from profile attributes
-            about_parts = []
-            
-            # Process traits from dir output
-            if hasattr(profile, 'traits') and profile.traits:
-                if isinstance(profile.traits, (list, tuple)):
-                    traits = ", ".join(profile.traits)
-                else:
-                    traits = str(profile.traits)
-                about_parts.append(f"😊 **Traits:** {traits}\n")
-                
-            if hasattr(profile, 'strengths') and profile.strengths:
-                if isinstance(profile.strengths, (list, tuple)):
-                    strengths = ", ".join(profile.strengths)
-                else:
-                    strengths = str(profile.strengths)
-                about_parts.append(f"💪 **Strengths:** {strengths}\n")
-                
-            if hasattr(profile, 'weaknesses') and profile.weaknesses:
-                if isinstance(profile.weaknesses, (list, tuple)):
-                    weaknesses = ", ".join(profile.weaknesses)
-                else:
-                    weaknesses = str(profile.weaknesses)
-                about_parts.append(f"🔄 **Weaknesses:** {weaknesses}\n")
-            
-            if hasattr(profile, 'motivations') and profile.motivations:
-                if isinstance(profile.motivations, (list, tuple)):
-                    motivations = ", ".join(profile.motivations)
-                else:
-                    motivations = str(profile.motivations)
-                about_parts.append(f"🎯 **Motivations:** {motivations}\n")
-                
-            if hasattr(profile, 'fears') and profile.fears:
-                if isinstance(profile.fears, (list, tuple)):
-                    fears = ", ".join(profile.fears)
-                else:
-                    fears = str(profile.fears)
-                about_parts.append(f"😨 **Fears:** {fears}\n")
-                
-            if hasattr(profile, 'communication_style'):
-                about_parts.append(f"💬 **Communication Style:** {profile.communication_style}\n")
-                
-            if hasattr(profile, 'engagement_level'):
-                about_parts.append(f"📊 **Engagement Level:** {profile.engagement_level}\n")
-                
-            # Join all parts with line breaks
-            about = "\n".join(about_parts) if about_parts else "No additional information available."
-            
-            
-            # Create Student instance and add to session state
-            student = Student(name=name, about=about, id=getattr(profile, 'id', Student.next_id))
-            st.session_state.students.append(student)
-            
-            # Only increment next_id if we didn't use the profile's id
-            if not hasattr(profile, 'id'):
-                Student.next_id += 1
-            
+            # We're already using StudentProfile objects, so just add them to the session state
+            st.session_state.students.append(profile)
         except Exception as e:
             print(f"Error processing student profile: {e}")
             import traceback
-            traceback.print_exc()  # Print full stack trace
+            traceback.print_exc()
             continue
 
 def create_student_form():
@@ -154,7 +88,6 @@ def create_student_form():
                     st.rerun()
                 else:
                     st.error(f"Failed to create student '{new_student_name}'.")
-                    
 
 def delete_student(student):
     # Delete the student from the database
