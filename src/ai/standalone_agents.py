@@ -390,7 +390,7 @@ class StandaloneEvaluator:
             "summary": "Brief summary of the interaction (1-2 sentences)",
             "effectiveness": "Score from 1-10 with brief explanation",
             "authenticity": "Score from 1-10 with brief explanation",
-            "best_practices_alignment": "Analysis of how well the teacher followed best practices",
+            "best_practices_alignment": "Analysis of how well the teacher followed best practices and their teaching/classroom management style",
             "strengths": ["Strength 1", "Strength 2", "etc."],
             "areas_for_improvement": ["Area 1", "Area 2", "etc."],
             "suggestions": ["Specific suggestion 1", "Specific suggestion 2", "etc."]
