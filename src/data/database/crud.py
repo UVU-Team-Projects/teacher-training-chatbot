@@ -1012,6 +1012,9 @@ def populate_all_tables():
     """
     Populates all database tables with predefined data.
     This function should be called after initialize_database().
+    
+    Returns:
+        bool: True if all tables were populated successfully, False otherwise.
     """
     print("Starting database population...")
     
@@ -1028,30 +1031,44 @@ def populate_all_tables():
     
     return success
 
-    # id = Column(Integer, primary_key=True, index=True)
-    # name = Column(String, index=True)
-    # grade_level = Column(Integer)
-    # personality_traits = Column(ARRAY(String), nullable=True)
-    # typical_moods = Column(ARRAY(String), nullable=True)
-    # behavioral_patterns = Column(String, nullable=True)
-    # learning_style = Column(String, nullable=True)
-    # interests = Column(ARRAY(String), nullable=True)
-    # academic_strengths = Column(ARRAY(String), nullable=True)
-    # academic_challenges = Column(ARRAY(String), nullable=True)
-    # support_strategies = Column(ARRAY(String), nullable=True)
-    # social_dynamics = Column(String, nullable=True)
 def populate_teacher_profiles():
+    """
+    Populates the teacher_profiles table with predefined teacher data.
+    """
     db = next(get_db())
     try:
-        teacher1 = create_teacher(
-        name="Jane Doe",
-        grade_level=3,
-        teaching_philosophy="Hands-on learning with focus on real-world applications",
-        preferred_teaching_methods=["experiential", "cooperative learning"],
-        behavior_management_philosophy="Building relationships and setting clear boundaries",
-        areas_for_growth=["assessment strategies", "parent communication"]
-    )
-        db.add(teacher1)
+        # Jane Doe
+        jane = TeacherProfile(
+            name="Jane Doe",
+            grade_level=2,
+            teaching_philosophy="Hands-on learning with focus on real-world applications",
+            preferred_teaching_methods=["experiential", "cooperative learning"],
+            behavior_management_philosophy="Building relationships and setting clear boundaries",
+            areas_for_growth=["assessment strategies", "parent communication"]
+        )
+        db.add(jane)
+
+        # John Smith
+        john = TeacherProfile(
+            name="John Smith",
+            grade_level=2,
+            teaching_philosophy="Student-centered learning with emphasis on critical thinking",
+            preferred_teaching_methods=["project-based", "inquiry-based"],
+            behavior_management_philosophy="Positive reinforcement and clear expectations",
+            areas_for_growth=["technology integration", "differentiated instruction"]
+        )
+        db.add(john)
+
+        # Sarah Johnson
+        sarah = TeacherProfile(
+            name="Sarah Johnson",
+            grade_level=2,
+            teaching_philosophy="Inclusive education with focus on individual learning styles",
+            preferred_teaching_methods=["differentiated instruction", "flipped classroom"],
+            behavior_management_philosophy="Proactive approach with emphasis on social-emotional learning",
+            areas_for_growth=["data-driven instruction", "classroom technology"]
+        )
+        db.add(sarah)
 
         db.commit()
         print("Teacher profiles populated successfully.")
