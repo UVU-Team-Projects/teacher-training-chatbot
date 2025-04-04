@@ -13,7 +13,6 @@ def main():
         print("Failed to initialize database. Exiting.")
         return
     print(clear_all_tables())
-    print_table_contents("student_profiles")
     
     # Then populate all tables using the combined function
     print("\nPopulating all tables...")

@@ -29,9 +29,9 @@ def populate_student_profiles() -> bool:
         # Create example students directly in the database with template information
         maria = create_student_profile(
             name="Maria Rodriguez",
-            grade_level=2,
+            grade_level=5,
             personality_traits=["quiet", "observant", "creative"],
-            typical_moods=["calm", "focused"],
+            typical_moods=["focused", "happy"],
             behavioral_patterns={"classroom": "prefers independent work", "group": "listens more than speaks"},
             learning_style="visual",
             interests=["reading", "arts", "nature"],
@@ -44,9 +44,9 @@ def populate_student_profiles() -> bool:
         
         jacob = create_student_profile(
             name="Jacob Smith",
-            grade_level=2,
+            grade_level=5,
             personality_traits=["energetic", "curious", "hands-on"],
-            typical_moods=["enthusiastic", "restless"],
+            typical_moods=["excited", "focused"],
             behavioral_patterns={"classroom": "needs movement breaks", "group": "active participant"},
             learning_style="kinesthetic",
             interests=["sports", "technology", "music"],
@@ -59,7 +59,7 @@ def populate_student_profiles() -> bool:
         
         sophia = create_student_profile(
             name="Sophia Chen",
-            grade_level=2,
+            grade_level=5,
             personality_traits=["artistic", "observant", "sensitive"],
             typical_moods=["thoughtful", "anxious"],
             behavioral_patterns={"classroom": "needs reassurance", "group": "prefers one-on-one"},
@@ -85,6 +85,99 @@ def populate_student_profiles() -> bool:
         db.rollback()
         print(f"Error populating student profiles: {e}")
         return False
+
+def print_student_profiles():
+    """
+    Prints all student profiles in the database.
+    """
+    db = next(get_db())
+    students = db.query(StudentProfileDB).all()
+    if not students:
+        print("No student profiles found in the database.")
+        return
+    
+    print(f"Found {len(students)} student profiles:")
+    for student in students:
+        print(f"\nID: {student.id}")
+        print(f"Name: {student.name}")
+        print(f"Grade Level: {student.grade_level if student.grade_level else 'Not specified'}")
+        print(f"Template: {student.template_name if student.template_name else 'Custom'}")
+        
+        if student.personality_traits:
+            print(f"Personality Traits: {', '.join(student.personality_traits)}")
+        
+        if student.typical_moods:
+            print(f"Typical Moods: {', '.join(student.typical_moods)}")
+        
+        if student.behavioral_patterns:
+            try:
+                behavioral_patterns = json.loads(student.behavioral_patterns)
+                print(f"Behavioral Patterns: {behavioral_patterns}")
+            except json.JSONDecodeError:
+                print(f"Behavioral Patterns: {student.behavioral_patterns}")
+        
+        if student.learning_style:
+            print(f"Learning Style: {student.learning_style}")
+        
+        if student.interests:
+            print(f"Interests: {', '.join(student.interests)}")
+        
+        if student.academic_strengths:
+            print(f"Academic Strengths: {', '.join(student.academic_strengths)}")
+        
+        if student.academic_challenges:
+            print(f"Academic Challenges: {', '.join(student.academic_challenges)}")
+        
+        if student.support_strategies:
+            print(f"Support Strategies: {', '.join(student.support_strategies)}")
+        
+        if student.social_dynamics:
+            try:
+                social_dynamics = json.loads(student.social_dynamics)
+                print(f"Social Dynamics: {social_dynamics}")
+            except json.JSONDecodeError:
+                print(f"Social Dynamics: {student.social_dynamics}")
+        
+        print("-" * 40)
+
+def print_teacher_profiles():
+    """
+    Prints the contents of the teacher_profiles table.
+    """
+    db = next(get_db())
+    teachers = db.query(TeacherProfile).all()
+    print("\nteacher_profiles table contents:")
+    for teacher in teachers:
+        print(f"  ID: {teacher.id}")
+        print(f"  Name: {teacher.name}")
+        print(f"  Grade Level: {teacher.grade_level}")
+        print(f"  Teaching Philosophy: {teacher.teaching_philosophy}")
+        print(f"  Preferred Teaching Methods: {', '.join(teacher.preferred_teaching_methods) if teacher.preferred_teaching_methods else 'None'}")
+        print(f"  Behavior Management Philosophy: {teacher.behavior_management_philosophy}")
+        print(f"  Areas for Growth: {', '.join(teacher.areas_for_growth) if teacher.areas_for_growth else 'None'}")
+        print("-" * 20)  # Separator between teachers
+
+def print_scenarios():
+    """
+    Prints the contents of the scenarios table.
+    """
+    db = next(get_db())
+    scenarios = db.query(Scenario).all()
+    print("\nscenarios table contents:")
+    for scenario in scenarios:
+        print(f"  ID: {scenario.id}")
+        print(f"  Title: {scenario.title}")
+        print(f"  Description: {scenario.description}")
+        print(f"  Instruction: {scenario.instruction[:100]}..." if scenario.instruction and len(scenario.instruction) > 100 else f"  Instruction: {scenario.instruction}")
+        print("-" * 20)  # Separator between scenarios
+
+def print_all_tables():
+    """
+    Prints the contents of all tables in the database.
+    """
+    print_student_profiles()
+    print_teacher_profiles()
+    print_scenarios()
 
 def populate_scenarios():
     """
@@ -755,7 +848,6 @@ Remember: While this is a self-advocacy situation, your primary goal is to stay 
         print(f"Error populating scenarios: {e}")
         return False
 
-
 def populate_active_files():
     """
     Populates the active_files table with markdown files from the data/markdown_files directory.
@@ -809,29 +901,6 @@ def populate_active_files():
         print(f"Error populating active files: {e}")
         return False
 
-def populate_all_tables():
-    """
-    Populates all database tables with predefined data.
-    This function should be called after initialize_database().
-    
-    Returns:
-        bool: True if all tables were populated successfully, False otherwise.
-    """
-    print("Starting database population...")
-    
-    success = True
-    success &= populate_student_profiles()
-    success &= populate_scenarios()
-    success &= populate_active_files()
-    success &= populate_teacher_profiles()
-    
-    if success:
-        print("All tables populated successfully.")
-    else:
-        print("Some tables may not have been populated correctly.")
-    
-    return success
-
 def populate_teacher_profiles():
     """
     Populates the teacher_profiles table with predefined teacher data.
@@ -883,174 +952,28 @@ def populate_teacher_profiles():
         print(f"Error populating teacher profiles: {e}")
         return False
 
-
-def print_student_profiles():
+def populate_all_tables() -> bool:
     """
-    Prints all student profiles in the database.
-    """
-    db = next(get_db())
-    students = db.query(StudentProfileDB).all()
-    if not students:
-        print("No student profiles found in the database.")
-        return
+    Populates all tables in the database with example data.
+    This function should be called after initialize_database().
     
-    print(f"Found {len(students)} student profiles:")
-    for student in students:
-        print(f"\nID: {student.id}")
-        print(f"Name: {student.name}")
-        print(f"Grade Level: {student.grade_level if student.grade_level else 'Not specified'}")
-        print(f"Template: {student.template_name if student.template_name else 'Custom'}")
-        
-        if student.personality_traits:
-            print(f"Personality Traits: {', '.join(student.personality_traits)}")
-        
-        if student.typical_moods:
-            print(f"Typical Moods: {', '.join(student.typical_moods)}")
-        
-        if student.behavioral_patterns:
-            try:
-                behavioral_patterns = json.loads(student.behavioral_patterns)
-                print(f"Behavioral Patterns: {behavioral_patterns}")
-            except json.JSONDecodeError:
-                print(f"Behavioral Patterns: {student.behavioral_patterns}")
-        
-        if student.learning_style:
-            print(f"Learning Style: {student.learning_style}")
-        
-        if student.interests:
-            print(f"Interests: {', '.join(student.interests)}")
-        
-        if student.academic_strengths:
-            print(f"Academic Strengths: {', '.join(student.academic_strengths)}")
-        
-        if student.academic_challenges:
-            print(f"Academic Challenges: {', '.join(student.academic_challenges)}")
-        
-        if student.support_strategies:
-            print(f"Support Strategies: {', '.join(student.support_strategies)}")
-        
-        if student.social_dynamics:
-            try:
-                social_dynamics = json.loads(student.social_dynamics)
-                print(f"Social Dynamics: {social_dynamics}")
-            except json.JSONDecodeError:
-                print(f"Social Dynamics: {student.social_dynamics}")
-        
-        print("-" * 40)
-
-def print_teacher_profiles():
+    Returns:
+        bool: True if all tables were populated successfully, False otherwise.
     """
-    Prints all teacher profiles in a formatted table.
-    """
-    db = next(get_db())
-    try:
-        teachers = db.query(TeacherProfile).all()
-        if not teachers:
-            print("\nNo teacher profiles found.")
-            return
-
-        print("\n=== Teacher Profiles ===")
-        print("-" * 80)
-        print(f"{'ID':<5} {'Name':<20} {'Grade Level':<12} {'Teaching Philosophy':<40}")
-        print("-" * 80)
-
-        for teacher in teachers:
-            # Truncate teaching philosophy if too long
-            philosophy = teacher.teaching_philosophy[:37] + "..." if len(teacher.teaching_philosophy) > 40 else teacher.teaching_philosophy
-            print(f"{teacher.id:<5} {teacher.name:<20} {teacher.grade_level:<12} {philosophy:<40}")
-
-        print("-" * 80)
-        print(f"Total Teachers: {len(teachers)}")
-        print("-" * 80)
-
-        # Print detailed information for each teacher
-        print("\nDetailed Teacher Information:")
-        print("=" * 80)
-        for teacher in teachers:
-            print(f"\nTeacher: {teacher.name} (ID: {teacher.id})")
-            print(f"Grade Level: {teacher.grade_level}")
-            print(f"Teaching Philosophy: {teacher.teaching_philosophy}")
-            if teacher.preferred_teaching_methods:
-                print(f"Preferred Teaching Methods: {', '.join(teacher.preferred_teaching_methods)}")
-            if teacher.behavior_management_philosophy:
-                print(f"Behavior Management Philosophy: {teacher.behavior_management_philosophy}")
-            if teacher.areas_for_growth:
-                print(f"Areas for Growth: {', '.join(teacher.areas_for_growth)}")
-            print("-" * 40)
-
-    except Exception as e:
-        print(f"Error printing teacher profiles: {e}")
-        return
-
-def print_scenarios():
-    """
-    Prints the contents of the scenarios table.
-    """
-    db = next(get_db())
-    scenarios = db.query(Scenario).all()
-    print("\nscenarios table contents:")
-    for scenario in scenarios:
-        print(f"  ID: {scenario.id}")
-        print(f"  Title: {scenario.title}")
-        print(f"  Description: {scenario.description}")
-        print(f"  Instruction: {scenario.instruction}")
-        print("-" * 20)  # Separator between scenarios
-
-def print_dialogues():
-    """
-    Prints the contents of the dialogues table.
-    """
-    db = next(get_db())
-    dialogues = db.query(Dialogue).all()
-    print("\ndialogues table contents:")
-    for dialogue in dialogues:
-        print(f"  ID: {dialogue.id}")
-        print(f"  Scenario ID: {dialogue.scenario_id}")
-        print(f"  Student Name: {dialogue.student_name}")
-        print(f"  Utterance: {dialogue.utterance}")
-        print("-" * 20)  # Separator between dialogues
-
-def print_active_files():
-    """
-    Prints the contents of the active_files table.
-    """
-    db = next(get_db())
-    active_files = db.query(ActiveFile).all()
-    print("\nactive_files table contents:")
-    for file in active_files:
-        print(f"ID: {file.id}, Name: {file.name}")  # Print only ID and name
-
-def print_inactive_files():
-    """
-    Prints the contents of the inactive_files table.
-    """
-    db = next(get_db())
-    inactive_files = db.query(InactiveFile).all()
-    print("\ninactive_files table contents:")
-    for file in inactive_files:
-        print(f"ID: {file.id}, Name: {file.name}")  # Print only ID and name
-
-def print_table_contents(table_name: str):
-    """
-    Prints the contents of the specified table.
-
-    Args:
-        table_name (str): The name of the table to print.
-    """
-    if table_name == "student_profiles":
-        print_student_profiles()
-    elif table_name == "teacher_profiles":
-        print_teacher_profiles()
-    elif table_name == "scenarios":
-        print_scenarios()
-    elif table_name == "dialogues":
-        print_dialogues()
-    elif table_name == "active_files":
-        print_active_files()
-    elif table_name == "inactive_files":
-        print_inactive_files()
+    print("Starting database population...")
+    
+    success = True
+    success &= populate_student_profiles()
+    success &= populate_scenarios()
+    success &= populate_active_files()
+    success &= populate_teacher_profiles()
+    
+    if success:
+        print("All tables populated successfully.")
     else:
-        print(f"\nInvalid table name: {table_name}")
+        print("Some tables may not have been populated correctly.")
+    
+    return success
 
 # Student CRUD Functions
 
@@ -1082,15 +1005,15 @@ def get_student_by_name(name: str) -> StudentProfileDB:
     student = db.query(StudentProfileDB).filter(StudentProfileDB.name == name).first()
     return student
 
-def get_custom_student_by_id(id: int) -> StudentProfile:
+def get_student_object_by_id(id: int) -> StudentProfile:
     """
-    Retrieves a student profile from the database and converts it to a StudentProfile.
+    Retrieves a student profile from the database and converts it to a StudentProfile object.
     
     Args:
         id (int): ID of the student to retrieve
         
     Returns:
-        StudentProfile: The student profile in custom format
+        StudentProfile: The student profile as a StudentProfile object
     """
     db = next(get_db())
     try:
@@ -1098,21 +1021,43 @@ def get_custom_student_by_id(id: int) -> StudentProfile:
         if not db_student:
             return None
             
-        # Convert to custom student profile
-        return db_to_custom_student(db_student)
+        # Convert to student profile object
+        return db_to_student_object(db_student)
     except Exception as e:
-        print(f"Error retrieving custom student profile: {e}")
+        print(f"Error retrieving student profile object: {e}")
         return None
 
-def db_to_custom_student(db_student: StudentProfileDB) -> StudentProfile:
+def get_student_object_by_name(name: str) -> StudentProfile:
     """
-    Converts a database student profile to a custom student profile.
+    Retrieves a student profile from the database and converts it to a StudentProfile object.
+    
+    Args:
+        name (str): name of the student to retrieve
+        
+    Returns:
+        StudentProfile: The student profile as a StudentProfile object
+    """
+    db = next(get_db())
+    try:
+        db_student = db.query(StudentProfileDB).filter(StudentProfileDB.name == name).first()
+        if not db_student:
+            return None
+            
+        # Convert to student profile object
+        return db_to_student_object(db_student)
+    except Exception as e:
+        print(f"Error retrieving student profile object: {e}")
+        return None
+
+def db_to_student_object(db_student: StudentProfileDB) -> StudentProfile:
+    """
+    Converts a database student profile to a StudentProfile object.
     
     Args:
         db_student (StudentProfileDB): The database student profile to convert
         
     Returns:
-        StudentProfile: The custom student profile
+        StudentProfile: The StudentProfile object
     """
     try:
         # Convert JSON strings back to dictionaries
@@ -1171,7 +1116,7 @@ def db_to_custom_student(db_student: StudentProfileDB) -> StudentProfile:
             )
         else:
             # Create from scratch if no template
-            custom_student = StudentProfile(
+            student_object = StudentProfile(
                 name=db_student.name,
                 grade_level=db_student.grade_level,
                 personality_traits=db_student.personality_traits,
@@ -1184,9 +1129,9 @@ def db_to_custom_student(db_student: StudentProfileDB) -> StudentProfile:
                 support_strategies=db_student.support_strategies,
                 social_dynamics=social_dynamics
             )
-            return custom_student
+            return student_object
     except Exception as e:
-        print(f"Error converting DB student to custom student: {e}")
+        print(f"Error converting DB student to StudentProfile object: {e}")
         return None
 
 def create_student_profile(
@@ -1259,7 +1204,7 @@ def create_student_profile_from_object(student_profile: StudentProfile) -> Stude
     Creates a database student profile from a StudentProfile object.
     
     Args:
-        student_profile (StudentProfile): The custom student profile to store
+        student_profile (StudentProfile): The StudentProfile object to store
         
     Returns:
         StudentProfileDB: The created database student profile
@@ -1302,6 +1247,65 @@ def get_all_students() -> List[StudentProfileDB]:
     db = next(get_db())
     students = db.query(StudentProfileDB).all()
     return students
+
+def create_student(
+    name: str, 
+    grade_level: int, 
+    personality_traits: list = None, 
+    typical_moods: list = None, 
+    behavioral_patterns: dict = None, 
+    learning_style: str = None, 
+    interests: list = None, 
+    academic_strengths: list = None, 
+    academic_challenges: list = None, 
+    support_strategies: list = None, 
+    social_dynamics: dict = None
+) -> StudentProfileDB:
+    """
+    Creates a new student profile in the database.
+
+    Args:
+        name (str): The name of the student.
+        grade_level (int): The grade level of the student.
+        personality_traits (list, optional): A list of personality traits. Defaults to None.
+        typical_moods (list, optional): A list of typical moods. Defaults to None.
+        behavioral_patterns (dict, optional): A dictionary of behavioral patterns. Defaults to None.
+        learning_style (str, optional): The student's learning style. Defaults to None.
+        interests (list, optional): A list of interests. Defaults to None.
+        academic_strengths (list, optional): A list of academic strengths. Defaults to None.
+        academic_challenges (list, optional): A list of academic challenges. Defaults to None.
+        support_strategies (list, optional): A list of support strategies. Defaults to None.
+        social_dynamics (dict, optional): A dictionary of social dynamics. Defaults to None.
+
+    Returns:
+        StudentProfileDB: The created StudentProfileDB object, or None if creation failed.
+    """
+    db = next(get_db())
+    try:
+        # Convert dictionaries to JSON strings for storage
+        behavioral_patterns_json = json.dumps(behavioral_patterns) if behavioral_patterns else None
+        social_dynamics_json = json.dumps(social_dynamics) if social_dynamics else None
+        
+        student = StudentProfileDB(
+            name=name,
+            grade_level=grade_level,
+            personality_traits=personality_traits,
+            typical_moods=typical_moods,
+            behavioral_patterns=behavioral_patterns_json,
+            learning_style=learning_style,
+            interests=interests,
+            academic_strengths=academic_strengths,
+            academic_challenges=academic_challenges,
+            support_strategies=support_strategies,
+            social_dynamics=social_dynamics_json
+        )
+        db.add(student)
+        db.commit()
+        db.refresh(student)
+        return student
+    except IntegrityError:
+        db.rollback()
+        return None
 
 def update_student(student_id: int, **kwargs) -> StudentProfileDB:
     """
@@ -2176,63 +2180,4 @@ def clear_all_tables() -> bool:
     except Exception as e:
         print(f"Error clearing all tables: {e}")
         return False
-
-def create_student(
-    name: str, 
-    grade_level: int, 
-    personality_traits: list = None, 
-    typical_moods: list = None, 
-    behavioral_patterns: dict = None, 
-    learning_style: str = None, 
-    interests: list = None, 
-    academic_strengths: list = None, 
-    academic_challenges: list = None, 
-    support_strategies: list = None, 
-    social_dynamics: dict = None
-) -> StudentProfileDB:
-    """
-    Creates a new student profile in the database.
-
-    Args:
-        name (str): The name of the student.
-        grade_level (int): The grade level of the student.
-        personality_traits (list, optional): A list of personality traits. Defaults to None.
-        typical_moods (list, optional): A list of typical moods. Defaults to None.
-        behavioral_patterns (dict, optional): A dictionary of behavioral patterns. Defaults to None.
-        learning_style (str, optional): The student's learning style. Defaults to None.
-        interests (list, optional): A list of interests. Defaults to None.
-        academic_strengths (list, optional): A list of academic strengths. Defaults to None.
-        academic_challenges (list, optional): A list of academic challenges. Defaults to None.
-        support_strategies (list, optional): A list of support strategies. Defaults to None.
-        social_dynamics (dict, optional): A dictionary of social dynamics. Defaults to None.
-
-    Returns:
-        StudentProfileDB: The created StudentProfileDB object, or None if creation failed.
-    """
-    db = next(get_db())
-    try:
-        # Convert dictionaries to JSON strings for storage
-        behavioral_patterns_json = json.dumps(behavioral_patterns) if behavioral_patterns else None
-        social_dynamics_json = json.dumps(social_dynamics) if social_dynamics else None
-        
-        student = StudentProfileDB(
-            name=name,
-            grade_level=grade_level,
-            personality_traits=personality_traits,
-            typical_moods=typical_moods,
-            behavioral_patterns=behavioral_patterns_json,
-            learning_style=learning_style,
-            interests=interests,
-            academic_strengths=academic_strengths,
-            academic_challenges=academic_challenges,
-            support_strategies=support_strategies,
-            social_dynamics=social_dynamics_json
-        )
-        db.add(student)
-        db.commit()
-        db.refresh(student)
-        return student
-    except IntegrityError:
-        db.rollback()
-        return None
 

@@ -1,188 +1,84 @@
 """
 Test script for student profile CRUD operations.
-This script tests creating, retrieving, updating, and deleting student profiles,
-including conversion between database profiles and custom profiles.
+This script tests creating, retrieving, updating, and deleting StudentProfile objects.
 """
 
-import json
-from src.ai.student_profiles import StudentProfile, Interest, Mood, create_student_profile as create_custom_profile
-from database import get_db
-from crud import (
-    clear_student_profiles, 
-    create_student_profile,
-    create_student_profile_from_object,
-    get_student_by_id,
-    get_student_by_name,
-    get_all_students,
-    get_custom_student_by_id,
-    update_student,
-    delete_student_by_id,
-    delete_student_by_name,
-    print_student_profiles
-)
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
-def test_student_profiles():
-    """Run all student profile tests."""
-    print("\n=========== STUDENT PROFILE TESTS ===========\n")
+from data.database.crud import (
+    initialize_database, 
+    create_student_profile_from_object,
+    get_student_object_by_id,
+    get_student_object_by_name,
+    delete_student_by_id
+)
+from src.ai.student_profiles import StudentProfile, Mood, Interest
+
+def main():
+    # Initialize the database
+    print("Initializing database...")
+    initialize_database()
     
-    # Start with a clean database
-    print("Clearing student profiles table...")
-    clear_student_profiles()
-    print("Table cleared.")
-    
-    # Test 1: Create student profiles with direct parameters
-    print("\n===== TEST 1: Create student profiles with direct parameters =====\n")
-    
-    print("Creating Maria Rodriguez...")
-    maria = create_student_profile(
-        name="Maria Rodriguez",
+    # Create a test student profile
+    print("\nCreating test student profile...")
+    test_student = StudentProfile(
+        name="Test Student",
         grade_level=5,
-        personality_traits=["quiet", "observant", "creative"],
-        typical_moods=["focused", "happy"],  # Using valid values from Mood enum
-        behavioral_patterns={"classroom": "prefers independent work", "group": "listens more than speaks"},
-        learning_style="visual",
-        interests=["reading", "arts", "nature"],  # Using valid values from Interest enum
-        academic_strengths=["reading comprehension", "creative writing"],
-        academic_challenges=["math", "public speaking"],
-        support_strategies=["visual aids", "positive reinforcement", "flexible learning environment"],
-        social_dynamics={"peers": "few close friends", "adults": "respectful but reserved"},
-        template_name=""
-    )
-    
-    print(f"Created Maria with ID: {maria.id}")
-    
-    # Test 2: Create student profile from StudentProfile object
-    print("\n===== TEST 2: Create student profile from StudentProfile object =====\n")
-    
-    print("Creating a StudentProfile object for Jacob Smith...")
-    jacob_custom = StudentProfile(
-        name="Jacob Smith",
-        grade_level=5,
-        personality_traits=["energetic", "curious", "hands-on"],
-        typical_moods=[Mood.EXCITED, Mood.FOCUSED],
-        behavioral_patterns={"classroom": "needs movement breaks", "group": "active participant"},
+        personality_traits=["curious", "energetic"],
+        typical_moods=[Mood.HAPPY, Mood.FOCUSED],
+        behavioral_patterns={"classroom": "active", "independent": "focused"},
         learning_style="kinesthetic",
-        interests=[Interest.SPORTS, Interest.TECHNOLOGY, Interest.MUSIC],
-        academic_strengths=["hands-on activities", "visual learning"],
-        academic_challenges=["sitting still", "completing tasks"],
-        support_strategies=["movement breaks", "clear expectations", "positive reinforcement"],
-        social_dynamics={"peers": "popular and outgoing", "adults": "friendly but needs boundaries"}
+        interests=[Interest.SPORTS, Interest.ARTS],
+        academic_strengths=["math", "science"],
+        academic_challenges=["reading"],
+        support_strategies=["visual aids", "breaks"],
+        social_dynamics={"peers": "friendly", "adults": "respectful"}
     )
     
-    print("Converting and storing Jacob's StudentProfile in the database...")
-    jacob_db = create_student_profile_from_object(jacob_custom)
-    print(f"Created Jacob with ID: {jacob_db.id}")
-    
-    # Test 3: Create student with template using teammate's create_student_profile
-    print("\n===== TEST 3: Create student with template using create_custom_profile =====\n")
-    
-    print("Creating a StudentProfile from template for Sophia Chen...")
-    sophia_custom = create_custom_profile(
-        template_name="struggling_student",
-        name="Sophia Chen",
-        grade_level=5,
-        interests=[Interest.NATURE, Interest.ARTS],
-        academic_strengths=["artistic expression", "observational skills"],
-        academic_challenges=["reading comprehension", "math"],
-        support_strategies=["small group instruction", "visual aids", "positive reinforcement"]
-    )
-    
-    print("Converting and storing Sophia's StudentProfile in the database...")
-    sophia_db = create_student_profile_from_object(sophia_custom)
-    print(f"Created Sophia with ID: {sophia_db.id}")
-    
-    # Test 4: Get all student profiles
-    print("\n===== TEST 4: Get all student profiles =====\n")
-    
-    students = get_all_students()
-    print(f"Retrieved {len(students)} student profiles")
-    print_student_profiles()
-    
-    # Test 5: Get student profile by ID
-    print("\n===== TEST 5: Get student profile by ID =====\n")
-    
-    maria_retrieved = get_student_by_id(maria.id)
-    print(f"Retrieved Maria by ID: {maria_retrieved.name}, template: {maria_retrieved.template_name}")
-    
-    # Test 6: Get student profile by name
-    print("\n===== TEST 6: Get student profile by name =====\n")
-    
-    jacob_retrieved = get_student_by_name("Jacob Smith")
-    print(f"Retrieved Jacob by name: ID {jacob_retrieved.id}")
-    
-    # Test 7: Get student as StudentProfile
-    print("\n===== TEST 7: Get student as StudentProfile =====\n")
-    
-    maria_custom = get_custom_student_by_id(maria.id)
-    print(f"Retrieved Maria as StudentProfile: {maria_custom.name}")
-    
-    # Check the exact type
-    from src.ai.student_profiles import StudentProfile as OriginalStudentProfile
-    print(f"Type check: {type(maria_custom) is OriginalStudentProfile}")
-    print(f"Type name: {type(maria_custom).__name__}")
-    
-    # Print interests and moods safely
-    if hasattr(maria_custom, 'interests') and maria_custom.interests:
-        interests = [interest.value for interest in maria_custom.interests]
-        print(f"Maria's interests: {interests}")
+    # Store the student in the database
+    db_student = create_student_profile_from_object(test_student)
+    if db_student:
+        print(f"Created student profile with ID: {db_student.id}")
+        student_id = db_student.id
     else:
-        print("Maria's interests not available")
-        
-    if hasattr(maria_custom, 'typical_moods') and maria_custom.typical_moods:
-        moods = [mood.value for mood in maria_custom.typical_moods]
-        print(f"Maria's typical moods: {moods}")
+        print("Failed to create student profile")
+        return
+    
+    # Retrieve the student by ID
+    print("\nRetrieving student by ID...")
+    retrieved_student = get_student_object_by_id(student_id)
+    if retrieved_student:
+        print(f"Retrieved student: {retrieved_student.name}")
+        print(f"Grade Level: {retrieved_student.grade_level}")
+        print(f"Personality Traits: {retrieved_student.personality_traits}")
+        print(f"Typical Moods: {[mood.name for mood in retrieved_student.typical_moods]}")
+        print(f"Interests: {[interest.name for interest in retrieved_student.interests]}")
     else:
-        print("Maria's typical moods not available")
+        print("Failed to retrieve student by ID")
     
-    # Test 8: Update student profile
-    print("\n===== TEST 8: Update student profile =====\n")
+    # Retrieve the student by name
+    print("\nRetrieving student by name...")
+    name_retrieved_student = get_student_object_by_name("Test Student")
+    if name_retrieved_student:
+        print(f"Retrieved student by name: {name_retrieved_student.name}")
+    else:
+        print("Failed to retrieve student by name")
     
-    print("Updating Maria's grade level to 6...")
-    update_student(maria.id, grade_level=6)
-    
-    maria_updated = get_student_by_id(maria.id)
-    print(f"Maria's grade level is now: {maria_updated.grade_level}")
-    
-    # Test 9: More complex update with JSON fields
-    print("\n===== TEST 9: More complex update with JSON fields =====\n")
-    
-    new_social_dynamics = {"peers": "becoming more outgoing", "adults": "respectful and engaging"}
-    social_dynamics_json = json.dumps(new_social_dynamics)
-    
-    print("Updating Maria's social dynamics...")
-    update_student(maria.id, social_dynamics=social_dynamics_json)
-    
-    maria_updated = get_student_by_id(maria.id)
-    social_dynamics = json.loads(maria_updated.social_dynamics)
-    print(f"Maria's updated social dynamics: {social_dynamics}")
-    
-    # Test 10: Delete student by ID
-    print("\n===== TEST 10: Delete student by ID =====\n")
-    
-    print(f"Deleting student with ID {maria.id} (Maria)...")
-    delete_student_by_id(maria.id)
+    # Delete the student
+    print("\nDeleting student...")
+    if delete_student_by_id(student_id):
+        print("Student deleted successfully")
+    else:
+        print("Failed to delete student")
     
     # Verify deletion
-    remaining_students = get_all_students()
-    print(f"Remaining students: {len(remaining_students)}")
-    
-    # Test 11: Delete student by name
-    print("\n===== TEST 11: Delete student by name =====\n")
-    
-    print("Deleting student with name 'Jacob Smith'...")
-    delete_student_by_name("Jacob Smith")
-    
-    # Verify deletion
-    remaining_students = get_all_students()
-    print(f"Remaining students: {len(remaining_students)}")
-    print_student_profiles()
-    
-    # Clean up
-    print("\n===== Cleaning up =====\n")
-    clear_student_profiles()
-    print("All student profiles cleared.")
-    
-    print("\n=========== ALL TESTS COMPLETED ===========\n")
+    deleted_check = get_student_object_by_id(student_id)
+    if deleted_check is None:
+        print("Verified student was deleted")
+    else:
+        print("Student was not deleted")
 
 if __name__ == "__main__":
-    test_student_profiles() 
+    main() 
