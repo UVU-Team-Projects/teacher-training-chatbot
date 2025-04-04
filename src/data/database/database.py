@@ -55,22 +55,29 @@ Base = declarative_base(metadata=metadata)
 #     "support_strategies": ["visual aids", "positive reinforcement", "small group settings"]
 # }}
 
-class StudentProfile(Base):
+class StudentProfileDB(Base):
+    """
+    Model representing a student profile in the database.
+    """
     __tablename__ = "student_profiles"
     __table_args__ = (UniqueConstraint('name'),)
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, index=True)
-    grade_level = Column(Integer)
+    grade_level = Column(Integer, nullable=True)
     personality_traits = Column(ARRAY(String), nullable=True)
-    typical_moods = Column(ARRAY(String), nullable=True)
-    behavioral_patterns = Column(JSON, nullable=True)
+    typical_moods = Column(ARRAY(String), nullable=True)  # Store string values of Mood enum
+    behavioral_patterns = Column(String, nullable=True)  # Store as JSON string
     learning_style = Column(String, nullable=True)
-    interests = Column(ARRAY(String), nullable=True)
+    interests = Column(ARRAY(String), nullable=True)  # Store string values of Interest enum
     academic_strengths = Column(ARRAY(String), nullable=True)
     academic_challenges = Column(ARRAY(String), nullable=True)
     support_strategies = Column(ARRAY(String), nullable=True)
-    social_dynamics = Column(JSON, nullable=True)
+    social_dynamics = Column(String, nullable=True)  # Store as JSON string
+    template_name = Column(String, nullable=True)  # Store which template was used
+
+    def __repr__(self):
+        return f"<StudentProfileDB(id={self.id}, name='{self.name}', template='{self.template_name}')>"
 
 class TeacherProfile(Base):
     __tablename__ = "teacher_profiles"
@@ -109,9 +116,9 @@ class Dialogue(Base):
     utterance = Column(Text)
 
     scenario = relationship("Scenario", back_populates="dialogues")
-    student = relationship("StudentProfile", back_populates="dialogues")
+    student = relationship("StudentProfileDB", back_populates="dialogues")
 
-StudentProfile.dialogues = relationship("Dialogue", back_populates="student")
+StudentProfileDB.dialogues = relationship("Dialogue", back_populates="student")
 
 class ActiveFile(Base):
     __tablename__ = "active_files"

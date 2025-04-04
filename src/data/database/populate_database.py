@@ -1,7 +1,4 @@
-from crud import (
-    initialize_database,
-    populate_all_tables
-)
+from crud import *
 
 def main():
     """
@@ -15,6 +12,8 @@ def main():
     if not initialize_database():
         print("Failed to initialize database. Exiting.")
         return
+    print(clear_all_tables())
+    print_table_contents("student_profiles")
     
     # Then populate all tables using the combined function
     print("\nPopulating all tables...")

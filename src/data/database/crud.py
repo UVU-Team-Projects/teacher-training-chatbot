@@ -1,8 +1,10 @@
-from database import StudentProfile, get_db, Scenario, Dialogue, ActiveFile, InactiveFile, TeacherProfile, generate_tables
+from typing import List, Dict, Any, Optional, Union
 from sqlalchemy.exc import IntegrityError
-from typing import List, Union, Optional
-import os
 import json
+import os
+
+from database import StudentProfileDB, TeacherProfile, get_db, Scenario, Dialogue, ActiveFile, InactiveFile, generate_tables, SessionLocal
+from src.ai.student_profiles import StudentProfile, Mood, Interest, create_student_profile as create_custom_profile
 
 def initialize_database():
     """
@@ -17,269 +19,68 @@ def initialize_database():
         print(f"Error generating database tables: {e}")
         return False
 
-def populate_student_profiles():
+def populate_student_profiles() -> bool:
     """
-    Populates the student_profiles table with predefined student data.
+    Populates the student_profiles table with example data.
+    Returns True if successful, False otherwise.
     """
     db = next(get_db())
     try:
-        # Maria Rodriguez
-        maria = StudentProfile(
+        # Create example students directly in the database with template information
+        maria = create_student_profile(
             name="Maria Rodriguez",
             grade_level=2,
-            personality_traits=["shy", "creative", "perfectionist", "sensitive"],
-            typical_moods=["focused", "daydreamer", "anxious"],
-            behavioral_patterns={
-                "morning": "quiet and focused",
-                "afternoon": "more talkative and social",
-                "group_work": "observes more than participates",
-                "independent_work": "highly focused",
-                "transitions": "needs clear expectations"
-            },
-            learning_style="visual and kinesthetic",
-            interests=["art", "reading", "nature"],
+            personality_traits=["quiet", "observant", "creative"],
+            typical_moods=["calm", "focused"],
+            behavioral_patterns={"classroom": "prefers independent work", "group": "listens more than speaks"},
+            learning_style="visual",
+            interests=["reading", "arts", "nature"],
             academic_strengths=["reading comprehension", "creative writing"],
             academic_challenges=["math", "public speaking"],
             support_strategies=["visual aids", "positive reinforcement", "flexible learning environment"],
-            social_dynamics={
-                "peer_interactions": "shy and reserved",
-                "teacher_interaction": "responds well to individual attention"
-            }
+            social_dynamics={"peers": "few close friends", "adults": "respectful but reserved"},
+            template_name="quiet_observer"
         )
-        db.add(maria)
-
-        # Jacob Smith (ADHD)
-        jacob = StudentProfile(
+        
+        jacob = create_student_profile(
             name="Jacob Smith",
             grade_level=2,
-            personality_traits=["energetic", "impulsive", "easily distracted", "fidgety", "enthusiastic"],
-            typical_moods=["excited", "restless", "frustrated"],
-            behavioral_patterns={
-                "morning": "high energy and distractible",
-                "afternoon": "restless and needs movement breaks",
-                "group_work": "can be disruptive or off-task",
-                "independent_work": "struggles to stay focused",
-                "transitions": "needs extra time and support"
-            },
-            learning_style="kinesthetic and auditory",
-            interests=["building", "sports", "music"],
+            personality_traits=["energetic", "curious", "hands-on"],
+            typical_moods=["enthusiastic", "restless"],
+            behavioral_patterns={"classroom": "needs movement breaks", "group": "active participant"},
+            learning_style="kinesthetic",
+            interests=["sports", "technology", "music"],
             academic_strengths=["hands-on activities", "visual learning"],
             academic_challenges=["sitting still", "completing tasks"],
             support_strategies=["movement breaks", "clear expectations", "positive reinforcement"],
-            social_dynamics={
-                "peer_interactions": "friendly but impulsive",
-                "teacher_interaction": "responds well to humor and positive feedback"
-            }
+            social_dynamics={"peers": "popular and outgoing", "adults": "friendly but needs boundaries"},
+            template_name="active_learner"
         )
-        db.add(jacob)
-
-        # Sophia Chen
-        sophia = StudentProfile(
+        
+        sophia = create_student_profile(
             name="Sophia Chen",
             grade_level=2,
-            personality_traits=["shy", "quiet", "observant", "anxious", "introverted"],
-            typical_moods=["calm", "withdrawn", "worried"],
-            behavioral_patterns={
-                "morning": "slow to warm up",
-                "afternoon": "more relaxed and engaged",
-                "group_work": "prefers to listen and observe",
-                "independent_work": "thrives with clear instructions",
-                "transitions": "can be challenging if unexpected"
-            },
-            learning_style="visual and read/write",
-            interests=["animals", "nature", "drawing"],
-            academic_strengths=["reading comprehension", "writing"],
-            academic_challenges=["public speaking", "group projects"],
-            support_strategies=["quiet workspaces", "predictable routines", "opportunities for self-expression"],
-            social_dynamics={
-                "peer_interactions": "limited but meaningful",
-                "teacher_interaction": "needs gentle encouragement and positive reinforcement"
-            }
+            personality_traits=["artistic", "observant", "sensitive"],
+            typical_moods=["thoughtful", "anxious"],
+            behavioral_patterns={"classroom": "needs reassurance", "group": "prefers one-on-one"},
+            learning_style="visual",
+            interests=["nature", "arts"],
+            academic_strengths=["artistic expression", "observational skills"],
+            academic_challenges=["reading comprehension", "math"],
+            support_strategies=["small group instruction", "visual aids", "positive reinforcement"],
+            social_dynamics={"peers": "selective in friendships", "adults": "seeks approval"},
+            template_name="struggling_student"
         )
-        db.add(sophia)
-
-        # David Lee (Mild mental disability)
-        david = StudentProfile(
-            name="David Lee",
-            grade_level=2,
-            personality_traits=["kind", "gentle", "eager to please", "slow learner", "easily frustrated"],
-            typical_moods=["happy", "confused", "upset"],
-            behavioral_patterns={
-                "morning": "needs extra time and support",
-                "afternoon": "may become tired and overwhelmed",
-                "group_work": "enjoys collaborative activities with support",
-                "independent_work": "needs frequent check-ins and encouragement",
-                "transitions": "require clear visual cues and routines"
-            },
-            learning_style="visual and kinesthetic",
-            interests=["music", "simple games", "hands-on activities"],
-            academic_strengths=["visual learning", "repetitive tasks"],
-            academic_challenges=["abstract concepts", "reading comprehension", "writing"],
-            support_strategies=["visual aids", "positive reinforcement", "simplified instructions", "extra time"],
-            social_dynamics={
-                "peer_interactions": "friendly and inclusive",
-                "teacher_interaction": "responds well to patience and positive guidance"
-            }
-        )
-        db.add(david)
-
-        # Emma Wilson (Advanced learner)
-        emma = StudentProfile(
-            name="Emma Wilson",
-            grade_level=2,
-            personality_traits=["confident", "outspoken", "perfectionist", "competitive", "sometimes bossy"],
-            typical_moods=["enthusiastic", "frustrated", "impatient"],
-            behavioral_patterns={
-                "morning": "eager to start and share knowledge",
-                "afternoon": "may become bored with routine tasks",
-                "group_work": "tends to take charge",
-                "independent_work": "completes quickly and seeks more",
-                "transitions": "efficient but may rush others"
-            },
-            learning_style="auditory and read/write",
-            interests=["science", "math", "reading", "debate"],
-            academic_strengths=["advanced reading", "problem-solving", "verbal expression"],
-            academic_challenges=["patience with others", "accepting different viewpoints"],
-            support_strategies=["enrichment activities", "leadership opportunities", "guidance in social interactions"],
-            social_dynamics={
-                "peer_interactions": "can be dominant",
-                "teacher_interaction": "responds well to being challenged intellectually"
-            }
-        )
-        db.add(emma)
-
-        # Lucas Parker (ADHD with strong math skills)
-        lucas = StudentProfile(
-            name="Lucas Parker",
-            grade_level=2,
-            personality_traits=["energetic", "mathematically gifted", "impulsive", "creative", "easily distracted"],
-            typical_moods=["excited", "focused", "frustrated"],
-            behavioral_patterns={
-                "morning": "needs movement to focus",
-                "afternoon": "more settled after physical activity",
-                "group_work": "excels in hands-on math activities",
-                "independent_work": "needs frequent breaks",
-                "transitions": "benefits from clear countdowns"
-            },
-            learning_style="kinesthetic and visual",
-            interests=["math games", "building", "puzzles", "sports"],
-            academic_strengths=["mathematical reasoning", "pattern recognition", "spatial awareness"],
-            academic_challenges=["reading comprehension", "sustained attention"],
-            support_strategies=["movement breaks", "math-based transitions", "visual schedules"],
-            social_dynamics={
-                "peer_interactions": "friendly but can be overwhelming",
-                "teacher_interaction": "responds well to math-based praise"
-            }
-        )
-        db.add(lucas)
-
-        # Ava Martinez (English Language Learner)
-        ava = StudentProfile(
-            name="Ava Martinez",
-            grade_level=2,
-            personality_traits=["resilient", "hardworking", "shy", "determined", "observant"],
-            typical_moods=["focused", "anxious", "proud"],
-            behavioral_patterns={
-                "morning": "quiet and observant",
-                "afternoon": "more comfortable with routines",
-                "group_work": "prefers working with bilingual peers",
-                "independent_work": "thrives with visual instructions",
-                "transitions": "follows visual cues well"
-            },
-            learning_style="visual and kinesthetic",
-            interests=["art", "music", "hands-on activities"],
-            academic_strengths=["mathematical concepts", "visual learning", "determination"],
-            academic_challenges=["English language comprehension", "verbal expression"],
-            support_strategies=["visual aids", "bilingual support", "peer buddies", "gesture-based communication"],
-            social_dynamics={
-                "peer_interactions": "gradually increasing",
-                "teacher_interaction": "responds well to visual and non-verbal communication"
-            }
-        )
-        db.add(ava)
-
-        # Noah Thompson (Social butterfly)
-        noah = StudentProfile(
-            name="Noah Thompson",
-            grade_level=2,
-            personality_traits=["outgoing", "charismatic", "easily distracted", "creative", "sensitive"],
-            typical_moods=["cheerful", "excited", "overwhelmed"],
-            behavioral_patterns={
-                "morning": "very social and energetic",
-                "afternoon": "needs quiet time to recharge",
-                "group_work": "natural leader but needs guidance",
-                "independent_work": "struggles without clear structure",
-                "transitions": "needs clear expectations"
-            },
-            learning_style="auditory and kinesthetic",
-            interests=["drama", "music", "group activities", "storytelling"],
-            academic_strengths=["verbal expression", "creativity", "leadership"],
-            academic_challenges=["organization", "following directions"],
-            support_strategies=["structured routines", "movement breaks", "social-emotional learning activities"],
-            social_dynamics={
-                "peer_interactions": "very social and well-liked",
-                "teacher_interaction": "responds well to positive reinforcement and clear boundaries"
-            }
-        )
-        db.add(noah)
-
-        # Isabella Patel (Gifted with anxiety)
-        isabella = StudentProfile(
-            name="Isabella Patel",
-            grade_level=2,
-            personality_traits=["intelligent", "anxious", "perfectionist", "thoughtful", "sensitive"],
-            typical_moods=["focused", "worried", "excited"],
-            behavioral_patterns={
-                "morning": "quiet and focused",
-                "afternoon": "may become overwhelmed",
-                "group_work": "prefers working alone",
-                "independent_work": "excellent when given space",
-                "transitions": "needs advance notice"
-            },
-            learning_style="visual and read/write",
-            interests=["science", "reading", "puzzles", "art"],
-            academic_strengths=["advanced comprehension", "analytical thinking", "attention to detail"],
-            academic_challenges=["test anxiety", "perfectionism", "social pressure"],
-            support_strategies=["quiet workspace", "stress management techniques", "positive self-talk"],
-            social_dynamics={
-                "peer_interactions": "selective and meaningful",
-                "teacher_interaction": "responds well to academic challenge and emotional support"
-            }
-        )
-        db.add(isabella)
-
-        # Ethan Wright (Dyslexic with strong creativity)
-        ethan = StudentProfile(
-            name="Ethan Wright",
-            grade_level=2,
-            personality_traits=["creative", "determined", "frustrated", "artistic", "resilient"],
-            typical_moods=["focused", "frustrated", "proud"],
-            behavioral_patterns={
-                "morning": "needs extra time for reading tasks",
-                "afternoon": "more confident after successful activities",
-                "group_work": "contributes creative ideas",
-                "independent_work": "needs frequent encouragement",
-                "transitions": "benefits from visual schedules"
-            },
-            learning_style="visual and kinesthetic",
-            interests=["art", "building", "storytelling", "music"],
-            academic_strengths=["creativity", "problem-solving", "visual thinking"],
-            academic_challenges=["reading fluency", "spelling", "written expression"],
-            support_strategies=["text-to-speech", "visual aids", "alternative assessment methods"],
-            social_dynamics={
-                "peer_interactions": "friendly and collaborative",
-                "teacher_interaction": "responds well to encouragement and alternative learning methods"
-            }
-        )
-        db.add(ethan)
-
-        db.commit()
-        print("Student profiles populated successfully.")
+        
+        if not maria or not jacob or not sophia:
+            print("Failed to create one or more student profiles")
+            return False
+            
         return True
     except IntegrityError:
         db.rollback()
-        print("Some student profiles already exist in the database.")
-        return False
+        print("Student profiles already exist in the database.")
+        return True
     except Exception as e:
         db.rollback()
         print(f"Error populating student profiles: {e}")
@@ -1085,39 +886,57 @@ def populate_teacher_profiles():
 
 def print_student_profiles():
     """
-    Prints the contents of the student_profiles table.
+    Prints all student profiles in the database.
     """
     db = next(get_db())
-    students = db.query(StudentProfile).all()
-    print("\nstudent_profiles table contents:")
+    students = db.query(StudentProfileDB).all()
+    if not students:
+        print("No student profiles found in the database.")
+        return
+    
+    print(f"Found {len(students)} student profiles:")
     for student in students:
-        print(f"  ID: {student.id}")
-        print(f"  Name: {student.name}")
-        print(f"  Grade Level: {student.grade_level}")
-        print(f"  Personality Traits: {', '.join(student.personality_traits) if student.personality_traits else 'None'}")
-        print(f"  Typical Moods: {', '.join(student.typical_moods) if student.typical_moods else 'None'}")
-        # Format behavioral patterns as a clean JSON string
+        print(f"\nID: {student.id}")
+        print(f"Name: {student.name}")
+        print(f"Grade Level: {student.grade_level if student.grade_level else 'Not specified'}")
+        print(f"Template: {student.template_name if student.template_name else 'Custom'}")
+        
+        if student.personality_traits:
+            print(f"Personality Traits: {', '.join(student.personality_traits)}")
+        
+        if student.typical_moods:
+            print(f"Typical Moods: {', '.join(student.typical_moods)}")
+        
         if student.behavioral_patterns:
-            if isinstance(student.behavioral_patterns, str):
-                print(f"  Behavioral Patterns: {student.behavioral_patterns}")
-            else:
-                print(f"  Behavioral Patterns: {json.dumps(student.behavioral_patterns)}")
-        else:
-            print("  Behavioral Patterns: None")
-        print(f"  Learning Style: {student.learning_style}")
-        print(f"  Interests: {', '.join(student.interests) if student.interests else 'None'}")
-        print(f"  Academic Strengths: {', '.join(student.academic_strengths) if student.academic_strengths else 'None'}")
-        print(f"  Academic Challenges: {', '.join(student.academic_challenges) if student.academic_challenges else 'None'}")
-        print(f"  Support Strategies: {', '.join(student.support_strategies) if student.support_strategies else 'None'}")
-        # Format social dynamics as a clean JSON string
+            try:
+                behavioral_patterns = json.loads(student.behavioral_patterns)
+                print(f"Behavioral Patterns: {behavioral_patterns}")
+            except json.JSONDecodeError:
+                print(f"Behavioral Patterns: {student.behavioral_patterns}")
+        
+        if student.learning_style:
+            print(f"Learning Style: {student.learning_style}")
+        
+        if student.interests:
+            print(f"Interests: {', '.join(student.interests)}")
+        
+        if student.academic_strengths:
+            print(f"Academic Strengths: {', '.join(student.academic_strengths)}")
+        
+        if student.academic_challenges:
+            print(f"Academic Challenges: {', '.join(student.academic_challenges)}")
+        
+        if student.support_strategies:
+            print(f"Support Strategies: {', '.join(student.support_strategies)}")
+        
         if student.social_dynamics:
-            if isinstance(student.social_dynamics, str):
-                print(f"  Social Dynamics: {student.social_dynamics}")
-            else:
-                print(f"  Social Dynamics: {json.dumps(student.social_dynamics)}")
-        else:
-            print("  Social Dynamics: None")
-        print("-" * 20)  # Separator between students
+            try:
+                social_dynamics = json.loads(student.social_dynamics)
+                print(f"Social Dynamics: {social_dynamics}")
+            except json.JSONDecodeError:
+                print(f"Social Dynamics: {student.social_dynamics}")
+        
+        print("-" * 40)
 
 def print_teacher_profiles():
     """
@@ -1235,102 +1054,256 @@ def print_table_contents(table_name: str):
 
 # Student CRUD Functions
 
-def get_student_by_id(id: int) -> StudentProfile:
+def get_student_by_id(id: int) -> StudentProfileDB:
     """
     Retrieves a student profile from the database by their id.
-
+    
     Args:
         id (int): Id of the student to retrieve.
-
+        
     Returns:
-        StudentProfile: The StudentProfile object if found, None otherwise.
+        StudentProfileDB: The StudentProfileDB object if found, None otherwise.
     """
     db = next(get_db())
-    student = db.query(StudentProfile).filter(StudentProfile.id == id).first()
+    student = db.query(StudentProfileDB).filter(StudentProfileDB.id == id).first()
     return student
 
-
-def get_student_by_name(name: str) -> StudentProfile:
+def get_student_by_name(name: str) -> StudentProfileDB:
     """
     Retrieves a student profile from the database by their name.
-
+    
     Args:
         name (str): The name of the student to retrieve.
-
+        
     Returns:
-        StudentProfile: The StudentProfile object if found, None otherwise.
+        StudentProfileDB: The StudentProfileDB object if found, None otherwise.
     """
     db = next(get_db())
-    student = db.query(StudentProfile).filter(StudentProfile.name == name).first()
+    student = db.query(StudentProfileDB).filter(StudentProfileDB.name == name).first()
     return student
 
-def get_all_students() -> List[StudentProfile]:
+def get_custom_student_by_id(id: int) -> StudentProfile:
     """
-    Retrieves all student profiles from the database.
-
-    Returns:
-        list: A list of StudentProfile objects.
-    """
-    db = next(get_db())
-    students = db.query(StudentProfile).all()
-    return students
-
-def create_student(
-    name: str, 
-    grade_level: int, 
-    personality_traits: list = None, 
-    typical_moods: list = None, 
-    behavioral_patterns: dict = None, 
-    learning_style: str = None, 
-    interests: list = None, 
-    academic_strengths: list = None, 
-    academic_challenges: list = None, 
-    support_strategies: list = None, 
-    social_dynamics: dict = None
-) -> StudentProfile:
-    """
-    Creates a new student profile in the database.
-
+    Retrieves a student profile from the database and converts it to a StudentProfile.
+    
     Args:
-        name (str): The name of the student.
-        grade_level (int): The grade level of the student.
-        personality_traits (list, optional): A list of personality traits. Defaults to None.
-        typical_moods (list, optional): A list of typical moods. Defaults to None.
-        behavioral_patterns (dict, optional): A dictionary of behavioral patterns. Defaults to None.
-        learning_style (str, optional): The student's learning style. Defaults to None.
-        interests (list, optional): A list of interests. Defaults to None.
-        academic_strengths (list, optional): A list of academic strengths. Defaults to None.
-        academic_challenges (list, optional): A list of academic challenges. Defaults to None.
-        support_strategies (list, optional): A list of support strategies. Defaults to None.
-        social_dynamics (dict, optional): A dictionary of social dynamics. Defaults to None.
-
+        id (int): ID of the student to retrieve
+        
     Returns:
-        StudentProfile: The created StudentProfile object, or None if creation failed.
+        StudentProfile: The student profile in custom format
     """
     db = next(get_db())
     try:
-        student = StudentProfile(
+        db_student = db.query(StudentProfileDB).filter(StudentProfileDB.id == id).first()
+        if not db_student:
+            return None
+            
+        # Convert to custom student profile
+        return db_to_custom_student(db_student)
+    except Exception as e:
+        print(f"Error retrieving custom student profile: {e}")
+        return None
+
+def db_to_custom_student(db_student: StudentProfileDB) -> StudentProfile:
+    """
+    Converts a database student profile to a custom student profile.
+    
+    Args:
+        db_student (StudentProfileDB): The database student profile to convert
+        
+    Returns:
+        StudentProfile: The custom student profile
+    """
+    try:
+        # Convert JSON strings back to dictionaries
+        behavioral_patterns = json.loads(db_student.behavioral_patterns) if db_student.behavioral_patterns else {}
+        social_dynamics = json.loads(db_student.social_dynamics) if db_student.social_dynamics else {}
+        
+        # Convert string interests to Interest enums, validating against available values
+        interests = []
+        if db_student.interests:
+            for interest_str in db_student.interests:
+                # Try to find a matching enum value
+                try:
+                    interests.append(Interest(interest_str))
+                except ValueError:
+                    # If no exact match, find the closest match
+                    for interest_enum in Interest:
+                        if interest_str.lower() == interest_enum.value.lower():
+                            interests.append(interest_enum)
+                            break
+        
+        # Convert string moods to Mood enums, with fallback mapping
+        moods = []
+        mood_mapping = {
+            "calm": Mood.HAPPY,
+            "focused": Mood.FOCUSED,
+            "enthusiastic": Mood.EXCITED,
+            "restless": Mood.DISTRACTED,
+            "thoughtful": Mood.FOCUSED,
+            "anxious": Mood.ANXIOUS
+        }
+        
+        if db_student.typical_moods:
+            for mood_str in db_student.typical_moods:
+                try:
+                    # Try direct match
+                    moods.append(Mood(mood_str))
+                except ValueError:
+                    # Try mapping
+                    if mood_str.lower() in mood_mapping:
+                        moods.append(mood_mapping[mood_str.lower()])
+                    else:
+                        # Default to FOCUSED if no match
+                        moods.append(Mood.FOCUSED)
+        
+        # Use teammate's create_student_profile function
+        if db_student.template_name:
+            # If we have a template, use it
+            return create_custom_profile(
+                template_name=db_student.template_name,
+                name=db_student.name,
+                grade_level=db_student.grade_level,
+                interests=interests,
+                academic_strengths=db_student.academic_strengths,
+                academic_challenges=db_student.academic_challenges,
+                support_strategies=db_student.support_strategies
+            )
+        else:
+            # Create from scratch if no template
+            custom_student = StudentProfile(
+                name=db_student.name,
+                grade_level=db_student.grade_level,
+                personality_traits=db_student.personality_traits,
+                typical_moods=moods,
+                behavioral_patterns=behavioral_patterns,
+                learning_style=db_student.learning_style,
+                interests=interests,
+                academic_strengths=db_student.academic_strengths,
+                academic_challenges=db_student.academic_challenges,
+                support_strategies=db_student.support_strategies,
+                social_dynamics=social_dynamics
+            )
+            return custom_student
+    except Exception as e:
+        print(f"Error converting DB student to custom student: {e}")
+        return None
+
+def create_student_profile(
+    name: str,
+    grade_level: int = None,
+    personality_traits: list = None,
+    typical_moods: list = None,
+    behavioral_patterns: dict = None,
+    learning_style: str = None,
+    interests: list = None,
+    academic_strengths: list = None,
+    academic_challenges: list = None,
+    support_strategies: list = None,
+    social_dynamics: dict = None,
+    template_name: str = None
+) -> StudentProfileDB:
+    """
+    Creates a new student profile in the database.
+    
+    Args:
+        name (str): The student's name
+        grade_level (int, optional): The student's grade level
+        personality_traits (list, optional): List of personality traits
+        typical_moods (list, optional): List of typical moods
+        behavioral_patterns (dict, optional): Dictionary of behavioral patterns
+        learning_style (str, optional): The student's learning style
+        interests (list, optional): List of interests
+        academic_strengths (list, optional): List of academic strengths
+        academic_challenges (list, optional): List of academic challenges
+        support_strategies (list, optional): List of support strategies
+        social_dynamics (dict, optional): Dictionary of social dynamics
+        template_name (str, optional): Name of the template used to create this profile
+        
+    Returns:
+        StudentProfileDB: The created database student profile
+    """
+    db = next(get_db())
+    try:
+        # Convert dictionaries to JSON strings for storage
+        behavioral_patterns_json = json.dumps(behavioral_patterns) if behavioral_patterns else None
+        social_dynamics_json = json.dumps(social_dynamics) if social_dynamics else None
+        
+        # Create the database student profile
+        student = StudentProfileDB(
             name=name,
             grade_level=grade_level,
             personality_traits=personality_traits,
             typical_moods=typical_moods,
-            behavioral_patterns=behavioral_patterns,
+            behavioral_patterns=behavioral_patterns_json,
             learning_style=learning_style,
             interests=interests,
             academic_strengths=academic_strengths,
             academic_challenges=academic_challenges,
             support_strategies=support_strategies,
-            social_dynamics=social_dynamics
+            social_dynamics=social_dynamics_json,
+            template_name=template_name
         )
+        
         db.add(student)
         db.commit()
         db.refresh(student)
         return student
-    except IntegrityError:
+    except Exception as e:
         db.rollback()
+        print(f"Error creating student profile: {e}")
         return None
 
-def update_student(student_id: int, **kwargs) -> StudentProfile:
+def create_student_profile_from_object(student_profile: StudentProfile) -> StudentProfileDB:
+    """
+    Creates a database student profile from a StudentProfile object.
+    
+    Args:
+        student_profile (StudentProfile): The custom student profile to store
+        
+    Returns:
+        StudentProfileDB: The created database student profile
+    """
+    try:
+        # Convert Interest enums to string values
+        interests = [interest.value for interest in student_profile.interests] if student_profile.interests else []
+        
+        # Convert Mood enums to string values
+        moods = [mood.value for mood in student_profile.typical_moods] if student_profile.typical_moods else []
+        
+        # Attempt to get template_name
+        template_name = getattr(student_profile, 'template_name', None)
+        
+        return create_student_profile(
+            name=student_profile.name,
+            grade_level=student_profile.grade_level,
+            personality_traits=student_profile.personality_traits,
+            typical_moods=moods,
+            behavioral_patterns=student_profile.behavioral_patterns,
+            learning_style=student_profile.learning_style,
+            interests=interests,
+            academic_strengths=student_profile.academic_strengths,
+            academic_challenges=student_profile.academic_challenges,
+            support_strategies=student_profile.support_strategies,
+            social_dynamics=student_profile.social_dynamics,
+            template_name=template_name
+        )
+    except Exception as e:
+        print(f"Error creating student profile from object: {e}")
+        return None
+
+def get_all_students() -> List[StudentProfileDB]:
+    """
+    Retrieves all student profiles from the database.
+
+    Returns:
+        list: A list of StudentProfileDB objects.
+    """
+    db = next(get_db())
+    students = db.query(StudentProfileDB).all()
+    return students
+
+def update_student(student_id: int, **kwargs) -> StudentProfileDB:
     """
     Updates an existing student profile in the database.
 
@@ -1339,10 +1312,10 @@ def update_student(student_id: int, **kwargs) -> StudentProfile:
         **kwargs: Keyword arguments representing the fields to update and their new values.
 
     Returns:
-        StudentProfile: The updated StudentProfile object, or None if the update failed.
+        StudentProfileDB: The updated StudentProfileDB object, or None if the update failed.
     """
     db = next(get_db())
-    student = db.query(StudentProfile).filter(StudentProfile.id == student_id).first()
+    student = db.query(StudentProfileDB).filter(StudentProfileDB.id == student_id).first()
     if student:
         for key, value in kwargs.items():
             setattr(student, key, value)
@@ -1361,7 +1334,7 @@ def delete_student_by_id(student_id: int) -> bool:
         bool: True if the deletion was successful, False otherwise.
     """
     db = next(get_db())
-    student = db.query(StudentProfile).filter(StudentProfile.id == student_id).first()
+    student = db.query(StudentProfileDB).filter(StudentProfileDB.id == student_id).first()
     if student:
         db.delete(student)
         db.commit()
@@ -1379,7 +1352,7 @@ def delete_student_by_name(student_name: str) -> bool:
         bool: True if the deletion was successful, False otherwise.
     """
     db = next(get_db())
-    student = db.query(StudentProfile).filter(StudentProfile.name == student_name).first()
+    student = db.query(StudentProfileDB).filter(StudentProfileDB.name == student_name).first()
     if student:
         db.delete(student)
         db.commit()
@@ -1395,7 +1368,7 @@ def clear_student_profiles() -> bool:
     """
     db = next(get_db())
     try:
-        db.query(StudentProfile).delete()
+        db.query(StudentProfileDB).delete()
         db.commit()
         return True
     except Exception as e:
@@ -2203,4 +2176,63 @@ def clear_all_tables() -> bool:
     except Exception as e:
         print(f"Error clearing all tables: {e}")
         return False
+
+def create_student(
+    name: str, 
+    grade_level: int, 
+    personality_traits: list = None, 
+    typical_moods: list = None, 
+    behavioral_patterns: dict = None, 
+    learning_style: str = None, 
+    interests: list = None, 
+    academic_strengths: list = None, 
+    academic_challenges: list = None, 
+    support_strategies: list = None, 
+    social_dynamics: dict = None
+) -> StudentProfileDB:
+    """
+    Creates a new student profile in the database.
+
+    Args:
+        name (str): The name of the student.
+        grade_level (int): The grade level of the student.
+        personality_traits (list, optional): A list of personality traits. Defaults to None.
+        typical_moods (list, optional): A list of typical moods. Defaults to None.
+        behavioral_patterns (dict, optional): A dictionary of behavioral patterns. Defaults to None.
+        learning_style (str, optional): The student's learning style. Defaults to None.
+        interests (list, optional): A list of interests. Defaults to None.
+        academic_strengths (list, optional): A list of academic strengths. Defaults to None.
+        academic_challenges (list, optional): A list of academic challenges. Defaults to None.
+        support_strategies (list, optional): A list of support strategies. Defaults to None.
+        social_dynamics (dict, optional): A dictionary of social dynamics. Defaults to None.
+
+    Returns:
+        StudentProfileDB: The created StudentProfileDB object, or None if creation failed.
+    """
+    db = next(get_db())
+    try:
+        # Convert dictionaries to JSON strings for storage
+        behavioral_patterns_json = json.dumps(behavioral_patterns) if behavioral_patterns else None
+        social_dynamics_json = json.dumps(social_dynamics) if social_dynamics else None
+        
+        student = StudentProfileDB(
+            name=name,
+            grade_level=grade_level,
+            personality_traits=personality_traits,
+            typical_moods=typical_moods,
+            behavioral_patterns=behavioral_patterns_json,
+            learning_style=learning_style,
+            interests=interests,
+            academic_strengths=academic_strengths,
+            academic_challenges=academic_challenges,
+            support_strategies=support_strategies,
+            social_dynamics=social_dynamics_json
+        )
+        db.add(student)
+        db.commit()
+        db.refresh(student)
+        return student
+    except IntegrityError:
+        db.rollback()
+        return None
 
