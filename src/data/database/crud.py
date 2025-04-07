@@ -1396,6 +1396,20 @@ def get_scenario_by_title(title: str) -> Scenario:
     scenario = db.query(Scenario).filter(Scenario.title == title).first()
     return scenario
 
+def get_scenario_by_id(id: int) -> Scenario:
+    """
+    Retrieves a scenario from the database by its id.
+
+    Args:
+        id (int): The id of the scenario to retrieve.
+
+    Returns:
+        Scenario: The Scenario object if found, None otherwise.
+    """
+    db = next(get_db())
+    scenario = db.query(Scenario).filter(Scenario.id == id).first()
+    return scenario
+
 def get_all_scenarios() -> List[Scenario]:
     """
     Retrieves all scenarios from the database.

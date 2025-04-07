@@ -2,7 +2,7 @@ from database import get_db, StudentProfileDB, Scenario, Dialogue, ActiveFile, I
 from crud import *
 
 if __name__ == "__main__":
-    print_all_tables()
+    print_scenarios()
 
     
     
