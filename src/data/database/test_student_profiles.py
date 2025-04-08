@@ -3,11 +3,7 @@ Test script for student profile CRUD operations.
 This script tests creating, retrieving, updating, and deleting StudentProfile objects.
 """
 
-import sys
-import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
-
-from data.database.crud import (
+from src.data.database.crud import (
     initialize_database, 
     create_student_profile_from_object,
     get_student_object_by_id,

@@ -1,4 +1,9 @@
-from crud import *
+from src.data.database.crud import (
+    initialize_database,
+    clear_all_tables,
+    populate_all_tables
+)
+from src.data.database.database import get_db, SessionLocal
 
 def main():
     """
