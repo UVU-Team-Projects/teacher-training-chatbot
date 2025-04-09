@@ -3,8 +3,23 @@ from sqlalchemy.exc import IntegrityError
 import json
 import os
 
-from database import StudentProfileDB, TeacherProfile, get_db, Scenario, Dialogue, ActiveFile, InactiveFile, generate_tables, SessionLocal
-from src.ai.student_profiles import StudentProfile, Mood, Interest, create_student_profile as create_custom_profile
+from src.data.database.database import (
+    StudentProfileDB, 
+    TeacherProfile, 
+    get_db, 
+    Scenario, 
+    Dialogue, 
+    ActiveFile, 
+    InactiveFile, 
+    generate_tables, 
+    SessionLocal
+)
+from src.ai.student_profiles import (
+    StudentProfile, 
+    Mood, 
+    Interest, 
+    create_student_profile as create_custom_profile
+)
 
 def initialize_database():
     """

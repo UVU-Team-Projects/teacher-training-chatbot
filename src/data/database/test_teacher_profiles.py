@@ -1,5 +1,5 @@
-from database import *
-from crud import (
+from src.data.database.database import generate_tables
+from src.data.database.crud import (
     create_teacher, get_teacher_by_id, get_teacher_by_name, get_all_teachers,
     update_teacher, delete_teacher_by_id, delete_teacher_by_name,
     get_teachers_by_teaching_method, get_teachers_by_area_for_growth,

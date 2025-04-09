@@ -4,9 +4,14 @@ from sqlalchemy import UniqueConstraint
 from sqlalchemy.exc import OperationalError
 import os
 
+print("DEBUG: Using database.py from:", __file__)
 # Database Configuration
-# DATABASE_URL = "postgresql://teacher_chatbot_user:team4ai@localhost/teacher_chatbot_database"         CONNECTING TO LOCAL DATABASE
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://teacher_chatbot_user:team4ai@postgres:5432/teacher_chatbot_database") #Connecting to DOCKER CONTAINER DATABASE
+DATABASE_URL = "postgresql://teacher_chatbot_user:team4ai@localhost/teacher_chatbot_database"         # CONNECTING TO LOCAL DATABASE
+# DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://teacher_chatbot_user:team4ai@postgres:5432/teacher_chatbot_database") #Connecting to DOCKER CONTAINER DATABASE
+# print("DEBUG: DATABASE_URL is:", DATABASE_URL)
+
+
+
 
 engine = create_engine(DATABASE_URL)
 metadata = MetaData()
