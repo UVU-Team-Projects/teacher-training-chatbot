@@ -6,17 +6,14 @@ def do_home_button():
     st.session_state.page = "home"
 
 def select_student(student):
-    #TODO: Add student selection from database.
-    st.session_state.selected_student = create_student_profile(
-                    template_name='struggling_student',
-                    name="Bob",
-                    grade_level=2,
-                    interests=['Math', 'Computer Science'],
-                    academic_strengths=['problem solving', 'critical thinking'],
-                    academic_challenges=['Fractions', 'Decimals'],
-                    support_strategies=['Hands-on learning', 'Visual aids', 'Group work']
-                )
-    # Change page to scenario selection.
+    # The 'student' parameter is already a StudentProfileDB object from the database
+    # Convert it to a StudentProfile object
+    st.session_state.selected_student = db.db_to_student_object(student)
+    
+    # Display success message
+    st.success(f"Selected student: {student.name}")
+    
+    # Change page to scenario selection
     st.session_state.create_chat_page = "scenario"
 
 def load_students():
@@ -83,24 +80,16 @@ def create_student_form():
                 comm_style = communication_style if communication_style else None
                 
                 # Create student profile object
-                student_profile = create_student_profile(
+                student_profile = db.create_student_profile(
                     name=new_student_name,
                     grade_level=2,
+                    personality_traits=trait_list,
                     interests=['Math', 'Computer Science'],
                     academic_strengths=strength_list,
                     academic_challenges=weakness_list,
-                    support_strategies=['Hands-on learning', 'Visual aids', 'Group work']
+                    support_strategies=['Hands-on learning', 'Visual aids', 'Group work'],
+                    template_name="custom"  # Add this required parameter
                 )
-                # Create student in database
-                # success = db.create_student(
-                #     name=new_student_name,
-                #     traits=trait_list,
-                #     strengths=strength_list,
-                #     weaknesses=weakness_list,
-                #     motivations=motivation_list,
-                #     fears=fear_list,
-                #     communication_style=comm_style
-                # )
                 if student_profile:
                     st.success(f"Student '{new_student_name}' created!")
                     st.rerun()
@@ -132,12 +121,56 @@ def main():
         else:
             for student in st.session_state.students:
                 with st.expander(student.name):
-                    # st.write(student.about)
+                    # Add a subtle separator line
+                    st.markdown("---")
+                    
+                    # Display student details in a clean format
+                    col1, col2 = st.columns(2)
+                    
+                    with col1:
+                        st.markdown("##### Personal Information")
+                        st.write(f"**Grade Level:** {student.grade_level}")
+                        
+                        if student.personality_traits:
+                            traits = ", ".join(student.personality_traits)
+                            st.write(f"**Personality Traits:** {traits}")
+                        
+                        if hasattr(student, 'learning_style') and student.learning_style:
+                            st.write(f"**Learning Style:** {student.learning_style}")
+                    
+                    with col2:
+                        st.markdown("##### Academic Profile")
+                        if hasattr(student, 'academic_strengths') and student.academic_strengths:
+                            strengths = ", ".join(student.academic_strengths)
+                            st.write(f"**Strengths:** {strengths}")
+                        
+                        if hasattr(student, 'academic_challenges') and student.academic_challenges:
+                            challenges = ", ".join(student.academic_challenges)
+                            st.write(f"**Challenges:** {challenges}")
+                        
+                        if hasattr(student, 'interests') and student.interests:
+                            interests_list = [i.value if hasattr(i, 'value') else str(i) for i in student.interests]
+                            st.write(f"**Interests:** {', '.join(interests_list)}")
+                    
+                    # Add a bit more separation before support strategies
+                    st.write("")
+                    
+                    if hasattr(student, 'support_strategies') and student.support_strategies:
+                        st.markdown("##### Support Strategies")
+                        strategies = ", ".join(student.support_strategies)
+                        st.write(strategies)
+                    
+                    # Add some space before buttons
+                    st.write("")
+                    
+                    # Buttons for actions - keep existing layout
                     select_button, edit_button, _, delete_button = st.columns([1,1,3,1])
+                    # Use a primary button for select to make it stand out
                     select_button.button("Select", 
                             on_click=select_student, 
                             args=(student,), 
-                            key=f"{student.id}_select_button")
+                            key=f"{student.id}_select_button",
+                            type="primary")
                     edit_button.button("Edit",
                             on_click=edit_student,
                             args=(student,),

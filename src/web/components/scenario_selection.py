@@ -5,17 +5,23 @@ from src.ai.scenario_generator import Scenario, ScenarioGenerator, GradeLevel, S
 def do_back_button():
     st.session_state.create_chat_page = "student"
 
-def select_scenario():
+def select_scenario(scenario):
+    # Store the selected scenario in session state
     st.session_state.selected_scenario = {
-                    "title": "Fractions",
-                    "description": "Bob is having a hard time understanding fractions. He needs help. He can't do\
-                        it on his own. He needs a visual explanation.",
-                    "grade_level": 2,
-                    "subject": 'Math',
-                    "challenge_type": 'Academic'
-                }
-    # Change page to chat.
+        "title": scenario.title,
+        "description": scenario.description,
+        "grade_level": scenario.grade_level.value if hasattr(scenario.grade_level, 'value') else scenario.grade_level,
+        "subject": scenario.subject.value if hasattr(scenario.subject, 'value') else scenario.subject,
+        "challenge_type": scenario.challenge_type.value if hasattr(scenario.challenge_type, 'value') else scenario.challenge_type,
+        "id": scenario.id if hasattr(scenario, 'id') else None,
+        "instruction": scenario.instruction if hasattr(scenario, 'instruction') else None
+    }
+    
+    # Change page to chat
     st.session_state.page = "chat"
+    
+    # Display success message
+    st.success(f"Selected scenario: {scenario.title}")
 
 def load_scenarios():
     st.session_state.scenarios = []
@@ -24,34 +30,43 @@ def load_scenarios():
     
     for scenario_data in scenarios:
         try:
-            # Convert database scenario to Scenario object
+            # Create a simplified Scenario object with only the fields that exist in the database
             scenario = Scenario(
                 title=scenario_data.title,
                 description=scenario_data.description,
-                grade_level=GradeLevel(scenario_data.grade_level) if scenario_data.grade_level else None,
-                subject=SubjectMatter(scenario_data.subject) if scenario_data.subject else None,
-                challenge_type=ChallengeType(scenario_data.challenge_type) if scenario_data.challenge_type else None,
+                # Use default/empty values for fields that don't exist in the database
+                grade_level=None,
+                subject=None,
+                challenge_type=None,
                 student_background=StudentBackground(
-                    age=scenario_data.student_age,
-                    grade=scenario_data.student_grade,
-                    learning_style=scenario_data.learning_style,
-                    special_needs=scenario_data.special_needs,
-                    cultural_background=scenario_data.cultural_background,
-                    language_background=scenario_data.language_background
+                    age=10,
+                    grade=5,
+                    learning_style="visual",
+                    special_needs=[],
+                    cultural_background="",
+                    language_background=""
                 ),
                 classroom_context=ClassroomContext(
-                    class_size=scenario_data.class_size,
-                    time_of_day=scenario_data.time_of_day,
-                    class_duration=scenario_data.class_duration,
-                    previous_activities=scenario_data.previous_activities if scenario_data.previous_activities else [],
-                    classroom_setup=scenario_data.classroom_setup,
-                    available_resources=scenario_data.available_resources if scenario_data.available_resources else []
+                    class_size=25,
+                    time_of_day="morning",
+                    class_duration=45,
+                    previous_activities=[],
+                    classroom_setup="Traditional rows",
+                    available_resources=[]
                 ),
-                key_considerations=scenario_data.key_considerations if scenario_data.key_considerations else [],
-                evidence_based_strategies=scenario_data.evidence_based_strategies if scenario_data.evidence_based_strategies else [],
-                research_sources=scenario_data.research_sources if scenario_data.research_sources else []
+                key_considerations=[],
+                evidence_based_strategies=[],
+                research_sources=[]
             )
+            
+            # Store the database ID and instruction in the object
+            if hasattr(scenario_data, 'id'):
+                scenario.id = scenario_data.id
+            if hasattr(scenario_data, 'instruction'):
+                scenario.instruction = scenario_data.instruction
+                
             st.session_state.scenarios.append(scenario)
+            
         except Exception as e:
             print(f"Error processing scenario: {e}")
             import traceback
@@ -139,44 +154,45 @@ def create_scenario_form():
                     return
                 
                 # Process inputs
-                spec_needs_list = [sn.strip() for sn in special_needs.split(",")] if special_needs else None
+                spec_needs_list = [sn.strip() for sn in special_needs.split(",")] if special_needs else []
                 prev_act_list = [pa.strip() for pa in previous_activities.split(",")] if previous_activities else []
                 avail_res_list = [ar.strip() for ar in available_resources.split(",")] if available_resources else []
                 key_cons_list = [kc.strip() for kc in key_considerations.split("\n")] if key_considerations else []
                 strategies_list = [s.strip() for s in evidence_based_strategies.split("\n")] if evidence_based_strategies else []
                 sources_list = [s.strip() for s in research_sources.split("\n")] if research_sources else []
                 
-                # success = db.create_scenario(
-                #     title=title,
-                #     description=description,
-                #     # grade_level=grade_level,
-                #     subject=subject,
-                #     challenge_type=challenge_type,
-                #     student_age=student_age,
-                #     student_grade=student_grade,
-                #     learning_style=learning_style,
-                #     special_needs=spec_needs_list,
-                #     cultural_background=cultural_background,
-                #     language_background=language_background,
-                #     class_size=class_size,
-                #     time_of_day=time_of_day,
-                #     class_duration=class_duration,
-                #     previous_activities=prev_act_list,
-                #     classroom_setup=classroom_setup,
-                #     available_resources=avail_res_list,
-                #     key_considerations=key_cons_list,
-                #     evidence_based_strategies=strategies_list,
-                #     research_sources=sources_list
-                # )
-                scenario = {
-                    "title": title,
-                    "description": description,
-                    "grade_level": grade_level,
-                    "subject": subject,
-                    "challenge_type": challenge_type
-                }
+                # Create the necessary objects for the full Scenario structure
+                student_bg = StudentBackground(
+                    age=student_age,
+                    grade=student_grade,
+                    learning_style=learning_style,
+                    special_needs=spec_needs_list,
+                    cultural_background=cultural_background,
+                    language_background=language_background
+                )
                 
-                if scenario:
+                classroom_ctx = ClassroomContext(
+                    class_size=class_size,
+                    time_of_day=time_of_day,
+                    class_duration=class_duration,
+                    previous_activities=prev_act_list,
+                    classroom_setup=classroom_setup,
+                    available_resources=avail_res_list
+                )
+                
+                # Generate an instruction based on scenario details
+                instruction = f"""This scenario involves a {grade_level.replace('_', ' ')} {subject.replace('_', ' ')} class 
+                with a {challenge_type.replace('_', ' ')} challenge. The student is {student_age} years old in grade {student_grade} 
+                with a {learning_style} learning style. The class has {class_size} students and lasts {class_duration} minutes."""
+                
+                # Create in database (supports only title, description, instruction)
+                success = db.create_scenario(
+                    title=title,
+                    description=description,
+                    instruction=instruction
+                )
+                
+                if success:
                     st.success(f"Scenario '{title}' created!")
                     st.rerun()
                 else:

@@ -7,7 +7,6 @@ from pathlib import Path
 # Add the src directory to the path for imports
 src_path = Path(__file__).parent.parent.parent
 sys.path.append(str(src_path))
-# from ai.chatbot import TeacherTrainingChatbot
 from src.ai.standalone_agents import (
     initialize_conversation_manager,
     process_streamlit_message,
@@ -16,36 +15,50 @@ from src.ai.standalone_agents import (
 )
 
 def main():
+    # These values should be set in session state by the parent component
     profile = st.session_state.selected_student
     st.session_state.profile = profile
     scenario = st.session_state.selected_scenario
 
-     # Initialize conversation manager
+    # Initialize message list if not already in session state
+    if 'messages' not in st.session_state:
+        st.session_state.messages = []
+    
+    # Initialize evaluation status if not already in session state
+    if 'evaluation_complete' not in st.session_state:
+        st.session_state.evaluation_complete = False
+    
+    # Initialize conversation as inactive if not already in session state
+    if 'conversation_active' not in st.session_state:
+        st.session_state.conversation_active = False
+
+    # Initialize conversation manager
     try:
         st.session_state.conversation_manager = initialize_conversation_manager(
             profile=profile,
             scenario=scenario,
             model_name="gpt-4o-mini",
-            # log_level=LogLevel.INFO
         )
+        
+        # Set conversation as active
+        st.session_state.conversation_active = True
+        
+        # Add system message to conversation if no messages exist
+        if len(st.session_state.messages) == 0:
+            st.session_state.messages.append({
+                "role": "system",
+                "content": f"Conversation started with {profile.name}, a grade {profile.grade_level} student."
+            })
+            
     except Exception as e:
         st.error(f"Error initializing conversation manager: {str(e)}")
         st.stop()
 
-    # Set conversation as active
-    st.session_state.conversation_active = True
-    
-    # Add system message to conversation
-    st.session_state.messages.append({
-        "role": "system",
-        "content": f"Conversation started with {profile.name}, a grade {profile.grade_level} student."
-    })
-
+    # Display scenario title and student name
     st.subheader(f"{scenario.get('title')} - {profile.name}")
 
     # Display current configuration if conversation is active
     if st.session_state.conversation_active and st.session_state.selected_student:
-        
         with st.expander("Current Session Information", expanded=False):
             col1, col2 = st.columns(2)
             
@@ -137,58 +150,61 @@ def main():
             
             # Process message using conversation manager
             if st.session_state.conversation_manager:
-                response_data = process_streamlit_message(
-                    st.session_state.conversation_manager,
-                    prompt
-                )
-                
-                # Handle different response types
-                if response_data["type"] == "student":
-                    # Add student message to chat history
-                    st.session_state.messages.append({
-                        "role": st.session_state.profile.name,
-                        "content": response_data["text"]
-                    })
+                try:
+                    response_data = process_streamlit_message(
+                        st.session_state.conversation_manager,
+                        prompt
+                    )
                     
-                    # Display student message
-                    with st.chat_message("assistant"):
-                        st.write(response_data["text"])
+                    # Handle different response types
+                    if response_data["type"] == "student":
+                        # Add student message to chat history
+                        st.session_state.messages.append({
+                            "role": st.session_state.profile.name,
+                            "content": response_data["text"]
+                        })
                         
-                elif response_data["type"] == "knowledge_base":
-                    # Add KB message to chat history
-                    st.session_state.messages.append({
-                        "role": "kb",
-                        "content": response_data["text"]
-                    })
-                    
-                    # Display KB message
-                    st.chat_message("assistant", avatar="📚").write(response_data["text"])
-                    
-                elif response_data["type"] == "evaluation":
-                    # Store evaluation results
-                    st.session_state.evaluation_results = response_data["evaluation_results"]
-                    st.session_state.evaluation_complete = True
-                    
-                    # Add evaluation message to chat history
-                    eval_text = f"""
-                    ## Evaluation Complete
-                    
-                    **Summary:** {response_data['evaluation_results'].get('summary', 'No summary available')}
-                    
-                    **Effectiveness:** {response_data['evaluation_results'].get('effectiveness', 'N/A')}
-                    
-                    **Authenticity:** {response_data['evaluation_results'].get('authenticity', 'N/A')}
-                    
-                    Would you like to continue the conversation?
-                    """
-                    
-                    st.session_state.messages.append({
-                        "role": "evaluation",
-                        "content": eval_text
-                    })
-                    
-                    st.rerun()
+                        # Display student message
+                        with st.chat_message("assistant"):
+                            st.write(response_data["text"])
+                            
+                    elif response_data["type"] == "knowledge_base":
+                        # Add KB message to chat history
+                        st.session_state.messages.append({
+                            "role": "kb",
+                            "content": response_data["text"]
+                        })
+                        
+                        # Display KB message
+                        st.chat_message("assistant", avatar="📚").write(response_data["text"])
+                        
+                    elif response_data["type"] == "evaluation":
+                        # Store evaluation results
+                        st.session_state.evaluation_results = response_data["evaluation_results"]
+                        st.session_state.evaluation_complete = True
+                        
+                        # Add evaluation message to chat history
+                        eval_text = f"""
+                        ## Evaluation Complete
+                        
+                        **Summary:** {response_data['evaluation_results'].get('summary', 'No summary available')}
+                        
+                        **Effectiveness:** {response_data['evaluation_results'].get('effectiveness', 'N/A')}
+                        
+                        **Authenticity:** {response_data['evaluation_results'].get('authenticity', 'N/A')}
+                        
+                        Would you like to continue the conversation?
+                        """
+                        
+                        st.session_state.messages.append({
+                            "role": "evaluation",
+                            "content": eval_text
+                        })
+                        
+                        st.rerun()
+                except Exception as e:
+                    st.error(f"Error processing message: {str(e)}")
     else:
         # Show welcome message if no conversation is active
         if not st.session_state.conversation_active and len(st.session_state.messages) == 0:
-            st.info("Configure the student profile and scenario in the sidebar, then click 'Start New Conversation' to begin.") 
+            st.info("Configure the student profile and scenario in the sidebar, then click 'Start New Conversation' to begin.")
