@@ -13,9 +13,10 @@ Example:
     embedding = embedder.generate_embedding("How to handle classroom disruption?")
 """
 
-from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.embeddings import HuggingFaceBgeEmbeddings
 from langchain_chroma import Chroma
+from langchain_experimental.text_splitter import SemanticChunker
+from langchain_openai.embeddings import OpenAIEmbeddings
 
 from sentence_transformers import SentenceTransformer
 from langchain.schema import Document
@@ -39,7 +40,7 @@ class EmbeddingGenerator:
         dimension (int): The dimension of generated embeddings (default: 384)
     """
 
-    def __init__(self, model_name: str = 'all-MiniLM-L6-v2'):
+    def __init__(self):
         """
         Initialize the EmbeddingGenerator with a specified model.
 
@@ -48,10 +49,7 @@ class EmbeddingGenerator:
                             Defaults to 'all-MiniLM-L6-v2'
         """
         self.CHROMA_PATH = "data/vectorstore/chroma_db"
-        self.embedding_model = model_name
-        self.dimension = 384  # Default dimension for the specified model
-
-        self.embeddings = self.get_embedding_function()
+        self.embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
 
     def normalize_text(self, document: Document) -> Document:
         """
@@ -152,12 +150,7 @@ class EmbeddingGenerator:
         Args:
             documents (list[Document]): List of documents to split
         """
-        text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=512,
-            chunk_overlap=20,
-            length_function=len,
-            is_separator_regex=False,
-        )
+        text_splitter = SemanticChunker(self.embeddings)
         return text_splitter.split_documents(documents)
 
     def calculate_chunk_ids(self, chunks: list[Document]) -> list[Document]:
@@ -197,20 +190,6 @@ class EmbeddingGenerator:
             chunk.metadata['source'] = source
 
         return chunks
-
-    def get_embedding_function(self):
-        """
-        Get the embedding function for the Chroma vector store.
-        """
-        # Initialize embeddings model with correct device
-        device = 'cuda' if torch.cuda.is_available(
-        ) else 'mps' if torch.backends.mps.is_available() else 'cpu'
-        embeddings = HuggingFaceBgeEmbeddings(
-            model_name=self.embedding_model,
-            model_kwargs={'device': device},
-            encode_kwargs={'normalize_embeddings': True}
-        )
-        return embeddings
 
     def add_to_chroma(self, chunks: list[Document]) -> None:
         """
