@@ -3,8 +3,8 @@ from langgraph.types import Command
 from langchain_core.messages import HumanMessage, SystemMessage
 from typing import List, Dict, Any, Optional, Literal
 from langchain_core.tools import BaseTool
-from src.ai.pipeline.agent_state import AgentState
-from src.ai.pipeline.agentTools import get_student_profile, get_scenario
+from agent_state import AgentState
+from agentTools import get_student_profile, get_scenario
 from src.logging import AgentLogger
 from colorama import Fore, Style
 from langgraph.graph import END

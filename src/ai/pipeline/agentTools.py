@@ -1,6 +1,6 @@
 from langchain_core.tools import tool
 from src.ai.student_profiles import StudentProfile
-from src.ai.pipeline.agent_state import AgentState
+from agent_state import AgentState
 from typing import Optional, Dict, Any
 from src.logging import AgentLogger
 

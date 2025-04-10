@@ -59,6 +59,7 @@ def select_classroom_management_philosophies():
     
     # Using streamlit pills select the options that best fit
     options = [
+        "MTSS (Multi-Tiered System of Supports)",
         "Assertive Discipline", 
         "Positive Reinforcement", 
         "Democratic Classroom", 
@@ -87,6 +88,16 @@ def select_classroom_management_philosophies():
         elif submit_button:
             st.session_state.teacher_classroom_management_philosophies = selected
             st.session_state.teach_profile_step = 4
+
+#TODO: Add more areas to ask
+'''
+How do you handle discipline?
+How do you handle conflict?
+How do you handle bullying?
+How do you handle student engagement?
+How do you handle parent engagement?
+How do you handle student achievement?
+'''
 
 def select_grade_levels():
     st.header("Select your grade levels", divider="rainbow")

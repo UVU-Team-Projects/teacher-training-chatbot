@@ -4,13 +4,24 @@ from langgraph.graph.state import CompiledStateGraph
 from langgraph.types import Command
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage
-from src.ai.pipeline.agent_state import AgentState
-from src.ai.pipeline.student_bot import StudentBot, Evaluation
-from src.ai.student_profiles import StudentProfile
-from src.ai.pipeline.agentTools import set_student_profile_in_state, set_scenario_in_state
-from src.logging import AgentLogger, LogLevel
+
+
+# Get the absolute path of the project root
+import os, sys
+root_dir = os.path.dirname(os.path.abspath(__file__))
+# Construct the path to the src directory
+src_dir = os.path.join(root_dir, 'src')
+# Add the src to sys.path
+sys.path.append(src_dir)
+
+# Project imports
+from agent_state import AgentState
+from student_bot import StudentBot, Evaluation
+from student_profiles import StudentProfile
+from agentTools import set_student_profile_in_state, set_scenario_in_state
+from logging import AgentLogger, LogLevel
 from langgraph.checkpoint.memory import MemorySaver
-from src.ai.pipeline.standalone_student import StandaloneStudentBot
+from standalone_student import StandaloneStudentBot
 
 # List of available agent members
 members = ["evaluation", "student_bot", "continue_prompt"]
@@ -272,6 +283,7 @@ class Supervisor:
         
         self.logger.debug("Adding student_bot node")
         workflow.add_node('student_bot', self.student_bot_node)
+        workflow.add_node('student_bot2', self.student_bot_node)
         
         self.logger.debug("Adding continue_prompt node")
         workflow.add_node('continue_prompt', self.continue_prompt_node)
