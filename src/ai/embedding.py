@@ -228,6 +228,9 @@ class EmbeddingGenerator:
         # self.embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
         self.embeddings = HuggingFaceBgeEmbeddings(model_name="all-MiniLM-L6-v2")
 
+        if __name__ == "__main__":
+            self.text_chunker = TextChunker()
+
     def normalize_text(self, document: Document) -> Document:
         """
         Normalize document content into uniform plain text.
@@ -309,6 +312,12 @@ class EmbeddingGenerator:
                 "type": "PDF"
             },
             {
+                "path": f"{data_dir}/books",
+                "glob": "**/*.pdf",
+                "loader_cls": PyMuPDFLoader,
+                "type": "PDF"
+            },
+            {
                 "path": f"{data_dir}/education_resources/cult_of_pedagogy/cleaned_texts",
                 "glob": "**/*.txt",
                 "loader_cls": TextLoader,
@@ -371,10 +380,8 @@ class EmbeddingGenerator:
                  continue
 
             try:
-                # Initialize the new TextChunker here
-                text_chunker = TextChunker() # Using default model for now
                 # Use the initialized text_chunker instance
-                chunk_strings = text_chunker.process_text(doc.page_content)
+                chunk_strings = self.text_chunker.process_text(doc.page_content)
 
                 doc_chunks = []
                 for chunk_text in chunk_strings:

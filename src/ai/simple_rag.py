@@ -28,7 +28,6 @@ class SimpleRAG:
             raise ValueError("OPENAI_API_KEY environment variable is not set")
 
         # Initialize language model
-        self.model = model_name
         self.llm = ChatOpenAI(
             model_name=model_name,
             temperature=0.7,
@@ -51,9 +50,11 @@ class SimpleRAG:
             str: Generated response
         """
         # Retrieve relevant documents
+        print(Fore.LIGHTGREEN_EX + f"Searching for {k} relevant documents..." + Style.RESET_ALL)
         dbResults = self.chroma_db.similarity_search_with_score(query, k=k)
         context = "\n\n---\n\n".join([doc.page_content for doc,
                                      _score in dbResults])
+        print(Fore.LIGHTGREEN_EX + f"Found {len(dbResults)} relevant documents." + Style.RESET_ALL)
 
         # Create messages with context
         messages = [
@@ -61,13 +62,16 @@ class SimpleRAG:
             {"role": "user", "content": f"Context: {context}\n\nQuestion: {query}"}
         ]
 
+        print(Fore.LIGHTGREEN_EX + f"Generating response..." + Style.RESET_ALL)
         response = self.llm.invoke(messages)
-        return response
+        print(Fore.LIGHTGREEN_EX + f"Response generated." + Style.RESET_ALL)
+        return response, context
 
 
 def main():
     # Initialize RAG system
-    rag = SimpleRAG(model_name='gpt-4o-mini')
+    rag = SimpleRAG(model_name='gpt-4o') #gpt-4.5-preview-2025-02-27
+    printContext = False
 
     while True:
         # Example query
@@ -75,13 +79,17 @@ def main():
             Fore.GREEN + "Enter your question (type 'quit' or 'q' to quit): " + Style.RESET_ALL)
         if query.lower() == 'quit' or query.lower() == 'q':
             break
-
+        if query.lower() == 'context' or query.lower() == 'c':
+            printContext = True if not printContext else False
+            continue
         # Generate response
         print(Fore.LIGHTBLUE_EX, end=" ")
         print("\nResponse:")
 
-        response = rag.generate_response(query)
+        response, context = rag.generate_response(query)
         print(response.content)
+        if printContext:
+            print(Fore.LIGHTYELLOW_EX + f"\nContext: {context}" + Style.RESET_ALL)
         print(Style.RESET_ALL)
 
 

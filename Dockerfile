@@ -8,4 +8,12 @@ RUN apt-get update && apt-get install -y \
 # Don't use the CMD that runs the app - we want an interactive shell for development
 WORKDIR /workspace
 
-# We'll install requirements in postCreateCommand instead
+# Install requirements
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
+# Copy the rest of the application
+COPY . .
+
+# Run the application
+CMD ["streamlit", "run", "src/web/web.py"]
