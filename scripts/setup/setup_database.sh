@@ -35,6 +35,8 @@ su - postgres -c "createdb teacher_chatbot_database"
 
 # Grant privileges
 su - postgres -c "psql -c \"GRANT ALL PRIVILEGES ON DATABASE teacher_chatbot_database TO teacher_chatbot_user;\""
+su - postgres -c "psql -d teacher_chatbot_database -c \"GRANT ALL ON SCHEMA public TO teacher_chatbot_user;\""
+
 
 # Check if the dump file exists
 if [ -f "/workspace/scripts/setup/database_dump.sql" ]; then
@@ -47,3 +49,6 @@ else
 fi
 
 echo "Database setup completed successfully"
+
+# Connection string
+echo "postgresql://teacher_chatbot_user:team4ai@localhost:5432/teacher_chatbot_database"

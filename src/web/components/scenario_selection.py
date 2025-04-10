@@ -250,12 +250,6 @@ def main():
     with back:
         st.button("Back", on_click=do_back_button, key='scenario-back', use_container_width=True)
 
-    # Add button for AI generation
-    ai_gen_col, _ = st.columns([1, 3])
-    with ai_gen_col:
-        st.button("Generate with AI", on_click=generate_ai_scenario, key='ai-generate', use_container_width=True)
-        st.button("Select Scenario", on_click=select_scenario, key='select-scenario', use_container_width=True)
-
     # Load scenarios
     load_scenarios()
     

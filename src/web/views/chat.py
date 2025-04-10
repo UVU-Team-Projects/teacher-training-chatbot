@@ -27,7 +27,8 @@ def chat():
         
         # Display the appropriate component based on the selected tab
         if chat_selected_tab == "AI Assistant":
-            ai_assistant.main()
+            pass
+            # ai_assistant.main()
         elif chat_selected_tab == "Knowledge Base":
             # Placeholder for Knowledge Base component
             pass
