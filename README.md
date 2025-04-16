@@ -180,7 +180,7 @@ teacher-training-chatbot/
 └── config/                          # Configuration files
 ```
 
-## �� For Each Role
+## 🎯 For Each Role
 
 ### Project Manager
 - **Primary Guide**: [`docs/project-management/README.md`](docs/project-management/README.md)
@@ -485,75 +485,98 @@ cd utah-tta
 3. [Performance Monitoring](docs/technical/maintenance/monitoring.md)
 4. [Security Updates](docs/technical/maintenance/security_updates.md)
 
-## 🚀 Deployment
+# Teacher Training Chatbot
 
-### Prerequisites
+A Retrieval Augmented Generation (RAG) chatbot designed to assist with teacher training, built using LangChain, Ollama, and Streamlit.
+
+## Features
+
+- **Simple RAG Mode**: Ask questions and get responses based on the knowledge base
+- **Student Profile RAG Mode**: Interact with a simulated student profile based on your question
+- **Customizable Student Profiles**: Create and modify student profiles with different traits and behaviors
+- **Document Context Visibility**: Option to view the retrieved context behind each response
+- **Model Selection**: Choose between different LLM models available in Ollama
+
+## Requirements
 
 - Python 3.8+
-- PostgreSQL or SQLite database
-- Virtual environment (recommended)
-- Flask (for API backend)
-- React (for frontend UI)
+- Ollama (with models like llama3.2:3b or deepseek-r1:14b installed)
+- Required Python packages (see installation section)
 
-### Steps to Deploy
+## Installation
 
-1. ***Clone*** the Repository
-
-   ```
-   git clone https://github.com/your-org/utah-tta.git
-   cd utah-tta
-   ```
-
-2. **Set Up Virtual Environment**
-
-   
-```
-   python3 -m venv venv
-   source venv/bin/activate  # On Windows use `venv\Scripts\activate`
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/teacher-training-chatbot.git
+cd teacher-training-chatbot
 ```
 
-
-3. **Install Dependencies**
-
-   
-```
-   pip install -r requirements.txt
+2. Install the required packages:
+```bash
+pip install -r requirements.txt
 ```
 
+3. Install Ollama and the required models:
+https://ollama.com/download
 
-4. **Set Up Database**
-
-   
-```
-   python manage.py migrate
-   python manage.py seed_data  # Optional: Populate with sample data
-```
-
-
-5. **Run the Backend**
-
-   
-```
-   flask run --host=0.0.0.0 --port=5000
+After installing Ollama, run the following commands to install the required models:
+```bash
+ollama pull llama3.2:3b
+ollama pull deepseek-r1:14b
 ```
 
+## Running the Application
 
-6. **Start the Frontend**
+### Running the Streamlit App
 
-   
+To start the Streamlit web interface:
+
+```bash
+cd teacher-training-chatbot
+streamlit run src/app.py
 ```
-   cd frontend
-   npm install
-   npm start
+
+The application should open in your browser automatically at `http://localhost:8501`
+
+### Using the Command-Line Interface
+
+You can also use the application through the command-line:
+
+```bash
+python src/ai/llama_rag.py  # For simple RAG
+python src/ai/rag_pipeline.py  # For student profile RAG
 ```
-## 🔮 Future Enhancements
 
-- **AI-Powered Adaptive Learning**: Implement personalized responses for teachers based on prior interactions.
-- **Multilingual Support**: Expand chatbot capabilities to support Spanish and other languages.
-- **Mobile-Friendly UI**: Optimize the frontend for mobile and tablet devices.
-- **Gamification Features**: Introduce badges and achievements for teachers completing training modules.
-- **Real-Time Data Analytics**: Provide insights into teacher progress and chatbot effectiveness.
-- **Integration with LMS**: Enable compatibility with Learning Management Systems like Canvas and Blackboard.
-- **Expanded Grade Levels**: Extend support to additional elementary grade levels.
+## Knowledge Base
 
+The application uses a knowledge base of PDFs stored in `/tmp/shared/UTTA/knowledge_base/books`. The embeddings are generated and stored in Chroma vector database.
+
+To update the knowledge base:
+1. Add new PDF files to the knowledge base directory
+2. Run the embedding generator:
+```bash
+python -c "from src.ai.embedding import EmbeddingGenerator; EmbeddingGenerator().construct_chroma()"
+```
+
+## Project Structure
+
+- `src/ai/embedding.py`: Handles document loading and embedding
+- `src/ai/llama_rag.py`: Simple RAG implementation
+- `src/ai/rag_pipeline.py`: Advanced RAG with student profiles
+- `src/ai/student_profiles.py`: Student profile definitions and templates
+- `src/app.py`: Streamlit application
+
+## Troubleshooting
+
+- **Missing Library Errors**: Make sure all required libraries are installed
+- **Ollama Connection Errors**: Ensure Ollama is running and the models are installed
+- **Knowledge Base Access Errors**: Ensure the PDF files exist in the expected location
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
  

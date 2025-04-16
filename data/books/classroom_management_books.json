@@ -1,0 +1,942 @@
+{
+    "books": [{
+            "title": "Activating the Modern Classroom",
+            "author": "Julian Reed",
+            "year": 2018,
+            "category": "classroom_modernization",
+            "original_filename": "2018 Activating the Modern Classroom - Julian Reed.pdf",
+            "filename": "activating_the_modern_classroom.pdf",
+            "metadata": {
+                "isbn": "",
+                "publisher": "",
+                "edition": "1st",
+                "language": "English",
+                "pages": "",
+                "file_format": "PDF",
+                "creation_date": "2018-05-11"
+            },
+            "content_overview": {
+                "description": "A comprehensive guide to modernizing classroom practices and teaching methods",
+                "main_topics": [
+                    "Technology integration",
+                    "Modern teaching methods",
+                    "Student engagement",
+                    "Digital learning tools"
+                ],
+                "target_audience": [
+                    "Teachers",
+                    "Educational administrators"
+                ],
+                "learning_objectives": [
+                    "Implement modern teaching strategies",
+                    "Integrate technology effectively",
+                    "Create engaging learning environments"
+                ]
+            }
+        },
+        {
+            "title": "Approaches to Behavior and Classroom Management",
+            "authors": [
+                "W. George Scarlett",
+                "Iris Chin Ponte",
+                "Jay P. Singh"
+            ],
+            "year": 2008,
+            "category": "behavior_management",
+            "original_filename": "Approaches to Behavior and Classroom Management - Scarlett, W. George.;Ponte, Iris Chin.;Singh, Jay P.;.pdf",
+            "filename": "approaches_to_behavior_and_classroom_management.pdf",
+            "metadata": {
+                "isbn": "",
+                "publisher": "",
+                "language": "English",
+                "file_format": "PDF",
+                "creation_date": "2008-10-23"
+            },
+            "content_overview": {
+                "description": "A comprehensive examination of various approaches to behavior management in educational settings",
+                "main_topics": [
+                    "Behavioral theories",
+                    "Management strategies",
+                    "Intervention techniques",
+                    "Positive reinforcement"
+                ],
+                "target_audience": [
+                    "Teachers",
+                    "School counselors",
+                    "Educational psychologists"
+                ],
+                "key_concepts": [
+                    "Behavioral assessment",
+                    "Intervention planning",
+                    "Classroom dynamics",
+                    "Student motivation"
+                ]
+            }
+        },
+        {
+            "title": "Behavior Management",
+            "author": "Norris M. Haynes",
+            "year": 2012,
+            "category": "behavior_management",
+            "original_filename": "Behavior Management - Haynes, Norris M_.pdf",
+            "filename": "behavior_management.pdf",
+            "metadata": {
+                "language": "English",
+                "file_format": "PDF",
+                "creation_date": "2012-11-01",
+                "publisher": "University Press"
+            },
+            "content_overview": {
+                "description": "A comprehensive approach to understanding and managing student behavior in educational settings, combining theoretical foundations with practical strategies.",
+                "main_topics": [
+                    "Behavior theory",
+                    "Classroom discipline",
+                    "Positive reinforcement",
+                    "Intervention strategies",
+                    "Behavioral assessment"
+                ],
+                "target_audience": [
+                    "Teachers",
+                    "School counselors",
+                    "Behavior specialists",
+                    "Educational psychologists"
+                ],
+                "key_concepts": [
+                    "Behavioral modification",
+                    "Positive discipline",
+                    "Student motivation",
+                    "Classroom climate"
+                ]
+            }
+        },
+        {
+            "title": "Beyond the Classroom Walls",
+            "author": "Jerome Cranston",
+            "year": 2018,
+            "category": "extended_learning",
+            "original_filename": "Beyond the Classroom Walls - Jerome Cranston.pdf",
+            "filename": "beyond_the_classroom_walls.pdf",
+            "metadata": {
+                "language": "English",
+                "file_format": "PDF",
+                "creation_date": "2018-10-25",
+                "publisher": "Routledge",
+                "edition": "1st"
+            },
+            "content_overview": {
+                "description": "An innovative exploration of extending learning beyond traditional classroom boundaries, incorporating technology, community resources, and real-world experiences.",
+                "main_topics": [
+                    "Extended learning environments",
+                    "Technology integration",
+                    "Community partnerships",
+                    "Experiential learning",
+                    "Digital education"
+                ],
+                "target_audience": [
+                    "Teachers",
+                    "Educational innovators",
+                    "School administrators",
+                    "Technology coordinators"
+                ],
+                "key_concepts": [
+                    "Blended learning",
+                    "Community engagement",
+                    "Digital literacy",
+                    "Authentic learning experiences"
+                ]
+            }
+        },
+        {
+            "title": "Classroom Management That Works",
+            "subtitle": "Research-Based Strategies for Every Teacher",
+            "authors": [
+                "Robert J. Marzano",
+                "Jana S. Marzano",
+                "Debra J. Pickering"
+            ],
+            "year": 2003,
+            "category": "classroom_management",
+            "original_filename": "Classroom Management That Works - Marzano, Robert J.,Marzano, Jana S.,Pickering, Debra_.pdf",
+            "filename": "classroom_management_that_works_research_based_strategies_for_every_teacher.pdf",
+            "metadata": {
+                "isbn": "0-87120-793-1",
+                "publisher": "Association for Supervision and Curriculum Development (ASCD)",
+                "publisher_location": "Alexandria, Virginia USA",
+                "edition": "1st",
+                "language": "English",
+                "pages": 142,
+                "file_format": "PDF",
+                "creation_date": "2003-08-11"
+            },
+            "content_overview": {
+                "description": "A research-based guide providing effective classroom management strategies for teachers, focusing on rules, procedures, and building positive teacher-student relationships.",
+                "main_topics": [
+                    "Classroom management fundamentals",
+                    "Rules and procedures",
+                    "Disciplinary interventions",
+                    "Teacher-student relationships",
+                    "Mental preparation",
+                    "Student responsibility",
+                    "School-level management"
+                ],
+                "target_audience": [
+                    "Teachers",
+                    "Educational administrators",
+                    "Teacher educators"
+                ],
+                "table_of_contents": [{
+                        "chapter": 1,
+                        "title": "The Critical Role of Classroom Management",
+                        "page": 1
+                    },
+                    {
+                        "chapter": 2,
+                        "title": "Rules and Procedures",
+                        "page": 13
+                    },
+                    {
+                        "chapter": 3,
+                        "title": "Disciplinary Interventions",
+                        "page": 27
+                    },
+                    {
+                        "chapter": 4,
+                        "title": "Teacher-Student Relationships",
+                        "page": 41
+                    },
+                    {
+                        "chapter": 5,
+                        "title": "Mental Set",
+                        "page": 65
+                    },
+                    {
+                        "chapter": 6,
+                        "title": "The Student's Responsibility for Management",
+                        "page": 76
+                    },
+                    {
+                        "chapter": 7,
+                        "title": "Getting Off to a Good Start",
+                        "page": 92
+                    },
+                    {
+                        "chapter": 8,
+                        "title": "Management at the School Level",
+                        "page": 103
+                    }
+                ]
+            }
+        },
+        {
+            "title": "Evidence-Based Strategies for Effective Classroom Management",
+            "authors": [
+                "David M. Hulac",
+                "Amy M. Briesch"
+            ],
+            "year": 2017,
+            "category": "classroom_management",
+            "original_filename": "Evidence-Based Strategies for Effective Classroom Management - David M. Hulac & Amy M. Briesch.pdf",
+            "filename": "evidence_based_strategies_for_effective_classroom_management.pdf",
+            "metadata": {
+                "language": "English",
+                "file_format": "PDF",
+                "creation_date": "2017-06-15",
+                "publisher": "Guilford Press",
+                "edition": "1st"
+            },
+            "content_overview": {
+                "description": "A research-based guide providing evidence-based strategies and interventions for effective classroom management, focusing on practical implementation and measurable outcomes.",
+                "main_topics": [
+                    "Evidence-based practices",
+                    "Behavioral interventions",
+                    "Classroom management strategies",
+                    "Assessment and monitoring",
+                    "Implementation science"
+                ],
+                "target_audience": [
+                    "Teachers",
+                    "School psychologists",
+                    "Educational researchers",
+                    "Behavior specialists"
+                ],
+                "key_concepts": [
+                    "Research-based interventions",
+                    "Data-driven decision making",
+                    "Behavioral assessment",
+                    "Implementation fidelity"
+                ]
+            }
+        },
+        {
+            "title": "Leading and Managing a Differentiated Classroom",
+            "authors": [
+                "Carol Ann Tomlinson",
+                "Marcia B. Imbeau"
+            ],
+            "subtitle": "Professional Development",
+            "edition": "2nd Edition",
+            "year": 2022,
+            "category": "differentiated_instruction",
+            "original_filename": "Leading and Managing a Differentiated Classroom, 2nd Edition - Carol Ann Tomlinson & Marcia B. Imbeau.pdf",
+            "filename": "leading_and_managing_a_differentiated_classroom.pdf",
+            "metadata": {
+                "publisher": "ASCD",
+                "language": "English",
+                "file_format": "PDF",
+                "creation_date": "2022-11-08",
+                "edition": "2nd"
+            },
+            "content_overview": {
+                "description": "A comprehensive guide to creating and managing differentiated classrooms that meet the diverse needs of all learners while maintaining effective classroom organization and management.",
+                "main_topics": [
+                    "Differentiated instruction",
+                    "Classroom organization",
+                    "Learning environment design",
+                    "Student assessment",
+                    "Flexible grouping strategies"
+                ],
+                "target_audience": [
+                    "Teachers",
+                    "Instructional coaches",
+                    "Educational administrators",
+                    "Curriculum specialists"
+                ],
+                "key_concepts": [
+                    "Student readiness",
+                    "Learning profiles",
+                    "Flexible grouping",
+                    "Tiered assignments",
+                    "Ongoing assessment"
+                ]
+            }
+        },
+        {
+            "title": "Nurturing Creativity in the Classroom",
+            "subtitle": "Training Handbook",
+            "author": "Katerina Kalafati-Michailaki",
+            "year": 2023,
+            "category": "creativity",
+            "original_filename": "Nurturing creativity in the Classroom_ Training Handbook - Katerina Kalafati-Michailaki.pdf",
+            "filename": "nurturing_creativity_in_the_classroom_training_handbook.pdf",
+            "metadata": {
+                "language": "English",
+                "file_format": "PDF",
+                "creation_date": "2023-05-13",
+                "publisher": "Creative Education Press",
+                "edition": "1st"
+            },
+            "content_overview": {
+                "description": "A practical handbook for educators focused on fostering creativity and innovative thinking in classroom settings through structured activities and proven methodologies.",
+                "main_topics": [
+                    "Creative thinking skills",
+                    "Innovation in education",
+                    "Arts integration",
+                    "Design thinking",
+                    "Problem-solving strategies"
+                ],
+                "target_audience": [
+                    "Teachers",
+                    "Art educators",
+                    "Curriculum designers",
+                    "Educational consultants"
+                ],
+                "key_concepts": [
+                    "Creative process",
+                    "Divergent thinking",
+                    "Arts-based learning",
+                    "Innovation mindset",
+                    "Creative assessment"
+                ]
+            }
+        },
+        {
+            "title": "Sensory Solutions in the Classroom",
+            "authors": [
+                "Monique Thoonsen",
+                "Carmen Lamp"
+            ],
+            "year": 2021,
+            "category": "sensory_learning",
+            "original_filename": "Sensory Solutions in the Classroom - Monique Thoonsen & Carmen Lamp.pdf",
+            "filename": "sensory_solutions_in_the_classroom.pdf",
+            "metadata": {
+                "language": "English",
+                "file_format": "PDF",
+                "creation_date": "2021-09-18",
+                "publisher": "Jessica Kingsley Publishers",
+                "edition": "1st"
+            },
+            "content_overview": {
+                "description": "A comprehensive guide to understanding and implementing sensory-based strategies to enhance learning and behavior management in educational settings.",
+                "main_topics": [
+                    "Sensory processing",
+                    "Learning environments",
+                    "Behavioral support",
+                    "Classroom adaptations",
+                    "Inclusive education"
+                ],
+                "target_audience": [
+                    "Teachers",
+                    "Special educators",
+                    "Occupational therapists",
+                    "School counselors"
+                ],
+                "key_concepts": [
+                    "Sensory integration",
+                    "Environmental modifications",
+                    "Individual accommodations",
+                    "Sensory-based interventions"
+                ]
+            }
+        },
+        {
+            "title": "Winning Strategies for Classroom Management",
+            "author": "Carol Bradford Cummings",
+            "year": 2003,
+            "category": "classroom_management",
+            "original_filename": "Winning Strategies for Classroom Management - Cummings, Carol Bradford.;.pdf",
+            "filename": "winning_strategies_for_classroom_management.pdf",
+            "metadata": {
+                "creation_date": "2003-04-07"
+            }
+        },
+        {
+            "title": "Classroom Behavior Manual",
+            "subtitle": "How to Build Relationships with Students, Share Control, and Teach Positive Behaviors",
+            "author": "Scott Ervin",
+            "year": 2022,
+            "category": "behavior_management",
+            "original_filename": "Classroom Behavior Manual_ How to Build Relationships with Stud Share Control, and Teach Positive Behaviors, The - Scott Ervin.pdf",
+            "filename": "classroom_behavior_manual_how_to_build_relationships_with_students_share_control_and_teach_positive_behaviors.pdf",
+            "metadata": {
+                "creation_date": "2022-02-01"
+            }
+        },
+        {
+            "title": "Classroom Talk",
+            "subtitle": "Evidence-based Teaching for Enquiring Teachers",
+            "author": "Rupert Knight",
+            "year": 2019,
+            "category": "teaching_methods",
+            "original_filename": "Classroom Talk_ Evidence-\u0442\u0410\u041bbased Teaching for Enquiring Teachers - Rupert Knight.pdf",
+            "filename": "classroom_talk_evidence_based_teaching_for_enquiring_teachers.pdf",
+            "metadata": {
+                "creation_date": "2019-12-10"
+            }
+        },
+        {
+            "title": "Connecting in the Online Classroom",
+            "author": "Rebecca A. Glazier",
+            "year": 2021,
+            "category": "online_learning",
+            "original_filename": "Connecting in the Online Classroom - Rebecca A. Glazier.pdf",
+            "filename": "connecting_in_the_online_classroom.pdf",
+            "metadata": {
+                "creation_date": "2021-09-08"
+            }
+        },
+        {
+            "title": "Creating Compassionate Classrooms",
+            "authors": [
+                "D. Undersolas",
+                "Angela C. Fain",
+                "Teresa A. Citro"
+            ],
+            "year": 2018,
+            "category": "classroom_environment",
+            "original_filename": "Creating Compassionate Classrooms_ Undersolas D.;Fain, Angela C.;Citro, Teresa A.;.pdf",
+            "filename": "creating_compassionate_classrooms.pdf",
+            "metadata": {
+                "language": "English",
+                "file_format": "PDF",
+                "creation_date": "2018-12-24",
+                "publisher": "Corwin Press",
+                "edition": "1st"
+            },
+            "content_overview": {
+                "description": "A guide to creating empathetic and supportive classroom environments that foster social-emotional learning and student well-being.",
+                "main_topics": [
+                    "Social-emotional learning",
+                    "Classroom culture",
+                    "Student well-being",
+                    "Empathy development",
+                    "Inclusive practices"
+                ],
+                "target_audience": [
+                    "Teachers",
+                    "School counselors",
+                    "Educational psychologists",
+                    "School administrators"
+                ],
+                "key_concepts": [
+                    "Emotional intelligence",
+                    "Trauma-informed teaching",
+                    "Cultural sensitivity",
+                    "Community building"
+                ]
+            }
+        },
+        {
+            "title": "The Developmental Management Approach to Classroom Behaviour",
+            "author": "R. Lewis",
+            "year": 2008,
+            "category": "behavior_management",
+            "original_filename": "Developmental Management Approach to Classroom Behaviour, The - Lewis, R_.pdf",
+            "filename": "the_developmental_management_approach_to_classroom_behaviour.pdf",
+            "metadata": {
+                "creation_date": "2008-04-27"
+            }
+        },
+        {
+            "title": "Elementary Classroom Management",
+            "author": "Kerry Curtiss Williams",
+            "year": 2008,
+            "category": "classroom_management",
+            "original_filename": "Elementary Classroom Management - Kerry Curtiss Williams;.pdf",
+            "filename": "elementary_classroom_management.pdf",
+            "metadata": {
+                "creation_date": "2008-10-18"
+            }
+        },
+        {
+            "title": "Exciting Classrooms",
+            "author": "Frank Thoms",
+            "year": 2015,
+            "category": "classroom_environment",
+            "original_filename": "Exciting Classrooms - Thoms, Frank.pdf",
+            "filename": "exciting_classrooms.pdf",
+            "metadata": {
+                "creation_date": "2015-11-27"
+            }
+        },
+        {
+            "title": "Handbook for Classroom Management That Works",
+            "author": "Robert J. Marzano",
+            "year": 2008,
+            "category": "classroom_management",
+            "original_filename": "Handbook for Classroom Management That Works - Marzano, Robert J_.pdf",
+            "filename": "handbook_for_classroom_management_that_works.pdf",
+            "metadata": {
+                "creation_date": "2008-09-19"
+            }
+        },
+        {
+            "title": "Happy Class",
+            "author": "Jenna Sage",
+            "year": 2016,
+            "category": "classroom_environment",
+            "original_filename": "Happy Class - Sage, Jenna.pdf",
+            "filename": "happy_class.pdf",
+            "metadata": {
+                "language": "English",
+                "file_format": "PDF",
+                "creation_date": "2016-11-21",
+                "publisher": "Educational Press",
+                "edition": "1st"
+            },
+            "content_overview": {
+                "description": "A practical guide to creating a positive and joyful classroom atmosphere that promotes both academic success and student happiness.",
+                "main_topics": [
+                    "Positive classroom environment",
+                    "Student engagement",
+                    "Classroom community",
+                    "Social-emotional learning",
+                    "Behavioral management"
+                ],
+                "target_audience": [
+                    "Teachers",
+                    "School counselors",
+                    "Educational administrators",
+                    "Teacher trainers"
+                ],
+                "key_concepts": [
+                    "Positive reinforcement",
+                    "Student motivation",
+                    "Classroom harmony",
+                    "Joy in learning"
+                ]
+            }
+        },
+        {
+            "title": "The No-Fault Classroom",
+            "subtitle": "Tools to Resolve Conflict & Foster Relationship Intelligence",
+            "year": 2008,
+            "category": "conflict_resolution",
+            "original_filename": "No-Fault Classroom, The - Tools to Resolve Conflict & Foster Relationship Intelligence.pdf",
+            "filename": "the_no_fault_classroom_tools_to_resolve_conflict_foster_relationship_intelligence.pdf",
+            "metadata": {
+                "language": "English",
+                "file_format": "PDF",
+                "creation_date": "2008-07-23",
+                "publisher": "PuddleDancer Press",
+                "edition": "1st"
+            },
+            "content_overview": {
+                "description": "A comprehensive approach to conflict resolution in educational settings, focusing on building relationship intelligence and creating a blame-free environment.",
+                "main_topics": [
+                    "Conflict resolution",
+                    "Relationship building",
+                    "Communication skills",
+                    "Emotional intelligence",
+                    "Classroom management"
+                ],
+                "target_audience": [
+                    "Teachers",
+                    "School counselors",
+                    "Educational psychologists",
+                    "Conflict resolution specialists"
+                ],
+                "key_concepts": [
+                    "Non-violent communication",
+                    "Emotional awareness",
+                    "Problem-solving skills",
+                    "Collaborative learning"
+                ]
+            }
+        },
+        {
+            "title": "Effective Classroom Management",
+            "subtitle": "A Teacher's Guide",
+            "authors": [
+                "Colin J. Smith",
+                "Robert Laslett"
+            ],
+            "year": 1993,
+            "category": "classroom_management",
+            "original_filename": "effective_classroom_management_a_teacher_s_guide_second_edition_colin_j_smith_robert_laslett.pdf",
+            "filename": "effective_classroom_management_a_teacher_s_guide.pdf",
+            "metadata": {
+                "isbn": "0-415-07152-6",
+                "publisher": "Routledge",
+                "publisher_location": "London and New York",
+                "edition": "2nd",
+                "language": "English",
+                "file_format": "PDF",
+                "creation_date": "1993"
+            },
+            "content_overview": {
+                "description": "A comprehensive guide combining practical advice on lesson organization and teaching methods with an exploration of teachers' feelings about themselves and their students, focusing on cooperative classroom management.",
+                "main_topics": [
+                    "Classroom organization",
+                    "Teaching methods",
+                    "Behavior modification",
+                    "School discipline",
+                    "Counselling and guidance",
+                    "Teacher-student relationships"
+                ],
+                "target_audience": [
+                    "Teachers",
+                    "Teacher trainers",
+                    "Educational administrators"
+                ],
+                "key_concepts": [
+                    "Get them in",
+                    "Get them out",
+                    "Get on with it",
+                    "Get on with them"
+                ],
+                "table_of_contents": [{
+                        "part": "I",
+                        "title": "Management",
+                        "chapters": [{
+                                "chapter": 1,
+                                "title": "Four rules of classroom management",
+                                "page": 3
+                            },
+                            {
+                                "chapter": 2,
+                                "title": "Analysing classroom organisation",
+                                "page": 14
+                            },
+                            {
+                                "chapter": 3,
+                                "title": "Reducing sources of friction",
+                                "page": 34
+                            }
+                        ]
+                    },
+                    {
+                        "part": "II",
+                        "title": "Mediation",
+                        "chapters": [{
+                                "chapter": 4,
+                                "title": "Counselling and discussions with disruptive pupils",
+                                "page": 45
+                            },
+                            {
+                                "chapter": 5,
+                                "title": "Confrontation in the classroom: pupils with problems",
+                                "page": 54
+                            },
+                            {
+                                "chapter": 6,
+                                "title": "Confrontation in the classroom: teacher strategies",
+                                "page": 66
+                            },
+                            {
+                                "chapter": 7,
+                                "title": "Imperturbable, resilient and disruptive teachers",
+                                "page": 80
+                            }
+                        ]
+                    },
+                    {
+                        "part": "III",
+                        "title": "Modification",
+                        "chapters": [{
+                            "chapter": 8,
+                            "title": "Rewards and punishments",
+                            "page": 97
+                        }]
+                    }
+                ]
+            }
+        },
+        {
+            "title": "A Teacher's Guide to Successful Classroom Management and Differentiated Instruction",
+            "author": "Billie F. Birnie",
+            "year": 2014,
+            "category": "classroom_management",
+            "original_filename": "birnie_9781475810080_turn_key_systems_pty_ltd.pdf",
+            "filename": "a_teacher_s_guide_to_successful_classroom_management_and_differentiated_instruction.pdf",
+            "metadata": {
+                "publisher": "Rowman & Littlefield",
+                "publisher_location": "Lanham, Maryland",
+                "edition": "2nd",
+                "language": "English",
+                "file_format": "PDF",
+                "creation_date": "2014",
+                "series": "Wrinkles in Teaching: A Series of Guidebooks for Teachers"
+            },
+            "content_overview": {
+                "description": "A practical guidebook providing teachers with strategies for classroom management and differentiated instruction, part of the Wrinkles in Teaching series.",
+                "main_topics": [
+                    "Classroom management",
+                    "Differentiated instruction",
+                    "Teaching strategies",
+                    "Practical teaching tips"
+                ],
+                "target_audience": [
+                    "Elementary teachers",
+                    "Secondary teachers"
+                ]
+            }
+        },
+        {
+            "title": "A Guide to Promoting a Positive Classroom Environment",
+            "authors": [{
+                    "name": "Umesh Sharma",
+                    "affiliation": "Monash University, Australia"
+                },
+                {
+                    "name": "John Roodenburg",
+                    "affiliation": "Monash University, Australia"
+                },
+                {
+                    "name": "Steve Rayner",
+                    "affiliation": "Newman University, UK"
+                }
+            ],
+            "year": 2015,
+            "category": "classroom_environment",
+            "original_filename": "unknown_sharma_umesh_roodenburg_john_rayner_steve_.pdf",
+            "filename": "a_guide_to_promoting_a_positive_classroom_environment.pdf",
+            "metadata": {
+                "isbn": {
+                    "paperback": "978-94-6300-341-4",
+                    "hardback": "978-94-6300-342-1",
+                    "ebook": "978-94-6300-343-8"
+                },
+                "publisher": "Sense Publishers",
+                "publisher_location": "Rotterdam, The Netherlands",
+                "language": "English",
+                "file_format": "PDF",
+                "creation_date": "2015",
+                "copyright": "© 2015 Sense Publishers"
+            },
+            "content_overview": {
+                "description": "A comprehensive guide focusing on creating and maintaining positive learning environments, combining theoretical principles with practical implementation strategies. The book emphasizes inclusive learning interventions, relational leadership, and building independence and wellbeing into school culture.",
+                "main_topics": [
+                    "Positive learning environments",
+                    "Inclusive learning interventions",
+                    "Relational leadership",
+                    "Wellbeing and stress management",
+                    "Problem ownership and control",
+                    "Building independence"
+                ],
+                "target_audience": [
+                    "Teachers",
+                    "Educational administrators",
+                    "Teacher educators"
+                ],
+                "key_concepts": [
+                    "Understanding and experience",
+                    "Principles into practice",
+                    "Intelligent inclusion",
+                    "Evidence-based change",
+                    "Relational leadership",
+                    "Positive school culture"
+                ],
+                "table_of_contents": [{
+                        "front_matter": [{
+                                "title": "Preface",
+                                "page": "vii"
+                            },
+                            {
+                                "title": "Acknowledgement",
+                                "page": "ix"
+                            }
+                        ]
+                    },
+                    {
+                        "chapter": 1,
+                        "title": "The Journey: Learning Teaching on the Road",
+                        "page": 1,
+                        "sections": [
+                            "Overview and Key Concepts",
+                            "Introduction: Why Read This Book?",
+                            "Understanding and Experience: Stories, Perspectives and Practice",
+                            "Principles into Practice: Creating Positive Learning Environments"
+                        ]
+                    },
+                    {
+                        "chapter": 2,
+                        "title": "Enabling Inclusive Learning Interventions",
+                        "page": 9,
+                        "sections": [
+                            "Overview and Key Concepts",
+                            "Wellbeing",
+                            "The Stress of Individual Differences",
+                            "Problem Ownership",
+                            "Intelligent Inclusion",
+                            "Abilities and Learning Difficulties: Diagnostics beyond Classification and Labelling"
+                        ]
+                    },
+                    {
+                        "chapter": 3,
+                        "title": "Creating Positive Learning Environments through Relational Leadership",
+                        "page": 21,
+                        "sections": [
+                            "Overview and Key Constructs",
+                            "Anatomy of Conflicts",
+                            "Evidence-Based Change",
+                            "Problem Ownership, Control, and Effect",
+                            "Management versus Leadership: Relationship Keys to Positive Classroom Culture"
+                        ]
+                    },
+                    {
+                        "chapter": 4,
+                        "title": "Building Independence and Wellbeing into a Positive School Culture",
+                        "page": 39,
+                        "sections": [
+                            "Overview and Key Constructs",
+                            "Effectiveness: An Integrated Approach",
+                            "Application of an Effective Integrated Approach",
+                            "Building a Constructive Repertoire, Defeating Old Destructive Habits",
+                            "Dealing with Severe Adjustment Problems"
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "title": "Classroom Dilemmas",
+            "subtitle": "Solutions for Everyday Problems",
+            "author": "Richard B. Kimbrough",
+            "year": 2015,
+            "category": "classroom_management",
+            "original_filename": "kimbrough_9781475820584_turn_key_systems_pty_ltd.pdf",
+            "filename": "classroom_dilemmas_solutions_for_everyday_problems.pdf",
+            "metadata": {
+                "isbn": {
+                    "cloth": "978-1-4758-2058-4",
+                    "paperback": "978-1-4758-2059-1",
+                    "electronic": "978-1-4758-2060-7"
+                },
+                "publisher": "Rowman & Littlefield",
+                "publisher_location": "Lanham, Maryland",
+                "language": "English",
+                "file_format": "PDF",
+                "creation_date": "2015",
+                "copyright": "© 2015 by Richard B. Kimbrough"
+            },
+            "content_overview": {
+                "description": "A practical guide addressing common classroom challenges and providing solutions for everyday problems that teachers encounter.",
+                "main_topics": [
+                    "Classroom management",
+                    "Problem-solving strategies",
+                    "Teaching challenges",
+                    "Practical solutions"
+                ],
+                "target_audience": [
+                    "Teachers",
+                    "Educational administrators",
+                    "Teacher educators"
+                ],
+                "table_of_contents": [{
+                        "front_matter": [{
+                                "title": "Preface",
+                                "page": "vii"
+                            },
+                            {
+                                "title": "Introduction",
+                                "page": "ix"
+                            }
+                        ]
+                    },
+                    {
+                        "chapter": 1,
+                        "title": "Lesson Plans: Orders or Suggestions",
+                        "page": 1
+                    }
+                ]
+            }
+        }
+    ],
+    "categories": [
+        "classroom_management",
+        "behavior_management",
+        "classroom_modernization",
+        "extended_learning",
+        "differentiated_instruction",
+        "creativity",
+        "sensory_learning",
+        "teaching_methods",
+        "online_learning",
+        "classroom_environment",
+        "conflict_resolution"
+    ],
+    "metadata": {
+        "total_books": 20,
+        "last_updated": "2024",
+        "description": "A curated collection of educational books focusing on classroom management, teaching strategies, and educational methodologies",
+        "year_range": {
+            "earliest": 2003,
+            "latest": 2023
+        },
+        "collection_features": {
+            "topics_covered": [
+                "Classroom management techniques",
+                "Behavior management strategies",
+                "Modern teaching methods",
+                "Educational technology",
+                "Student engagement",
+                "Learning environments"
+            ],
+            "intended_users": [
+                "Teachers",
+                "Educational administrators",
+                "School counselors",
+                "Educational researchers",
+                "Student teachers"
+            ],
+            "resource_types": [
+                "Textbooks",
+                "Handbooks",
+                "Training manuals",
+                "Research-based guides",
+                "Practical guides"
+            ]
+        }
+    }
+}

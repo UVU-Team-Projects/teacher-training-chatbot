@@ -38,6 +38,7 @@ env/
 # Database
 *.db
 *.sqlite3
+*.sqlite
 instance/
 
 # Logs
@@ -66,6 +67,10 @@ coverage.xml
 alembic/versions/*.py
 !alembic/versions/.gitkeep
 
-# Project specific
+# ------ Project specific -------
 chatbot.db
 chatbot_test.db 
+
+# Data
+data/education_resources/cult_of_pedagogy/cleaned_texts/
+conversation_logs/

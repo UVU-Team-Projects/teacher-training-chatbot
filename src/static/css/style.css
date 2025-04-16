@@ -1,0 +1,86 @@
+/* Custom CSS for the Teacher Training Chatbot */
+
+/* Improve chat container styling */
+.stChatMessage {
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Enhance the message input */
+.stChatInputContainer {
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    border: 1px solid #e0e0e0;
+}
+
+/* Give a professional look to headers */
+h1,
+h2,
+h3 {
+    font-weight: 600;
+    color: #1e3a8a;
+}
+
+/* Style the sidebar */
+.sidebar .sidebar-content {
+    background-color: #f8f9fa;
+}
+
+/* Style buttons */
+.stButton>button {
+    background-color: #4e7bec;
+    color: white;
+    border-radius: 0.25rem;
+    border: none;
+    padding: 0.5rem 1rem;
+    transition: all 0.3s;
+}
+
+.stButton>button:hover {
+    background-color: #365bb7;
+    color: white;
+    border: none;
+}
+
+/* Style chat message containers */
+div[data-testid="stChatMessage"] {
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-bottom: 0.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Style user messages */
+div[data-testid="stChatMessage"][data-testid*="user"] {
+    background-color: #e6f3ff;
+    border-left: 4px solid #4e7bec;
+}
+
+/* Style assistant messages */
+div[data-testid="stChatMessage"][data-testid*="assistant"] {
+    background-color: #f0f4f8;
+    border-left: 4px solid #34d399;
+}
+
+/* Improve code blocks */
+code {
+    border-radius: 0.25rem;
+    padding: 0.2rem 0.4rem;
+    background-color: #f1f1f1;
+    color: #e83e8c;
+    font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+pre {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+}
+
+/* Add some spacing */
+.block-container {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+}
