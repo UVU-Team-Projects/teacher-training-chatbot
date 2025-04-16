@@ -24,8 +24,7 @@ class KnowledgeBaseRetriever:
         self.logger.info(f"Initializing KnowledgeBaseRetriever using ChromaDB.")
 
         # Initialize EmbeddingGenerator and ChromaDB
-        self.embedder = EmbeddingGenerator()
-        self.db = self.embedder.return_chroma()
+        self.db = EmbeddingGenerator().return_chroma()
 
         if self.db is None:
             self.logger.error("Failed to initialize ChromaDB. Knowledge base retrieval will not work.")

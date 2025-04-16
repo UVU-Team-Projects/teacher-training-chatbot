@@ -35,8 +35,7 @@ class SimpleRAG:
         )
 
         # Initialize embeddings model with correct device
-        self.embeddings_generator = EmbeddingGenerator()
-        self.chroma_db = self.embeddings_generator.return_chroma()
+        self.chroma_db = EmbeddingGenerator().return_chroma()
 
     def generate_response(self, query: str, k: int = 5):
         """
