@@ -15,5 +15,12 @@ RUN pip install -r requirements.txt
 # Copy the rest of the application
 COPY . .
 
-# Run the application
+# Copy entrypoint script and make it executable
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# Set entrypoint
+ENTRYPOINT ["/entrypoint.sh"]
+
+# Default command (will be executed by entrypoint.sh after initialization check)
 CMD ["streamlit", "run", "src/web/web.py"]
