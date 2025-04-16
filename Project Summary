@@ -1,22 +1,39 @@
-Project Summary: Utah Elementary Teacher Training Assistant (UTAH-TTA)
-The Utah Elementary Teacher Training Assistant (UTAH-TTA) is an innovative, LLM-powered educational chatbot developed to support the training of elementary school teachers in Utah, with a specific focus on second-grade instruction. This intelligent assistant simulates authentic classroom scenarios and provides personalized teaching guidance aligned with Utah Core Standards for second grade.
+# Project Summary: Utah Elementary Teacher Training Assistant (UTAH-TTA)
 
-UTAH-TTA is designed to address the growing need for scalable, interactive professional development tools that help teachers master curriculum delivery, classroom management, and differentiated instruction strategies for 7-8 year olds. Through integration of expert-validated content and AI-driven scenario handling, the chatbot assists educators in navigating everyday teaching challenges and refining their pedagogical approaches.
+The **Utah Elementary Teacher Training Assistant (UTAH-TTA)** is an innovative, LLM-powered educational chatbot developed to support the training of elementary school teachers in Utah, with a specific focus on second-grade instruction. This intelligent assistant simulates authentic classroom scenarios and provides personalized teaching guidance aligned with Utah Core Standards for second grade.
 
-Key features of the system include:
+UTAH-TTA is designed to address the growing need for scalable, interactive professional development tools that help teachers master curriculum delivery, classroom management, and differentiated instruction strategies for 7–8 year olds. Through integration of expert-validated content and AI-driven scenario handling, the chatbot assists educators in navigating everyday teaching challenges and refining their pedagogical approaches.
 
-A robust knowledge base structured around second-grade core subjects (Math, ELA, Science, and Social Studies)
+## 🔑 Key Features
 
-Age-appropriate classroom management techniques and teacher-student interactions
+- **Standard-Aligned Knowledge Base**: Structured around Utah's second-grade standards in Math, English Language Arts, Science, and Social Studies.
+- **Classroom Management Guidance**: Provides age-appropriate techniques and sample teacher-student interactions.
+- **Scenario-Based Learning**: Includes realistic, subject-specific classroom scenarios and special situation simulations.
+- **LLM + RAG Pipeline**: Utilizes Retrieval-Augmented Generation (RAG) for generating context-aware responses.
+- **User-Friendly Web Interface**: Built with a modern frontend for intuitive access and usage by educators.
 
-Scenario-based learning modules reflecting real-life classroom conditions
+## 🛠 Development and Team Structure
 
-A Retrieval-Augmented Generation (RAG) pipeline for generating context-aware, standard-aligned responses
+The project follows an agile workflow with clearly defined roles:
+- **Project Manager**: Oversees progress and coordination
+- **Product Owner**: Ensures alignment with educational standards
+- **AI/ML Developer**: Implements language models and training pipelines
+- **Data Engineer**: Manages structured content and preprocessing
+- **Frontend & Backend Developers**: Build the user interface and API integrations
+- **Documentation & QA Specialist**: Ensures clarity, correctness, and compliance
 
-An intuitive web interface for ease of use by educators
+All educational content is validated by **Dr. Krista Ruggles**, Associate Professor of Elementary Education STEM at Utah Valley University.
 
-The project’s development followed an agile workflow with clearly defined roles across AI/ML, frontend, backend, data engineering, and documentation. Content validation is conducted in partnership with Dr. Krista Ruggles, an expert in Elementary Education STEM at Utah Valley University.
+## 🚀 Future Enhancements
 
-With plans for future enhancements such as multilingual support, adaptive learning paths, gamification, and LMS integration, UTAH-TTA aims to become a transformative tool in teacher training and support across Utah's elementary education system.
+- **AI-Powered Adaptive Learning**: Personalized support based on teacher learning history
+- **Multilingual Support**: Including Spanish for broader accessibility
+- **Mobile Optimization**: A responsive UI for tablets and phones
+- **Gamification**: Badges and achievements to motivate learning
+- **LMS Integration**: Compatibility with platforms like Canvas and Blackboard
+- **Expanded Grade Support**: Plans to extend beyond second grade
 
+---
+
+UTAH-TTA represents a powerful blend of artificial intelligence, educational expertise, and user-centric design, empowering elementary educators with practical, engaging tools for continuous professional growth.
 
