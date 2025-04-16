@@ -1,1 +1,22 @@
+Project Summary: Utah Elementary Teacher Training Assistant (UTAH-TTA)
+The Utah Elementary Teacher Training Assistant (UTAH-TTA) is an innovative, LLM-powered educational chatbot developed to support the training of elementary school teachers in Utah, with a specific focus on second-grade instruction. This intelligent assistant simulates authentic classroom scenarios and provides personalized teaching guidance aligned with Utah Core Standards for second grade.
+
+UTAH-TTA is designed to address the growing need for scalable, interactive professional development tools that help teachers master curriculum delivery, classroom management, and differentiated instruction strategies for 7-8 year olds. Through integration of expert-validated content and AI-driven scenario handling, the chatbot assists educators in navigating everyday teaching challenges and refining their pedagogical approaches.
+
+Key features of the system include:
+
+A robust knowledge base structured around second-grade core subjects (Math, ELA, Science, and Social Studies)
+
+Age-appropriate classroom management techniques and teacher-student interactions
+
+Scenario-based learning modules reflecting real-life classroom conditions
+
+A Retrieval-Augmented Generation (RAG) pipeline for generating context-aware, standard-aligned responses
+
+An intuitive web interface for ease of use by educators
+
+The project’s development followed an agile workflow with clearly defined roles across AI/ML, frontend, backend, data engineering, and documentation. Content validation is conducted in partnership with Dr. Krista Ruggles, an expert in Elementary Education STEM at Utah Valley University.
+
+With plans for future enhancements such as multilingual support, adaptive learning paths, gamification, and LMS integration, UTAH-TTA aims to become a transformative tool in teacher training and support across Utah's elementary education system.
+
 
