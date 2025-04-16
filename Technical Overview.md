@@ -1,87 +1,77 @@
-🚀 Frameworks & Tools
-FastAPI
-Purpose: Main web framework for building APIs.
+# Technical Overview
 
-Key Features Used:
+## ✨ Frameworks & Tools
 
-Dependency injection
+### FastAPI
+- **Purpose**: Main web framework for building APIs.
+- **Highlights**:
+  - Asynchronous route support
+  - Pydantic for data validation
+  - Auto-generated OpenAPI docs
 
-Pydantic for data validation
+### Pydantic
+- **Purpose**: Data modeling and validation for request and response schemas.
+- **Usage**: Used for request validation (`StudentCreate`, `ScenarioUpdate`, etc.)
 
-Built-in exception handling
+### SQLAlchemy *(Assumed)*
+- **Purpose**: ORM for database access.
+- **Used in**: `src/data/database/crud.py` for all database operations.
 
-Asynchronous support
+### CORS Middleware
+- **Purpose**: Enables front-end communication with the API.
+- **Allowed Origins**: `http://0.0.0.0:5500`, `http://localhost:5500`
 
-Pydantic
-Purpose: Data modeling and validation for request and response schemas.
+### StaticFiles
+- **Purpose**: Serves HTML, JS, and CSS assets from the `src/web` directory.
 
-Usage: Defined BaseModel classes like StudentCreate, StudentUpdate, etc.
+---
 
-Uvicorn (assumed)
-Purpose: ASGI server used to run FastAPI apps.
+## 📄 API Overview
 
-Benefit: High performance for async I/O.
+### Students API
+- Endpoints:
+  - `GET /students`
+  - `POST /students`
+  - `PUT /students/{id}`
+  - `DELETE /students/{id}`
+- Features: Stores name, traits, motivations, communication styles, etc.
 
-SQLAlchemy (assumed via crud usage)
-Purpose: ORM (Object Relational Mapper) for interacting with the database.
+### Scenarios API
+- Manages classroom scenarios for teacher training.
+- Endpoints:
+  - `GET /scenarios`
+  - `POST /scenarios`
+  - `PUT /scenarios/{id}`
 
-Usage: CRUD operations in src/data/database/crud.py.
+### Dialogues API
+- Represents conversations tied to students and scenarios.
+- Endpoints:
+  - `GET /dialogues/by-scenario/{id}`
+  - `POST /dialogues`
 
-CORS Middleware
-Purpose: Allowing frontend clients to interact with the API.
+### File Management API
+- Manages educational files (e.g., markdown lesson content).
+- Key Features:
+  - Upload files
+  - Move between active/inactive states
+  - Query by name or ID
 
-Config:
+### Health Check
+- Endpoint: `GET /database-health`
+- Confirms database connectivity.
 
-allow_origins=["http://0.0.0.0:5500", "http://localhost:5500"]
+---
 
-allow_methods=["*"], allow_headers=["*"]
+## 🔎 Planned: AI Chatbot Integration
+- Route: `POST /chat`
+- Current: Returns default static response
+- Future: Will connect to an LLM for real-time classroom simulation dialogue
 
-FastAPI StaticFiles
-Purpose: Serves frontend files (HTML, CSS, JS).
+---
 
-Directory: src/web is mounted at /static.
+## 🔢 Models & Serialization
+- All main entities (Students, Scenarios, Dialogues, Files) use:
+  - `BaseModel` + `Create`, `Update`, and `Response` classes
+  - Pydantic with `orm_mode = True` for ORM compatibility
 
-📁 API Design & Endpoints
-Students API
-Create, read (by ID and name), update, delete
 
-Data: name, traits, strengths, weaknesses, motivations, fears, communication style
-
-Scenarios API
-Manage classroom situations or case studies
-
-Dialogues API
-Represents conversations between a student and teacher in a scenario
-
-File Management API
-Uploading and toggling files between active/inactive
-
-Handles markdown file ingestion for educational content
-
-Health Check Endpoint
-/database-health: Verifies database connectivity
-
-Chat Endpoint
-/chat: Placeholder for future AI chatbot integration
-
-📦 Models & Serialization
-Each main entity (Student, Scenario, Dialogue, File) has:
-
-BaseModel for shared fields
-
-Create, Update, Response models for different use cases
-
-All response models use orm_mode = True for SQLAlchemy compatibility.
-
-💬 Planned AI Integration
-Chat Endpoint (placeholder)
-Route: /chat
-
-Planned Use: Integrate with an LLM (e.g., OpenAI GPT, LLaMA, or custom model) for interactive teacher training
-
-⚙️ Assumed Additions (Behind the Scenes)
-Database: Likely SQLite or PostgreSQL
-
-File Storage: Handled in-memory or stored via BLOBs in the DB
-
-Environment: Localhost testing on port 5500 with HTML front-end
