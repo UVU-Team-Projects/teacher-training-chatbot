@@ -5,6 +5,8 @@ RUN apt-get update && apt-get install -y \
     git \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
+RUN pip install --upgrade pip
+
 # Don't use the CMD that runs the app - we want an interactive shell for development
 WORKDIR /workspace
 
@@ -21,6 +23,9 @@ RUN chmod +x /entrypoint.sh
 
 # Set entrypoint
 ENTRYPOINT ["/entrypoint.sh"]
+
+# Expose the default Streamlit port
+EXPOSE 8501
 
 # Default command (will be executed by entrypoint.sh after initialization check)
 CMD ["streamlit", "run", "src/web/web.py"]

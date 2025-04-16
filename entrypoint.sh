@@ -8,7 +8,7 @@ if [ ! -f "$MARKER_FILE" ]; then
   echo "Database not populated yet. Running population script..."
   # Assuming the script is run directly, not via run.py based on your selection
   # If run.py is needed, change this line accordingly
-  python src/data/database/populate_database.py 
+  python -m src.data.database.populate_database 
   echo "Database population complete. Creating marker file."
   touch "$MARKER_FILE"
 else
