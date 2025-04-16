@@ -71,4 +71,5 @@ chatbot.db
 chatbot_test.db 
 
 # Data
-data/
+# data/
+data/education_resources/cult_of_pedagogy/cleaned_texts/
